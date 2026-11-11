@@ -4,8 +4,9 @@ channels:
 dependencies:
   - python=3.11
   - cadquery=2.8.0
-  - ocp_vscode
-  - ruff=0.16.5
   - pip
   - pip:
+      # Not conda packages: these exist only on PyPI.
+      - ruff==0.16.5
+      - ocp_vscode==4.0.1
       - cq_warehouse @ git+https://github.com/gumyr/cq_warehouse.git@daa46507ecc429c0e2dce11d9d5ffd09b12a42af#egg=cq_warehouse
