@@ -1,0 +1,215 @@
+"""Proves `lib/gate.py` can FAIL (`./run selftest`).
+
+For each check module in `lib/assembly/` and `lib/subassembly/`:
+  1. Builds a temporary symlink farm (`N64_CAD_LIB_DIR`) mirroring `lib/`.
+  2. Replaces one target module with a mutated copy containing a real geometric
+     or datum defect.
+  3. Runs `lib/gate.py` against that farm and asserts the gate exits non-zero
+     and prints `FAIL` on the expected row.
+"""
+
+import os
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+GATE = os.path.join(HERE, "gate.py")
+
+# (check_filter, target_relpath, old_snippet, new_snippet, expected_failed_row_prefix)
+MUTATIONS = [
+    (
+        "datum_check",
+        "assembly/datum.py",
+        "SCALE = 0.50",
+        "SCALE = 0.65",
+        "SCALE",
+    ),
+    (
+        "datum_check",
+        "assembly/datum.py",
+        "(0.0, 0.0, 1.0),  # +Z: up",
+        "(0.0, 0.0, -1.0),  # +Z: flipped reflection",
+        "HANDED",
+    ),
+    (
+        "radxa_mount_check",
+        "assembly/datum.py",
+        "RADXA_STANDOFF_H = 6.6",
+        "RADXA_STANDOFF_H = 2.0",
+        "G13_CLEAR",
+    ),
+    (
+        "radxa_mount_check",
+        "variant/lower_tub.py",
+        "bore_dia=D.INSERT_M25_BORE_D,",
+        "bore_dia=0.01,",
+        "J02_SEAT",
+    ),
+    (
+        "radxa_mount_check",
+        "variant/lower_tub.py",
+        '"volume_mm3": 281.25,',
+        '"volume_mm3": 999.00,',
+        "VARIANT   lower_tub.rear_rj45_cutout",
+    ),
+    (
+        "top_controls_check",
+        "variant/upper_shell.py",
+        '"volume_mm3": 52.45,',
+        '"volume_mm3": 999.00,',
+        "VARIANT   upper_shell.rear_dome_exhaust_l",
+    ),
+    (
+        "top_controls_check",
+        "part/upper_shell.py",
+        "T.memory_expansion_prisms(z0=25.0, height=10.0)",
+        "T.memory_expansion_prisms(z0=35.0, height=1.0)",
+        "DOME_TOP",
+    ),
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "CARTRIDGE_FLAP_CLEAR = 0.15",
+        "CARTRIDGE_FLAP_CLEAR = 0.01",
+        "J09_FLAPS",
+    ),
+    (
+        "top_controls_check",
+        "part/upper_shell.py",
+        "22.10,",
+        "27.20,",
+        "J03_SLIDE",
+    ),
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "OMRON_REST_DEFLECTION = 3.20",
+        "OMRON_REST_DEFLECTION = 0.50",
+        "OMRON_ACT",
+    ),
+    (
+        "front_panel_check",
+        "assembly/datum.py",
+        "FRONT_COVER_CLEAR = 0.20",
+        "FRONT_COVER_CLEAR = 0.01",
+        "J05_COVER",
+    ),
+    (
+        "front_panel_check",
+        "assembly/datum.py",
+        "PORT_INSERT_BOSS_D = 7.8",
+        "PORT_INSERT_BOSS_D = 8.18",
+        "J08_PORT",
+    ),
+    (
+        "radxa_mount_check",
+        "variant/radxa_x4.py",
+        '"volume_mm3": 2445.58,',
+        '"volume_mm3": 9999.00,',
+        "VARIANT   radxa_x4.usb3_dual_stack",
+    ),
+    (
+        "console_check",
+        "assembly/datum.py",
+        "WAIST_HALF_W = 60.00",
+        "WAIST_HALF_W = 64.50",
+        "SH_OUTSIDE",
+    ),
+    (
+        "console_check",
+        "assembly/datum.py",
+        "RABBET_INSET = 1.00",
+        "RABBET_INSET = 1.80",
+        "J01_SPLIT",
+    ),
+    (
+        "radxa_mount_check",
+        "part/usb_retainer_bracket.py",
+        "BRIDGE_Z0 = 16.85",
+        "BRIDGE_Z0 = 18.00",
+        "USB_LOCK",
+    ),
+    (
+        "radxa_mount_check",
+        "variant/lower_tub.py",
+        "12.80, 6.80, 48.40, 3.60",
+        "9.60, 3.70, 48.40, 3.60",
+        "REAR_PLUGS",
+    ),
+    (
+        "top_controls_check",
+        "part/shared/n64_text.py",
+        "PLAQUE_FONT_SIZE = 2.6",
+        "PLAQUE_FONT_SIZE = 4.0",
+        "PLAQUE",
+    ),
+]
+
+
+def _make_farm(root: str) -> str:
+    """Create a symlink farm of `lib/` inside `root/lib`."""
+    farm = os.path.join(root, "lib")
+    for dirpath, dirnames, filenames in os.walk(HERE):
+        rel = os.path.relpath(dirpath, HERE)
+        if "__pycache__" in rel:
+            continue
+        dest_dir = farm if rel == "." else os.path.join(farm, rel)
+        os.makedirs(dest_dir, exist_ok=True)
+        for fn in filenames:
+            if fn.endswith(".pyc"):
+                continue
+            src = os.path.join(dirpath, fn)
+            dst = os.path.join(dest_dir, fn)
+            os.symlink(src, dst)
+    # Symlink notes/ beside lib/ so datum_check can find notes/TOLERANCES.md
+    repo_notes = os.path.join(os.path.dirname(HERE), "notes")
+    if os.path.isdir(repo_notes):
+        os.symlink(repo_notes, os.path.join(root, "notes"))
+    return farm
+
+
+def main() -> int:
+    print("=== GATE MUTATION SELF-TEST (REQ-12) ===\n")
+    failed = 0
+    for check_filter, target_rel, old_s, new_s, expected_row in MUTATIONS:
+        with tempfile.TemporaryDirectory(prefix="n64_selftest_") as tmp:
+            farm = _make_farm(tmp)
+            target_path = os.path.join(farm, target_rel)
+            real_src = open(os.path.join(HERE, target_rel), encoding="utf-8").read()
+            if old_s not in real_src:
+                print(f"  FAIL  [{check_filter}] snippet {old_s!r} not found in {target_rel}")
+                failed += 1
+                continue
+            os.unlink(target_path)
+            with open(target_path, "w", encoding="utf-8") as f:
+                f.write(real_src.replace(old_s, new_s, 1))
+
+            env = os.environ.copy()
+            env["N64_CAD_LIB_DIR"] = farm
+            proc = subprocess.run(
+                [sys.executable, GATE, check_filter],
+                cwd=HERE,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=180,
+            )
+            caught = proc.returncode != 0 and f"FAIL  {expected_row}" in proc.stdout
+            tag = "PASS" if caught else "FAIL"
+            print(
+                f"  {tag}  {check_filter:20s} mutate {target_rel} ({old_s} -> {new_s}) "
+                f"=> caught by {expected_row}"
+            )
+            if not caught:
+                failed += 1
+                print(f"        gate exit={proc.returncode}")
+                for ln in proc.stdout.splitlines()[-10:]:
+                    print(f"        {ln}")
+
+    print(f"\n{len(MUTATIONS) - failed}/{len(MUTATIONS)} mutations caught by gate.py")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,11 @@
+# Generated output and local caches
+export/
+scratch/
+.ocp_vscode/
+__pycache__/
+.ruff_cache/
+lib/testing/last_run_report.json
+# Third-party reference models: never committed (see CREDITS.md)
+lib/step/*.step
+# The owner's own plaque lettering
+local/

@@ -1,0 +1,82 @@
+name: cad-ci
+
+# The geometry gate (`./run gate`) checks the case against third-party reference models that are
+# not in this repository (see CREDITS.md), so it runs on the maintainer's machine. CI builds and
+# lints everything a fresh clone can build: every printed part and the print plate.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cad-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: lint and printable exports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2.0.7
+        with:
+          environment-name: cadquery
+          environment-file: environment.yml
+      - name: Lint and structural lint
+        shell: bash -el {0}
+        run: |
+          ruff check .
+          ruff format --check .
+          python3 lib/testing/lint_structure.py
+      - name: Export printed parts and the print plate
+        shell: bash -el {0}
+        run: python3 lib/testing/export_harness.py --printable-only
+      - name: Package
+        run: |
+          mkdir -p dist/parts
+          for d in export/*/; do
+            name="$(basename "$d")"
+            [ "$name" = plate ] || cp -r "$d" dist/parts/
+          done
+          cp export/plate/print_plate.step dist/print_plate.step
+          cp LICENSE CREDITS.md notes/BOM_COMPLETE.md notes/MANUFACTURING.md notes/TOLERANCES.md dist/
+          (cd dist && zip -r n64-classic-mini-cad-exports.zip parts print_plate.step LICENSE CREDITS.md BOM_COMPLETE.md MANUFACTURING.md TOLERANCES.md)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: n64-classic-mini-cad-exports
+          path: |
+            dist/n64-classic-mini-cad-exports.zip
+            dist/print_plate.step
+          if-no-files-found: error
+
+  release:
+    # Only main publishes. The `latest` tag is moved to this commit each time so the release's
+    # source archives match its assets; README links use releases/latest/download/.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: n64-classic-mini-cad-exports
+          path: dist
+      - name: Move the latest tag to this commit
+        run: |
+          git tag -f latest
+          git push -f origin latest
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          tag_name: latest
+          name: Latest build (main)
+          make_latest: "true"
+          files: |
+            dist/n64-classic-mini-cad-exports.zip
+            dist/print_plate.step
