@@ -8,7 +8,7 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 - **Recommended Model:** **Radxa X4 4GB (`RS119-D4E0`) or 8GB (`RS119-D8E0`), WITHOUT eMMC, WITHOUT pre-soldered 40-pin GPIO header**.
 - **Why 4GB / 8GB RAM:** Batocera Linux + Mupen64Plus-Next (`GLideN64` / `ParaLLEl-RDP` at 1080p60) uses `< 1.5 GB` RAM total. The **4GB LPDDR5** model (`~$50–$58`) has over `2.5 GB` of free headroom; choose **8GB** (`~$65`) only if you also plan to run heavier emulators or texture packs.
 - **Why NO pre-soldered 40-pin GPIO header:** Ordering the bare-pad (`H0`) version saves desoldering the 40-pin header and leaves clean through-hole pads for soldering the `Omron SS-5GL` `POWER`/`RESET` switches and the 3-lead bi-colour Red/Green LED.
-- **Why Upside-Down Mounting (Heatsink Facing UP `+Z`):** On the Radxa X4, the Intel Processor N100 lives on the underside of the PCB. By mounting the board inverted (`180 deg` roll about `+X` at `Z = 8.20 mm`), the **Intel N100 and its finned aluminium heatsink (`Z = 9.8 .. 20.2 mm`) face UP (`+Z`)** directly into the tall `33.5 mm` N64 dome and the 25 parabolic cooling louvers for natural upward convection.
+- **Why Upside-Down Mounting (Heat Sink Facing UP `+Z`):** On the Radxa X4, the Intel Processor N100 lives on the underside of the PCB. Mounted inverted (`180 deg` roll about `+X` at `Z = 8.20 mm`), the N100 and its pin-fin heat sink face up into the dome. A 30 mm fan under the 25 top louvers blows room air down through the pins; it leaves through the floor vents, waist slots and rear slits (`subassembly/cooling_check.py` computes the junction temperature from the measured openings).
 
 ### 2. Which M.2 SSD to Buy & Storage Space Needed
 - **Required Form Factor:** **M.2 2230 NVMe PCIe Gen3 x4 SSD** (`22 mm wide x 30 mm long`, M-key — same compact size used in Steam Deck / ROG Ally; **do not** buy 2280).
@@ -37,6 +37,8 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 | USB-A Top Retainer & Button Travel-Stop Brackets (`lib/part/usb_retainer_bracket.py`, `31.6 x 8.8 x 11.85 mm`, glued onto `lower_tub` USB-A cradle walls after seating the 4 USB-A receptacles) | Charcoal Grey PETG / Matte PLA | 2 |
 | Shallow N64 Controller Port Inserts (`lib/part/n64_port_insert.py`, `Ø10.88 x 1.92 mm` with `R=0.50mm` front rim fillet & `P1..P4` tactile pips) | Light Cool Grey PLA / PETG | 4 |
 | Lenticular N64 Power LED Light Pipe (`lib/part/led_light_pipe.py`, `6.36 x 1.76 mm` authentic N64 almond front lens + rear optical barrel) | Clear / Transparent PETG (100% infill) | 1 |
+| Cooling duct (`lib/part/cooling_duct.py`): fan seat, plenum, chamber and the cover that clamps the heat sink; printed cover-side down | PETG or ASA (the heat sink runs ~60-70 C; not PLA) | 1 |
+| Intake hood (`lib/part/cooling_hood.py`): seals the 25 top louvers to the fan; printed floor-side down | PETG or ASA | 1 |
 
 ### Bought Hardware & Electronics
 
@@ -44,7 +46,12 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 |---|---|---:|
 | Radxa X4 SBC — **4GB or 8GB LPDDR5, NO eMMC, NO 40-pin GPIO header** (SKU `RS119-D4E0` 4GB or `RS119-D8E0` 8GB; Intel Processor N100, mounted upside-down so SoC & heatsink face `+Z` up into the dome) | `Radxa X4 4GB/8GB (RS119-D4E0 / RS119-D8E0, no GPIO header)` | 1 |
 | M.2 **2230** NVMe PCIe Gen3 x4 SSD — **64GB or 128GB** (M-key, `22 x 30 mm`; e.g. Kioxia BG4/BG5 128GB or WD SN530/SN740 128GB; full N64 library + Batocera OS + 1080p artwork uses only ~12–15 GB) | `M.2 2230 NVMe SSD (64GB / 128GB)` | 1 |
-| Official Radxa X4 Heatsink (`SKU RA018`, `64 x 56 x 10.5 mm`, outer case wings milled to `40 x 38 x 10.4 mm` finned block facing UP into top dome) | `Radxa X4 Heatsink (SKU RA018)` | 1 |
+| Same Sky HSB26-343408 BGA pin-fin heat sink (`33.5 x 33.5 x 10 mm`, 14 x 14 pins, black anodised AL6063; on the N100 with paste, clamped by the printed duct; replaces the stock silicone pad, which limits the stock cooler) | `Same Sky HSB26-343408` | 1 |
+| Sunon MF30060V2-1000U-A99 fan (`30 x 30 x 6 mm`, 5 V, 3.7 CFM, 0.11 inH2O, 15.7 dB(A); 2 wires to the Radxa X4 2-pin 1.25 mm fan header, which sets its speed). Louder, more margin: Same Sky CFM-3007CF-0110-320 (7 mm, 32 dB(A)) | `Sunon MF30060V2-1000U-A99` | 1 |
+| Thermal paste, non-conductive (e.g. Arctic MX-4 or Noctua NT-H1): thin layer between the N100 die and the heat sink. No thermal pad. | `Non-conductive thermal paste` | 1 |
+| 3M Bumpon SJ5012 rubber foot (`12.7 mm` cylindrical, flat top, `3.5 mm` tall): one over each corner screw counterbore; the gap feeds the floor vents | `3M Bumpon SJ5012` | 4 |
+| Self-adhesive silicone rubber pad, `0.5 mm`, ~`30 x 12 mm`: on the duct cover under the cartridge cradle; closing the shell presses the heat sink onto the die | `Silicone pad 0.5 mm` | 1 |
+| Closed-cell foam tape, `1 mm` thick, `3 mm` wide: seals the intake hood's wall tops to the roof underside (~200 mm) | `Foam tape 1 x 3 mm` | 1 |
 | Ruthex RX-M2.5x4.0 brass heat-set insert (`M2.5 x 4.0 mm`, `OD 3.2 mm`: 4 for Radxa X4 standoffs + 2 for 2.5GbE RJ45 Ethernet carrier standoffs) | `Ruthex RX-M2.5x4.0` | 6 |
 | M2.5 x 6 ISO 7380 button-head socket screw (A2 stainless: 4 for Radxa X4 + 2 for 2.5GbE RJ45 Ethernet carrier) | `M2.5 x 6 ISO 7380 BHCS` | 6 |
 | TE Connectivity 292303-7 right-angle USB 2.0 Type-A female receptacle (Farnell `1240559` / Mouser `571-292303-7`, wired to Radxa X4 USB pads) | `TE 292303-7 USB-A receptacle` | 4 |
@@ -85,17 +92,22 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 | `2.0mm Clear Cast Acrylic + Cricut vinyl` | 2.0 mm Clear Cast Acrylic sheet blank (`>= 35 x 25 mm`) + Cricut adhesive vinyl (Matte Black background + Red/Blue/Green/Yellow/White N64 logo) | 1 |
 | `3.0 x 1.0 mm N52 magnet` | Neodymium disc magnet (`Ø3.0 x 1.0 mm`, N52 — 2 per cover + 2 per bay) | 8 |
 | `330R 0.25W 1% axial resistor` | 330 Ohm 0.25 W metal-film axial resistor (`1%`, current-limiting on Pin 1 Red anode & Pin 3 Green anode — shared GBA BOM part) | 2 |
+| `3M Bumpon SJ5012` | 3M Bumpon SJ5012 rubber foot (`12.7 mm` cylindrical, flat top, `3.5 mm` tall): one over each corner screw counterbore; the gap feeds the floor vents | 4 |
+| `Foam tape 1 x 3 mm` | Closed-cell foam tape, `1 mm` thick, `3 mm` wide: seals the intake hood's wall tops to the roof underside (~200 mm) | 1 |
 | `Kingbright L-93WEGW (Rapid 55-0155) 3 mm bi-colour LED` | Kingbright L-93WEGW (`Rapid 55-0155`) 3 mm Red/Green bi-colour 3-lead common-cathode through-hole LED (Pin 1 Red `625 nm` = Power/Standby, Pin 2 Common Cathode = `GND`, Pin 3 Green `565 nm` = ON) | 1 |
 | `M.2 2230 NVMe SSD (64GB / 128GB)` | M.2 **2230** NVMe PCIe Gen3 x4 SSD — **64GB or 128GB** (M-key, `22 x 30 mm`; e.g. Kioxia BG4/BG5 128GB or WD SN530/SN740 128GB; full N64 library + Batocera OS + 1080p artwork uses only ~12–15 GB) | 1 |
 | `M2 DIN 125 washer` | M2 flat washer (`DIN 125` A2, `Ø5.0 x 0.3 mm`, under `M2 x 10` heads on `Omron SS-5GL` — shared GBA BOM part) | 2 |
 | `M2 x 10 DIN 912 SHCS` | M2 x 10 DIN 912 socket-head cap screw (A2-70, 1 per `Omron SS-5GL` switch through `Ø2.35 mm` Hole 2, paired with integral `Ø2.20 mm` Pin 1 — shared GBA) | 2 |
 | `M2.5 x 6 ISO 7380 BHCS` | M2.5 x 6 ISO 7380 button-head socket screw (A2 stainless: 4 for Radxa X4 + 2 for 2.5GbE RJ45 Ethernet carrier) | 6 |
 | `M3 x 12 DIN 912 SHCS` | M3 x 12 DIN 912 socket-head cap screw (A2-70, 4 corner enclosure bolts) | 4 |
+| `Non-conductive thermal paste` | Thermal paste, non-conductive (e.g. Arctic MX-4 or Noctua NT-H1): thin layer between the N100 die and the heat sink. No thermal pad. | 1 |
 | `Omron SS-5GL microswitch` | Omron SS-5GL subminiature hinge-lever SPDT microswitch (`19.8 x 6.4 x 10.2 mm`, `0.49 N` max operating force, `OP = 8.8 +/- 0.8 mm` — shared GBA BOM part; 1 under `POWER`, 1 under `RESET`) | 2 |
 | `Panel-mount RJ45 jack` | 2.5GbE 8P8C shielded RJ45 Ethernet receptacle on M2.5 breakout carrier (`2x Ø2.70 mm` mounting ears at `(43.00, 23.00)` & `(51.50, 28.50)`) | 1 |
 | `Radxa X4 4GB/8GB (RS119-D4E0 / RS119-D8E0, no GPIO header)` | Radxa X4 SBC — **4GB or 8GB LPDDR5, NO eMMC, NO 40-pin GPIO header** (SKU `RS119-D4E0` 4GB or `RS119-D8E0` 8GB; Intel Processor N100, mounted upside-down so SoC & heatsink face `+Z` up into the dome) | 1 |
-| `Radxa X4 Heatsink (SKU RA018)` | Official Radxa X4 Heatsink (`SKU RA018`, `64 x 56 x 10.5 mm`, outer case wings milled to `40 x 38 x 10.4 mm` finned block facing UP into top dome) | 1 |
 | `Ruthex RX-M2.5x4.0` | Ruthex RX-M2.5x4.0 brass heat-set insert (`M2.5 x 4.0 mm`, `OD 3.2 mm`: 4 for Radxa X4 standoffs + 2 for 2.5GbE RJ45 Ethernet carrier standoffs) | 6 |
 | `Ruthex RX-M2x4.0` | Ruthex RX-M2x4.0 brass heat-set insert (`M2 x 4.0 mm`, `OD 3.2 mm`, 1 per `Omron SS-5GL` switch in `lower_tub` Hole 2 — shared GBA BOM part) | 2 |
 | `Ruthex RX-M3x5.7` | Ruthex RX-M3x5.7 brass heat-set insert (`M3 x 5.7 mm`, `OD 4.0 mm`, 4 in `upper_shell` corner bosses — shared GBA BOM part) | 4 |
+| `Same Sky HSB26-343408` | Same Sky HSB26-343408 BGA pin-fin heat sink (`33.5 x 33.5 x 10 mm`, 14 x 14 pins, black anodised AL6063; on the N100 with paste, clamped by the printed duct; replaces the stock silicone pad, which limits the stock cooler) | 1 |
+| `Silicone pad 0.5 mm` | Self-adhesive silicone rubber pad, `0.5 mm`, ~`30 x 12 mm`: on the duct cover under the cartridge cradle; closing the shell presses the heat sink onto the die | 1 |
+| `Sunon MF30060V2-1000U-A99` | Sunon MF30060V2-1000U-A99 fan (`30 x 30 x 6 mm`, 5 V, 3.7 CFM, 0.11 inH2O, 15.7 dB(A); 2 wires to the Radxa X4 2-pin 1.25 mm fan header, which sets its speed). Louder, more margin: Same Sky CFM-3007CF-0110-320 (7 mm, 32 dB(A)) | 1 |
 | `TE 292303-7 USB-A receptacle` | TE Connectivity 292303-7 right-angle USB 2.0 Type-A female receptacle (Farnell `1240559` / Mouser `571-292303-7`, wired to Radxa X4 USB pads) | 4 |

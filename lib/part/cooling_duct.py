@@ -1,0 +1,121 @@
+"""Printed cooling duct (REQ-04): fan seat, plenum, turning chamber and heat-sink cover in one part.
+
+The fan blows down into a plenum floored by a printed plate (ahead of the board) and the Radxa X4
+(over it). The plenum opens rearward into a chamber in front of the heat sink, and side skirts plus
+a cover over the pin tips force the air through the 14 x 14 pin fins, front to rear. The cover
+rests on the pin tips and clamps the heat sink onto the N100 when the duct is screwed down.
+Print in PETG or ASA (the heat sink runs at ~60-70 C), cover-side down.
+
+Clearances measured against the assembly (2026-11-11): the left plenum wall stands inside the fan
+footprint, clear of the power-switch tower (X <= -19.0); the front strip sits above the front
+USB socket tops (Z 10.2) and meets the USB retainer bridge, which closes the fan's front
+strip from below.
+"""
+
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import cadquery as cq  # noqa: E402
+from assembly import datum as D  # noqa: E402
+
+PROCESS = "fdm"
+MANUFACTURE = "fdm"
+PRINT_NORMAL = (0, 0, -1)  # cover face on the bed
+VISIBLE_FACES: tuple[str, ...] = ()
+
+W = D.DUCT_WALL
+CLEAR = 0.3  # heat sink to skirt, per side
+X_IN_L = D.HS_X0 - CLEAR  # skirt inner faces
+X_IN_R = D.HS_X0 + D.HS_W + CLEAR
+X_OUT_L, X_OUT_R = X_IN_L - W, X_IN_R + W
+X_FAN_WALL = D.FAN_X0  # left plenum wall, inside the fan footprint, ahead of Y_STEP
+Y_STEP = -12.0  # left wall steps out to the skirt line here (ahead of the board edge)
+Y_BRIDGE = -27.8  # USB retainer bridge rear face: it closes the fan's front strip below
+Y_FRONT_OUT = -27.4  # front wall outer face: 0.1 behind the front USB sockets (rear at -27.5),
+# 0.4 from the bridge
+Y_FRONT_IN = Y_FRONT_OUT + W
+Y_PLATE0 = -25.6  # plate front edge, behind the tub/USB-socket tops at Y <= -25.8
+Y_PLATE1 = -9.0  # plate rear edge, ahead of the RAM (Y >= -8.71) and over the board-edge parts
+Y_REAR = D.HS_Y0 + D.HS_W  # heat sink rear face: air leaves into the case here
+Z_HIGH = 10.4  # front strip floor: above the front USB sockets' tops (Z <= 10.2), measured by
+# point classification (a clash bounding box had wrongly suggested tub structure up to Z 11.6)
+Z_PLATE0 = D.RADXA_PCB_Z1 + 0.2  # 10.0: just above the board-edge parts (Z <= 9.8)
+Z_PLATE1 = Z_PLATE0 + W
+Z_SKIRT = D.RADXA_PCB_Z1 + D.DUCT_SKIRT_GAP  # 10.3 over the board
+Z_SKIRT_SOC = D.RADXA_PCB_Z1 + D.SOC_H + CLEAR  # 11.6 where the skirts cross the N100 package
+Z_COVER0 = D.HS_Z1  # cover rests on the pin tips
+Z_COVER1 = Z_COVER0 + D.DUCT_COVER_T
+Z_SEAT1 = D.FAN_Z0  # fan seat plate top = fan bottom
+Z_SEAT0 = Z_SEAT1 - W
+FAN_Y1 = D.FAN_Y0 + D.FAN_W
+
+
+def _box(x0: float, x1: float, y0: float, y1: float, z0: float, z1: float) -> cq.Solid:
+    return cq.Solid.makeBox(x1 - x0, y1 - y0, z1 - z0, cq.Vector(x0, y0, z0))
+
+
+def get_shape() -> cq.Shape:
+    """The duct in console coordinates."""
+    parts = [
+        # Cover over the pin tips and the turning chamber, fan rear edge to heat sink rear face.
+        _box(X_OUT_L, X_OUT_R, FAN_Y1, Y_REAR, Z_COVER0, Z_COVER1),
+        # Right skirt: low over the plate/board, high in front of the plate.
+        _box(X_IN_R, X_OUT_R, Y_PLATE0, Y_REAR, Z_SKIRT, Z_COVER1),
+        _box(X_IN_R, X_OUT_R, Y_FRONT_OUT, Y_PLATE0, Z_HIGH, Z_SEAT1),
+        # Left skirt from the step to the heat sink rear.
+        _box(X_OUT_L, X_IN_L, Y_STEP, Y_REAR, Z_SKIRT, Z_COVER1),
+        # Step wall joining the skirt line to the fan-line wall.
+        _box(X_OUT_L, X_FAN_WALL + W, Y_STEP - W, Y_STEP, Z_PLATE0, Z_SEAT1),
+        # Left fan-line wall: low over the plate, high in front of it.
+        _box(X_FAN_WALL, X_FAN_WALL + W, Y_PLATE0, Y_STEP, Z_PLATE0, Z_SEAT1),
+        _box(X_FAN_WALL, X_FAN_WALL + W, Y_FRONT_OUT, Y_PLATE0, Z_HIGH, Z_SEAT1),
+        # Front wall, above the tub and socket tops, against the retainer bridge.
+        _box(X_FAN_WALL, X_OUT_R, Y_FRONT_OUT, Y_FRONT_IN, Z_HIGH, Z_SEAT1),
+        # Front strip floor, from the front wall back to the plate.
+        _box(X_FAN_WALL, X_OUT_R, Y_FRONT_OUT, Y_PLATE0 + 0.1, Z_HIGH, Z_HIGH + W),
+        # Plenum floor ahead of the board (stops air escaping under the board), including the
+        # strip left of the fan-line wall behind the step.
+        _box(X_FAN_WALL, X_OUT_R, Y_PLATE0, Y_PLATE1, Z_PLATE0, Z_PLATE1),
+        _box(X_OUT_L, X_FAN_WALL + W, Y_STEP - W, Y_PLATE1, Z_PLATE0, Z_PLATE1),
+        # Fan seat: closes the plenum top around the fan's bore, including the strip left of the
+        # fan behind the step (else the plenum vents straight back to the intake side).
+        _box(X_FAN_WALL, X_OUT_R, Y_FRONT_OUT, FAN_Y1, Z_SEAT0, Z_SEAT1),
+        _box(X_OUT_L, X_FAN_WALL, Y_STEP - W, FAN_Y1, Z_SEAT0, Z_SEAT1),
+        # Beside the fan's rear edge, seat up to cover: closes the chamber from the intake side
+        # where the fan frame doesn't.
+        _box(X_OUT_L, D.FAN_X0, FAN_Y1 - W, FAN_Y1, Z_SEAT0, Z_COVER1),
+        _box(D.FAN_X0 + D.FAN_W, X_OUT_R, FAN_Y1 - W, FAN_Y1, Z_SEAT0, Z_COVER1),
+    ]
+    duct = parts[0].fuse(*parts[1:])
+    cx, cy = D.FAN_X0 + D.FAN_W / 2.0, D.FAN_Y0 + D.FAN_W / 2.0
+    # The bore opens only into the plenum: where the 28 mm circle reaches past the front wall it
+    # would cut a slot through the wall's top (found by the COOL_SEAL flood check).
+    bore = cq.Solid.makeCylinder(
+        D.FAN_BORE_D / 2.0, W + 0.2, cq.Vector(cx, cy, Z_SEAT0 - 0.1)
+    ).intersect(_box(X_FAN_WALL + W, X_IN_R, Y_FRONT_IN, FAN_Y1, Z_SEAT0 - 0.2, Z_SEAT1 + 0.2))
+    # Skirts clear the N100 package where they cross it (it is 1.5 mm wider than the heat sink);
+    # the relief runs through the whole skirt thickness so no sliver is left.
+    soc_relief = _box(
+        X_OUT_L - 0.1, X_OUT_R + 0.1, D.SOC_Y0 - CLEAR, D.SOC_Y1 + CLEAR, Z_SKIRT - 0.1, Z_SKIRT_SOC
+    )
+    # Relief over the board's screw heads that fall under the duct (front-right hole).
+    heads = [
+        cq.Solid.makeCylinder(
+            D.BOARD_SCREW_HEAD_D / 2.0 + 0.2,
+            D.BOARD_SCREW_HEAD_H + 0.3,
+            cq.Vector(hx, hy, D.RADXA_PCB_Z1 - 0.1),
+        )
+        for hx, hy in D.radxa_hole_centres()
+    ]
+    # Notches round the lower tub's two posts in the front strip (X +-9.0..13.1, Y -27.4..-25.8,
+    # up to Z 11.55); the posts themselves close the notches.
+    posts = [
+        _box(x0 - 0.2, x1 + 0.2, -27.6, -25.6, Z_HIGH - 0.1, 11.75)
+        for x0, x1 in ((-13.1, -9.0), (9.0, 13.1))
+    ]
+    # The right post's notch eats into the right skirt; thicken the skirt outward beside it so a
+    # full wall remains.
+    patch = _box(13.3, 13.3 + W, -27.4, -25.6, Z_HIGH, 11.75)
+    return duct.cut(bore, soc_relief, *heads, *posts).fuse(patch).clean()

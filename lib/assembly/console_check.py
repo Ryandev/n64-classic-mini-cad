@@ -13,7 +13,7 @@ Verifies:
     sloped wing decks, `36.5 mm` convex front barrel dome, and concave rear cartridge cradle
     (a boxy prism fails immediately!)
   - `G13_FULL`: `0.000 mm^3` pairwise boolean interference across all printed parts and
-    placed bought electronics (`variant/radxa_x4`, `variant/radxa_heatsink`, USB-A, RJ45, switches)
+    placed bought electronics (`variant/radxa_x4`, the HSB26 heat sink, USB-A, RJ45, switches)
 """
 
 import math

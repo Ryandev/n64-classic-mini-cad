@@ -1,11 +1,10 @@
-"""Gate checks for `radxa_mount_mech.py`, `lower_tub`, `radxa_x4`, and `radxa_heatsink`.
+"""Gate checks for `radxa_mount_mech.py`, `lower_tub`, `radxa_x4`, and the SoC heat sink.
 
 Measures the actual 3D solids (`BRepAlgoAPI_Common`, `BRepClass3d_SolidClassifier`,
 `lib/printable.py`, and `lib/testing/variant_manifest.py`) to verify:
   - `lower_tub` printability (`manifold`, `single_body`, `bed`, `overhang`, `wall`, `footprint`)
   - `variant/lower_tub.py` manifest against `part/lower_tub.py` (`DEVIATIONS`)
   - `variant/radxa_x4.py` manifest against `step/radxa_x4.py` (all 6 tall headers stripped)
-  - `variant/radxa_heatsink.py` manifest against `step/radxa_heatsink.py` (finned SoC block)
   - `G13` zero boolean interference between `lower_tub` and every bought component
   - `J-02` standoff top-face Z datum contact (`Z = 8.6 mm`) and coaxial `Ø3.2 mm` bores
   - Underside M.2 2230 NVMe keepout clearance above the `Z = 2.0 mm` tub floor
@@ -56,10 +55,9 @@ def check_all():
         )
     )
 
-    # 1b. Variant manifest rows for lower_tub, radxa_x4, and radxa_heatsink
+    # 1b. Variant manifest rows for lower_tub and radxa_x4
     rows.extend(variant_manifest.check_variant("lower_tub", load_by_path))
     rows.extend(variant_manifest.check_variant("radxa_x4", load_by_path))
-    rows.extend(variant_manifest.check_variant("radxa_heatsink", load_by_path))
 
     # 1c. Placed Radxa X4 vertical clearance check above Z = FLOOR_T
     step_bb = radxa_x4.vendor_step_compound().BoundingBox()
@@ -93,9 +91,8 @@ def check_all():
     components = [
         ("radxa_pcb", radxa_x4.board_solid()),
         ("radxa_vendor_step", radxa_x4.vendor_step_compound()),
-        ("finned_heatsink_step", radxa_x4.heatsink_solid()),
+        ("hsb26_heatsink", radxa_x4.heatsink_solid()),
         ("m2_2230_nvme", radxa_x4.m2_keepout()),
-        ("cooler_heatsink", radxa_x4.cooler_keepout()),
         ("front_usb_a_x4", radxa_x4.usb_a_cluster()),
         ("rear_rj45", radxa_x4.rj45_jack()),
     ]

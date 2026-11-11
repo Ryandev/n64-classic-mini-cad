@@ -62,7 +62,13 @@ When the Radxa X4 (`RS119-D4E0` / `RS119-D8E0`, ordered **without** the pre-sold
 4. **Front Power LED & Light Pipe:**
    - Slide `led_light_pipe` (Clear PETG) into the `X = 0` front aperture and seat the `Kingbright L-93WEGW` 3-lead bi-colour LED (`330 Ω` resistors on Red & Green anodes) into the rear cradle.
 5. **Inverted Radxa X4 + M.2 2230 SSD + RJ45 Breakout:**
-   - Install the M.2 2230 NVMe SSD on the Radxa X4, mill the `RA018` heatsink case wings to the `40 x 38 x 10.4 mm` fin block, solder the USB-A, RJ45, Omron (`POWER`/`RESET`), and LED leads, and fasten the inverted Radxa X4 (`4x M2.5 x 6 BHCS` at `Z = 8.20 mm`) and rear-right RJ45 breakout (`2x M2.5 x 6 BHCS` at `Z = 5.60 mm`).
+   - Install the M.2 2230 NVMe SSD on the Radxa X4, solder the USB-A, RJ45, Omron (`POWER`/`RESET`), and LED leads, and fasten the inverted Radxa X4 (`4x M2.5 x 6 BHCS` at `Z = 8.20 mm`) and rear-right RJ45 breakout (`2x M2.5 x 6 BHCS` at `Z = 5.60 mm`).
+5b. **Cooling (REQ-04):**
+   - Clean the N100 die, spread a thin layer of non-conductive paste (no thermal pad), and set the `Same Sky HSB26-343408` on it, centred on the package.
+   - Lower the printed `cooling_duct` over it (cover onto the pin tips, skirts either side) and stick the `0.5 mm` silicone pad on the cover above the die.
+   - Seat the `Sunon MF30060V2` on the duct (label down, blowing into the plenum) and plug it into the X4's 2-pin fan header.
+   - Set `cooling_hood` on the fan rim and the duct, and run `1 mm` foam tape along the hood's wall tops.
+   - Stick a `3M Bumpon SJ5012` over each corner screw counterbore on the underside.
 6. **Seat `POWER` & `RESET` Buttons on Guide Poles:**
    - Place `power_slider` (`X = -32.32 mm`) and `reset_button` (`X = +32.32 mm`) straight down onto the `Ø2.80 mm` vertical guide poles on `usb_retainer_bracket`. The `Ø3.20 mm` blind underside holes (`1.70 mm` engaged at rest) hold both buttons upright and oriented before the top shell is installed.
 7. **Upper Shell Trim (`cartridge_flaps` & `front_bezel`):**

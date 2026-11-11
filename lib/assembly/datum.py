@@ -121,8 +121,49 @@ RADXA_STANDOFF_H = 6.6  # clears 5.53 mm M.2 2230 NVMe + vendor STEP underside b
 RADXA_PCB_Z0 = FLOOR_T + RADXA_STANDOFF_H  # Z = 8.2 mm standoff top datum (J-02)
 RADXA_PCB_Z1 = RADXA_PCB_Z0 + RADXA_PCB_T  # Z = 9.8 mm
 RADXA_M2_H = 5.53  # underside M.2 2230 NVMe socket + SSD envelope (Z = 2.67 .. 8.20 mm)
-RADXA_COOLER_H = 11.5  # low-profile finned heatsink + blower above PCB (Z = 9.80 .. 21.30 mm)
-MIN_PLENUM_H = 8.0  # required air plenum above cooler inside the 33.5 mm dome (REQ-04)
+
+# ---------------------------------------------------------------------------
+# 3b. Active cooling (REQ-04): bought heat sink + 30 mm fan, printed duct and intake hood.
+#     Air: room -> 25 top louvers -> hood -> fan (blowing down) -> chamber in front of the heat
+#     sink -> pin fins (front to rear, under the cartridge cradle) -> case -> floor vents behind
+#     the feet gap, waist slots and rear slits. Sized by `thermal.py`; positions from the
+#     occupancy search in the 2026-11-11 cooling study.
+# ---------------------------------------------------------------------------
+SOC_X0, SOC_X1 = -21.89, 13.11  # Intel N100 FCBGA package (35 x 24 mm) on the upward face,
+SOC_Y0, SOC_Y1 = 7.44, 31.44  # measured from the Radxa X4 vendor STEP
+SOC_H = 1.50  # package top above PCB_Z1
+SOC_CX = (SOC_X0 + SOC_X1) / 2.0  # -4.39
+SOC_CY = (SOC_Y0 + SOC_Y1) / 2.0  # 19.44
+PASTE_T = 0.05  # thermal paste bond line (no silicone pad: it was the stock cooler's bottleneck)
+
+HS_W = 33.5  # Same Sky HSB26-343408 (datasheet): 33.5 x 33.5 mm, 2.0 base + 8.0 pin fins
+HS_BASE_T = 2.0
+HS_FIN_H = 8.0
+HS_PIN = 1.0  # 14 x 14 square pins, edge pins flush with the base
+HS_ROWS = 14
+HS_X0 = SOC_CX - HS_W / 2.0
+HS_Y0 = SOC_CY - HS_W / 2.0
+HS_Z0 = RADXA_PCB_Z1 + SOC_H + PASTE_T  # 11.35: base sits on the die through the paste
+HS_Z1 = HS_Z0 + HS_BASE_T + HS_FIN_H  # 21.35
+
+FAN_W = 30.0  # Sunon MF30060V2-1000U-A99: 30 x 30 x 6 mm, 5 V, X4 fan header. A 10 mm fan can't
+FAN_H = 6.0  # fit: its bottom must clear the USB retainer bridge (Z 18.4 at Y < -27.8) and its top
+FAN_X0 = -18.5  # stay ~3 mm under the roof at its rear edge (27.7) for the hood. X0 clears the
+FAN_Y0 = -33.0  # power-switch tower (X <= -19.0, up to Z 21.9).
+FAN_Z0 = 18.6
+FAN_BORE_D = 28.0
+FAN_HUB_D = 12.0
+
+DUCT_WALL = 1.2  # printed duct walls (PETG/ASA; the heat sink runs ~60-70 C)
+DUCT_SKIRT_GAP = 0.2  # skirt bottom above the PCB: a wider gap lets air bypass the pins
+DUCT_COVER_T = 2.1  # cover over the pin tips; its top sits 0.35 under the cartridge cradle
+CLAMP_PAD_T = 0.5  # silicone pad on the cover under the cradle: closing the shell compresses it
+# and presses the cover onto the pins, centred over the die (no extra screws)
+BOARD_SCREW_HEAD_D, BOARD_SCREW_HEAD_H = 4.7, 1.3  # ISO 7380 M2.5 holding the Radxa X4
+HOOD_ROOF_GAP = 0.4  # hood wall tops below the roof underside; closed with foam tape
+
+FOOT_D = 12.7  # 3M Bumpon SJ5012 (cylindrical, flat top), stuck over the 4 corner counterbores
+FOOT_H = 3.5  # also the height of the gap feeding the floor vents
 
 STANDOFF_M25_OD = 7.0
 INSERT_M25_BORE_D = 3.2  # Ruthex RX-M2.5x4.0 heat-set insert bore

@@ -1,7 +1,7 @@
 """Variant of `part/lower_tub.py` adding Radxa X4 M2.5 standoffs, LED holder & I/O apertures.
 
 Imports the faithful 50%-scale N64 lower tub (`from part import lower_tub as FAITHFUL`)
-and applies 10 declared changes:
+and applies 13 declared changes:
   - 4x additive M2.5 standoffs (`Z = 8.20 mm` datum, `RX-M2.5x4.0`) for the inverted Radxa X4
   - 1x additive internal **Wired-LED & Clear PETG Light-Pipe Holder Cradle** (`led_holder_cradle`)
     behind the central front apron (`Y = -42.50 .. -35.50 mm`), holding the rear optical barrel
@@ -11,6 +11,8 @@ and applies 10 declared changes:
     (`front_led_bore`, `J-07`)
   - 4x subtractive rear `+Y` I/O apertures (`Micro-HDMI #1`, `USB-C + Micro-HDMI #2`, `3.5mm Audio`,
     and relocated `RJ45 Ethernet`)
+  - Cooling exhaust (REQ-04): 9 floor vents behind the Bumpon feet gap, and the 28 waist louvers
+    cut through
 
 Verified against `DEVIATIONS` by `lib/testing/variant_manifest.py`.
 """
@@ -32,6 +34,27 @@ PRINT_NORMAL = (0, 0, 1)
 VISIBLE_FACES = ("-X", "+X", "-Y", "+Y", "-Z")
 
 DEVIATIONS = {
+    "floor_vents": {
+        "kind": "removed",
+        "why": "9 through-floor exhaust slots (2x18 mm) behind the Bumpon feet gap (REQ-04)",
+        "bbox": (-22.5, 21.5, -0.6, 14.5, 40.5, 2.2),
+        "volume_mm3": 372.6,
+        "tolerance_mm3": 5.0,
+    },
+    "waist_slots_l": {
+        "kind": "removed",
+        "why": "14 left waist louvers cut through wall + backing strip (REQ-04 exhaust)",
+        "bbox": (-60.5, 2.5, 4.0, -56.5, 39.5, 11.0),
+        "volume_mm3": 187.69,
+        "tolerance_mm3": 3.0,
+    },
+    "waist_slots_r": {
+        "kind": "removed",
+        "why": "14 right waist louvers cut through wall + backing strip (REQ-04 exhaust)",
+        "bbox": (56.5, 2.5, 4.0, 60.5, 39.5, 11.0),
+        "volume_mm3": 187.69,
+        "tolerance_mm3": 3.0,
+    },
     "radxa_standoff_fl": {
         "kind": "added",
         "why": "Front-left M2.5 standoff (Z=8.2mm datum, RX-M2.5x4.0) for inverted Radxa X4 (J-02)",
@@ -337,5 +360,40 @@ def get_shape() -> cq.Shape:
             cq.Vector(44.10 - 6.40, 45.20, D.REAR_RJ45_Z_CENTRE - 5.50),
         )
     )
-
+    cuts.extend(floor_vent_cutters())
+    cuts.extend(waist_slot_cutters())
     return with_posts.cut(*cuts)
+
+
+# Cooling exhaust (REQ-04): floor vents breathe through the gap under the Bumpon feet, clear of
+# the M.2 SSD (X < -25.3), the standoffs and the duct's plenum ahead of the board.
+FLOOR_SLOT_W, FLOOR_SLOT_L, FLOOR_SLOT_PITCH = 2.0, 18.0, 4.0
+FLOOR_SLOT_XS = tuple(-22.0 + i * FLOOR_SLOT_PITCH for i in range(9))
+FLOOR_SLOT_YS = (22.0,)  # recessed underside only: Y < ~18 is the bed-contact pad
+WAIST_SLOT_Y0, WAIST_SLOT_PITCH, WAIST_SLOT_W = 2.839, 2.60, 1.25
+WAIST_SLOT_Z0, WAIST_SLOT_H = 4.25, 6.50
+WAIST_CUT_X_IN = 56.9  # through the 2 mm wall and the louver backing strip behind it
+
+
+def floor_vent_cutters() -> list[cq.Solid]:
+    """Through-floor slots (2 x 18 mm) in the recessed underside, clear of the bed-contact pad."""
+    return [
+        cq.Solid.makeBox(FLOOR_SLOT_W, FLOOR_SLOT_L, D.FLOOR_T + 1.0, cq.Vector(x, y, -0.5))
+        for x in FLOOR_SLOT_XS
+        for y in FLOOR_SLOT_YS
+    ]
+
+
+def waist_slot_cutters() -> list[cq.Solid]:
+    """The 14 authentic waist louvers per side, cut through instead of recessed."""
+    depth = D.WAIST_HALF_W + 0.2 - WAIST_CUT_X_IN
+    out = []
+    for i in range(14):
+        sy = WAIST_SLOT_Y0 + i * WAIST_SLOT_PITCH
+        for x0 in (-D.WAIST_HALF_W - 0.2, WAIST_CUT_X_IN):
+            out.append(
+                cq.Solid.makeBox(
+                    depth, WAIST_SLOT_W, WAIST_SLOT_H, cq.Vector(x0, sy, WAIST_SLOT_Z0)
+                )
+            )
+    return out

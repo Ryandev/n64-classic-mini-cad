@@ -10,7 +10,9 @@ every bought/modified internal component in the right-handed console coordinate 
   - `4x part/n64_port_insert.py` (Light Cool Grey `Ø10.2 mm` N64 controller port bezels)
   - `part/led_light_pipe.py` (Translucent Red front power indicator light-pipe)
   - `variant/radxa_x4.py` (`placed()`, 23-solid de-ported Radxa X4 v1.11 SBC)
-  - `variant/radxa_heatsink.py` (`placed()`, milled finned aluminium SoC heatsink)
+  - `component/hsb26_343408.py` (bought pin-fin SoC heat sink), `component/sunon_mf30060v2.py`
+    (30 mm fan), `part/cooling_duct.py` + `part/cooling_hood.py` (printed), and
+    `component/bumpon_sj5012.py` (4 rubber feet)
   - `component/radxa_x4.py` (`m2_keepout()`, `usb_a_cluster()`, `rj45_jack()`)
   - `subassembly/top_controls_mech.py` (`2x` `6x6x5 mm` tactile switches)
 """
@@ -22,9 +24,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
 from assembly import datum as D  # noqa: E402
-from component import radxa_x4  # noqa: E402
+from component import bumpon_sj5012, radxa_x4, sunon_mf30060v2  # noqa: E402
 from part import (  # noqa: E402
     cartridge_flaps,
+    cooling_duct,
+    cooling_hood,
     front_bezel,
     led_light_pipe,
     power_slider,
@@ -71,7 +75,7 @@ def named_bodies() -> list[tuple[str, tuple[float, float, float], cq.Shape]]:
         ("led_light_pipe", led_red, led_light_pipe.get_shape()),
         ("wired_led_3mm", (0.98, 0.22, 0.18), front_panel_mech.wired_led_3mm()),
         ("radxa_x4_deported", pcb_green, radxa_x4.vendor_step_compound()),
-        ("radxa_heatsink_finned", silver, radxa_x4.heatsink_solid()),
+        ("hsb26_heatsink", matte_black, radxa_x4.heatsink_solid()),
         ("m2_2230_nvme", nvme_dark, radxa_x4.m2_keepout()),
         ("front_usb_a_x4", silver, radxa_x4.usb_a_cluster()),
         ("front_door_magnets_x4", silver, front_panel_mech.door_magnets()),
@@ -79,6 +83,10 @@ def named_bodies() -> list[tuple[str, tuple[float, float, float], cq.Shape]]:
         ("rear_rj45_2_5gbe", silver, radxa_x4.rj45_jack()),
         ("tact_switch_power", brass, sw_l),
         ("tact_switch_reset", brass, sw_r),
+        ("fan_mf30060v2", matte_black, sunon_mf30060v2.placed()),
+        ("cooling_duct", charcoal, cooling_duct.get_shape()),
+        ("cooling_hood", charcoal, cooling_hood.get_shape()),
+        ("feet_sj5012", matte_black, bumpon_sj5012.placed()),
     ]
 
 

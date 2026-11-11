@@ -104,18 +104,7 @@ def check_all():
         )
     )
 
-    # 4. REQ-04: Vertical thermal stackup inside the 36.5 mm centre dome
-    cooler_bb = radxa_x4.cooler_keepout().BoundingBox()
-    dome_inner_z = D.SHELL_H - D.ROOF_T
-    plenum_h = dome_inner_z - cooler_bb.zmax
-    rows.append(
-        (
-            "THERMAL   cooler top clears 36.5mm dome ceiling with >= 8.0 mm air plenum",
-            plenum_h >= D.MIN_PLENUM_H,
-            f"cooler zmax={cooler_bb.zmax:.1f} mm, dome inner Z={dome_inner_z:.1f} mm "
-            f"-> plenum={plenum_h:.1f} mm (min {D.MIN_PLENUM_H:.1f} mm)",
-        )
-    )
+    # 4. REQ-04 (cooling) is measured in subassembly/cooling_check.py.
 
     # 5. REQ-05: Rear-right RJ45 bay beside shifted Radxa X4
     rj45_bay_avail = inner_xmax - pcb_bb.xmax

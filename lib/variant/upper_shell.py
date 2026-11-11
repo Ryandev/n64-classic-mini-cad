@@ -4,8 +4,7 @@ Imports the faithful 50%-scale N64 upper shell (`from part import upper_shell as
 and opens:
   - 13 vertical rear `+Y` exhaust louver slits (`1.425 x 4.60 mm` on `2.675 mm` centres across
     `X = -16.76 .. +16.76 mm`, `Z = 19.50 .. 24.10 mm`) aligned to the top louver array
-  - 3 top-plenum louver vents through the central parabolic fan-arc slots (`X = -5.35, 0.0, +5.35`)
-    directly above the upward-facing Radxa X4 Intel N100 finned heatsink
+  - all 25 top louvers through the roof: the fan's intake, sealed to it by `part/cooling_hood.py`
 
 Verified against `DEVIATIONS` by `lib/testing/variant_manifest.py`.
 """
@@ -46,26 +45,13 @@ DEVIATIONS = {
         "volume_mm3": 52.45,
         "tolerance_mm3": 2.0,
     },
-    "crescent_plenum_vent_l": {
+    "top_louvers_intake": {
         "kind": "removed",
-        "why": "Open left-centre parabolic louver through dome roof above N100 heatsink",
-        "bbox": (-6.5, -8.2, 24.0, -4.2, 3.8, 34.0),
-        "volume_mm3": 27.89,
-        "tolerance_mm3": 2.0,
-    },
-    "crescent_plenum_vent_c": {
-        "kind": "removed",
-        "why": "Open centre parabolic louver through dome roof above N100 heatsink",
-        "bbox": (-1.2, -8.2, 24.0, 1.2, 3.8, 34.0),
-        "volume_mm3": 28.24,
-        "tolerance_mm3": 2.0,
-    },
-    "crescent_plenum_vent_r": {
-        "kind": "removed",
-        "why": "Open right-centre parabolic louver through dome roof above N100 heatsink",
-        "bbox": (4.2, -8.2, 24.0, 6.5, 3.8, 34.0),
-        "volume_mm3": 27.89,
-        "tolerance_mm3": 2.0,
+        "why": "Open all 25 top louvers through the roof: the cooling intake, sealed to the fan by "
+        "part/cooling_hood.py (REQ-04)",
+        "bbox": (-33.5, -8.5, 24.0, 33.5, 4.2, 34.0),
+        "volume_mm3": 495.7,
+        "tolerance_mm3": 5.0,
     },
 }
 
@@ -84,9 +70,8 @@ def get_shape() -> cq.Shape:
         )
         for (x0, _, x1, _) in C.TOP_LOUVER_BOXES_50[6:19]
     ]
-    # Open 3 central parabolic louver slots (indices 10, 12, 14) into the top heatsink plenum
-    for idx in (10, 12, 14):
-        x0, y0, x1, y1 = C.TOP_LOUVER_BOXES_50[idx]
+    # Open all 25 top louvers through the roof: the cooling intake (REQ-04)
+    for x0, y0, x1, y1 in C.TOP_LOUVER_BOXES_50:
         cuts.append(
             cq.Solid.makeBox(
                 x1 - x0,

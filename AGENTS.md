@@ -40,3 +40,15 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
 3. **One feature holds an axis:** Every mating pair in [`notes/TOLERANCES.md`](notes/TOLERANCES.md) names one datum per axis; every other feature on that axis clears the tolerance stack.
 4. **Never treat a bounding box as a surface:** Check interference by boolean common volume (`BRepAlgoAPI_Common`) or `BRepExtrema_DistShapeShape` / point classification (`BRepClass3d_SolidClassifier`), not bounding-box arithmetic.
 5. **Write the failing row first, and red-confirm it:** Add a mutation case in `lib/gate_selftest.py` for every new check module.
+
+## Lessons (cooling, 2026-11-11)
+
+- **A sampled grid misses thin parts; a boolean doesn't.** A 1 mm occupancy grid placed the fan
+  clear of everything; the boolean `G13_COOL` row then found it inside the USB retainer bridge.
+  Use grids to search, booleans to decide.
+- **A clash bounding box is not geometry.** The duct was designed around "tub structure up to
+  Z 11.6" read off an intersection's bounding box; point classification showed the corner was
+  empty, and the plenum leaked there. Classify points or measure volumes (rule 4).
+- **Airflow parts need a seal check, not just a clash check.** Three leaks (a fan bore cutting the
+  plenum's front wall, an open seat strip, a screw-head relief) passed every fit row. `COOL_SEAL`
+  floods air through a voxel grid and traces the route of any leak; it found all of them.

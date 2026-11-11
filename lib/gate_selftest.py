@@ -144,6 +144,50 @@ MUTATIONS = [
         "PLAQUE_FONT_SIZE = 4.0",
         "PLAQUE",
     ),
+    # Cooling (REQ-04): a vent that stops being a vent, a fan that drops into the retainer
+    # bridge, a weaker fan, and a cover that no longer clamps the heat sink.
+    (
+        "cooling_check",
+        "variant/upper_shell.py",
+        "for x0, y0, x1, y1 in C.TOP_LOUVER_BOXES_50:",
+        "for x0, y0, x1, y1 in C.TOP_LOUVER_BOXES_50[:3]:",
+        "COOL_VENT",
+    ),
+    (
+        "cooling_check",
+        "assembly/datum.py",
+        "FAN_Z0 = 18.6",
+        "FAN_Z0 = 16.0",
+        "G13_COOL",
+    ),
+    (
+        "cooling_check",
+        "component/sunon_mf30060v2.py",
+        "P_MAX_PA = 0.110 * INH2O_PA",
+        "P_MAX_PA = 0.030 * INH2O_PA",
+        "THERMAL",
+    ),
+    (
+        "cooling_check",
+        "part/cooling_duct.py",
+        "Z_COVER0 = D.HS_Z1  # cover rests on the pin tips",
+        "Z_COVER0 = D.HS_Z1 + 0.5  # cover rests on the pin tips",
+        "COOL_SEAT",
+    ),
+    (
+        "cooling_check",
+        "part/cooling_duct.py",
+        "Y_FRONT_IN, FAN_Y1, Z_SEAT0 - 0.2",
+        "Y_FRONT_OUT - 9.0, FAN_Y1, Z_SEAT0 - 0.2",
+        "COOL_SEAL",
+    ),
+    (
+        "cooling_check",
+        "assembly/datum.py",
+        "DUCT_COVER_T = 2.1",
+        "DUCT_COVER_T = 1.6",
+        "CLAMP",
+    ),
 ]
 
 
@@ -193,7 +237,7 @@ def main() -> int:
                 env=env,
                 capture_output=True,
                 text=True,
-                timeout=180,
+                timeout=600,
             )
             caught = proc.returncode != 0 and f"FAIL  {expected_row}" in proc.stdout
             tag = "PASS" if caught else "FAIL"

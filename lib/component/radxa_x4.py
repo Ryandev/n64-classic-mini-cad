@@ -2,7 +2,8 @@
 
 Dimensions from the Radxa X4 mechanical specification (`85.0 x 56.0 mm`, `4x Ø2.7 mm`
 mounting holes on a `58.0 x 49.0 mm` rectangle), wired directly to the `lib/step/` ->
-`lib/variant/` pipeline (`variant/radxa_x4.py` and `variant/radxa_heatsink.py`).
+`lib/variant/` pipeline (`variant/radxa_x4.py`); the SoC heat sink is the bought
+Same Sky HSB26-343408 (`component/hsb26_343408.py`).
 """
 
 import os
@@ -13,8 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import assembly_positions as AP  # noqa: E402
 import cadquery as cq  # noqa: E402
 from assembly import datum as D  # noqa: E402
+from component import hsb26_343408 as _heatsink  # noqa: E402
 from step import usb_a_te_292303_7 as _usb_a_step  # noqa: E402
-from variant import radxa_heatsink as _heatsink_variant  # noqa: E402
 from variant import radxa_x4 as _radxa_variant  # noqa: E402
 
 # Tall through-hole connectors stripped in `lib/variant/radxa_x4.py` from `lib/step/radxa_x4.py`
@@ -59,8 +60,8 @@ def vendor_step_compound() -> cq.Shape:
 
 
 def heatsink_solid() -> cq.Shape:
-    """Milled finned Radxa X4 SoC heatsink (`variant/radxa_heatsink.py`) in console coords."""
-    return _heatsink_variant.placed()
+    """Bought Same Sky HSB26-343408 pin-fin heat sink seated on the N100, in console coords."""
+    return _heatsink.placed()
 
 
 def board_solid() -> cq.Shape:
@@ -88,14 +89,6 @@ def m2_keepout() -> cq.Shape:
     y0 = D.RADXA_Y_CENTRE - 16.7
     z0 = D.RADXA_PCB_Z0 - D.RADXA_M2_H
     return cq.Solid.makeBox(22.0, D.RADXA_M2_H * 0.0 + 30.0, D.RADXA_M2_H, cq.Vector(x0, y0, z0))
-
-
-def cooler_keepout() -> cq.Shape:
-    """Topside low-profile heatsink + blower keepout (`42.0 x 42.0 x 12.0 mm` above PCB `+Z`)."""
-    x0 = D.RADXA_X_CENTRE - 21.0
-    y0 = D.RADXA_Y_CENTRE - 21.0
-    z0 = D.RADXA_PCB_Z1
-    return cq.Solid.makeBox(42.0, 42.0, D.RADXA_COOLER_H, cq.Vector(x0, y0, z0))
 
 
 def usb_a_cluster() -> cq.Shape:
@@ -171,7 +164,7 @@ def get_shape() -> cq.Shape:
         [
             board_solid(),
             m2_keepout(),
-            cooler_keepout(),
+            heatsink_solid(),
             usb_a_cluster(),
             rj45_jack(),
         ]

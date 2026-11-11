@@ -66,6 +66,22 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                 "material": "Clear / Transparent PETG (100% infill)",
                 "qty": 1,
             },
+            {
+                "part": (
+                    "Cooling duct (`lib/part/cooling_duct.py`): fan seat, plenum, chamber and the "
+                    "cover that clamps the heat sink; printed cover-side down"
+                ),
+                "material": "PETG or ASA (the heat sink runs ~60-70 C; not PLA)",
+                "qty": 1,
+            },
+            {
+                "part": (
+                    "Intake hood (`lib/part/cooling_hood.py`): seals the 25 top louvers to the "
+                    "fan; printed floor-side down"
+                ),
+                "material": "PETG or ASA",
+                "qty": 1,
+            },
         ],
         "bought": [
             {
@@ -88,10 +104,53 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
             },
             {
                 "item": (
-                    "Official Radxa X4 Heatsink (`SKU RA018`, `64 x 56 x 10.5 mm`, outer case "
-                    "wings milled to `40 x 38 x 10.4 mm` finned block facing UP into top dome)"
+                    "Same Sky HSB26-343408 BGA pin-fin heat sink (`33.5 x 33.5 x 10 mm`, 14 x 14 "
+                    "pins, black anodised AL6063; on the N100 with paste, clamped by the printed "
+                    "duct; replaces the stock silicone pad, which limits the stock cooler)"
                 ),
-                "spec": "Radxa X4 Heatsink (SKU RA018)",
+                "spec": "Same Sky HSB26-343408",
+                "qty": 1,
+            },
+            {
+                "item": (
+                    "Sunon MF30060V2-1000U-A99 fan (`30 x 30 x 6 mm`, 5 V, 3.7 CFM, 0.11 inH2O, "
+                    "15.7 dB(A); 2 wires to the Radxa X4 2-pin 1.25 mm fan header, which sets its "
+                    "speed). Louder, more margin: Same Sky CFM-3007CF-0110-320 (7 mm, 32 dB(A))"
+                ),
+                "spec": "Sunon MF30060V2-1000U-A99",
+                "qty": 1,
+            },
+            {
+                "item": (
+                    "Thermal paste, non-conductive (e.g. Arctic MX-4 or Noctua NT-H1): thin layer "
+                    "between the N100 die and the heat sink. No thermal pad."
+                ),
+                "spec": "Non-conductive thermal paste",
+                "qty": 1,
+            },
+            {
+                "item": (
+                    "3M Bumpon SJ5012 rubber foot (`12.7 mm` cylindrical, flat top, `3.5 mm` "
+                    "tall): one over each corner screw counterbore; the gap feeds the floor vents"
+                ),
+                "spec": "3M Bumpon SJ5012",
+                "qty": 4,
+            },
+            {
+                "item": (
+                    "Self-adhesive silicone rubber pad, `0.5 mm`, ~`30 x 12 mm`: on the duct "
+                    "cover under the cartridge cradle; closing the shell presses the heat sink "
+                    "onto the die"
+                ),
+                "spec": "Silicone pad 0.5 mm",
+                "qty": 1,
+            },
+            {
+                "item": (
+                    "Closed-cell foam tape, `1 mm` thick, `3 mm` wide: seals the intake hood's "
+                    "wall tops to the roof underside (~200 mm)"
+                ),
+                "spec": "Foam tape 1 x 3 mm",
                 "qty": 1,
             },
             {
@@ -289,11 +348,12 @@ def generate_markdown() -> str:
             "the `Omron SS-5GL` `POWER`/`RESET` switches and the 3-lead bi-colour Red/Green LED."
         ),
         (
-            "- **Why Upside-Down Mounting (Heatsink Facing UP `+Z`):** On the Radxa X4, the Intel "
-            "Processor N100 lives on the underside of the PCB. By mounting the board inverted "
-            "(`180 deg` roll about `+X` at `Z = 8.20 mm`), the **Intel N100 and its finned "
-            "aluminium heatsink (`Z = 9.8 .. 20.2 mm`) face UP (`+Z`)** directly into the tall "
-            "`33.5 mm` N64 dome and the 25 parabolic cooling louvers for natural upward convection."
+            "- **Why Upside-Down Mounting (Heat Sink Facing UP `+Z`):** On the Radxa X4, the Intel "
+            "Processor N100 lives on the underside of the PCB. Mounted inverted (`180 deg` roll "
+            "about `+X` at `Z = 8.20 mm`), the N100 and its pin-fin heat sink face up into the "
+            "dome. A 30 mm fan under the 25 top louvers blows room air down through the pins; it "
+            "leaves through the floor vents, waist slots and rear slits (`subassembly/"
+            "cooling_check.py` computes the junction temperature from the measured openings)."
         ),
         "",
         "### 2. Which M.2 SSD to Buy & Storage Space Needed",
