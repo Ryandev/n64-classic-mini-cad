@@ -37,9 +37,17 @@ so they run on the maintainer's machine, not in CI.
 
 ## Pictures
 
+| Front | Rear: vents and I/O |
+|---|---|
+| ![Front isometric](notes/screenshots/cad_front_iso.png) | ![Rear isometric](notes/screenshots/cad_rear_iso.png) |
+
 | Inside: the inverted Radxa X4, USB-A retainers and button guides | First-pass FEM (von Mises stress) on the USB retainer |
 |---|---|
 | ![Internal cutaway](notes/screenshots/cad_internal_cutaway.png) | ![FEM von Mises stress](notes/screenshots/cad_fem_stress.png) |
+
+The print plate: all 15 printed bodies (`240.6 x 229.0 x 23.5 mm`).
+
+![Print plate](notes/screenshots/cad_print_plate.png)
 
 ---
 
