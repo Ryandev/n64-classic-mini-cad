@@ -177,9 +177,18 @@ MUTATIONS = [
     (
         "cooling_check",
         "part/cooling_duct.py",
-        "Y_FRONT_IN, FAN_Y1, Z_SEAT0 - 0.2",
-        "Y_FRONT_OUT - 9.0, FAN_Y1, Z_SEAT0 - 0.2",
+        # No pocket floor: the plenum opens down into the case under the fan's front strip.
+        "        _box(-X_POCKET, X_POCKET, Y_POCKET_OUT, Y_FRONT_OUT, Z_HIGH, Z_HIGH + W),"
+        "  # floor\n",
+        "",
         "COOL_SEAL",
+    ),
+    (
+        "cooling_check",
+        "part/cooling_duct.py",
+        "X_POCKET = 9.0",
+        "X_POCKET = 4.0",
+        "COOL_FAN",
     ),
     (
         "cooling_check",

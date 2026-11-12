@@ -52,3 +52,11 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
 - **Airflow parts need a seal check, not just a clash check.** Three leaks (a fan bore cutting the
   plenum's front wall, an open seat strip, a screw-head relief) passed every fit row. `COOL_SEAL`
   floods air through a voxel grid and traces the route of any leak; it found all of them.
+- **A check's modelling shortcut is a blind spot; check the shortcut too.** `COOL_SEAL` treats the
+  fan as a solid wall, so it never asked where the fan blows. 13 % of the bore overhung the
+  plenum's front wall onto open case air, a bypass the thermal model (all flow through the pins)
+  couldn't see; the owner spotted it in FreeCAD. `COOL_FAN` now requires every voxel under the
+  bore to be wall or flooded plenum (red-confirmed on the old duct: 56 mm2 open).
+  The fix made the old `COOL_SEAL` selftest mutation (a slot through the front wall) harmless,
+  since that wall now opens into the pocket: the selftest flagged it as uncaught. A planted defect
+  must stay a defect after a design change; it now removes the pocket floor instead.

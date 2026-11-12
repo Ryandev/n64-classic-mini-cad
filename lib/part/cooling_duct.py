@@ -2,7 +2,9 @@
 
 The fan blows down into a plenum floored by a printed plate (ahead of the board) and the Radxa X4
 (over it). The plenum opens rearward into a chamber in front of the heat sink, and side skirts plus
-a cover over the pin tips force the air through the 14 x 14 pin fins, front to rear. The cover
+a cover over the pin tips force the air through the 14 x 14 pin fins, front to rear. A pocket
+under the fan's front strip, between the USB retainer brackets, keeps that part of the bore
+blowing into the plenum too. The cover
 rests on the pin tips and clamps the heat sink onto the N100 when the duct is screwed down.
 Print in PETG or ASA (the heat sink runs at ~60-70 C), cover-side down.
 
@@ -36,6 +38,11 @@ Y_BRIDGE = -27.8  # USB retainer bridge rear face: it closes the fan's front str
 Y_FRONT_OUT = -27.4  # front wall outer face: 0.1 behind the front USB sockets (rear at -27.5),
 # 0.4 from the bridge
 Y_FRONT_IN = Y_FRONT_OUT + W
+# The fan reaches 5.6 mm in front of the front wall. Between the USB retainer brackets (inner
+# faces X +-9.2, tops Z 18.4, which dam the bore above them) that strip is open to the tub floor,
+# so a pocket carries it into the plenum: else 13 % of the blades blow past the heat sink.
+X_POCKET = 9.0  # pocket side walls' outer faces, 0.2 inside the brackets
+Y_POCKET_OUT = D.FAN_Y0 - 0.2  # pocket front wall under the fan frame
 Y_PLATE0 = -25.6  # plate front edge, behind the tub/USB-socket tops at Y <= -25.8
 Y_PLATE1 = -9.0  # plate rear edge, ahead of the RAM (Y >= -8.71) and over the board-edge parts
 Y_REAR = D.HS_Y0 + D.HS_W  # heat sink rear face: air leaves into the case here
@@ -92,9 +99,26 @@ def get_shape() -> cq.Shape:
     cx, cy = D.FAN_X0 + D.FAN_W / 2.0, D.FAN_Y0 + D.FAN_W / 2.0
     # The bore opens only into the plenum: where the 28 mm circle reaches past the front wall it
     # would cut a slot through the wall's top (found by the COOL_SEAL flood check).
-    bore = cq.Solid.makeCylinder(
-        D.FAN_BORE_D / 2.0, W + 0.2, cq.Vector(cx, cy, Z_SEAT0 - 0.1)
-    ).intersect(_box(X_FAN_WALL + W, X_IN_R, Y_FRONT_IN, FAN_Y1, Z_SEAT0 - 0.2, Z_SEAT1 + 0.2))
+    disc = cq.Solid.makeCylinder(D.FAN_BORE_D / 2.0, W + 0.2, cq.Vector(cx, cy, Z_SEAT0 - 0.1))
+    bore = disc.intersect(
+        _box(X_FAN_WALL + W, X_IN_R, Y_FRONT_IN, FAN_Y1, Z_SEAT0 - 0.2, Z_SEAT1 + 0.2)
+    )
+    # The front pocket's share of the bore, through the seat strip on the old front wall.
+    bore_front = disc.intersect(
+        _box(
+            -X_POCKET + W, X_POCKET - W, Y_POCKET_OUT + W, Y_FRONT_IN, Z_SEAT0 - 0.2, Z_SEAT1 + 0.2
+        )
+    )
+    # The old front wall opens into the pocket between its side walls.
+    opening = _box(
+        -X_POCKET + W, X_POCKET - W, Y_FRONT_OUT - 0.1, Y_FRONT_IN + 0.1, Z_HIGH + W, Z_SEAT1 + 0.1
+    )
+    pocket = [
+        _box(-X_POCKET, X_POCKET, Y_POCKET_OUT, Y_POCKET_OUT + W, Z_HIGH, Z_SEAT1),  # front
+        _box(-X_POCKET, -X_POCKET + W, Y_POCKET_OUT, Y_FRONT_OUT, Z_HIGH, Z_SEAT1),  # left
+        _box(X_POCKET - W, X_POCKET, Y_POCKET_OUT, Y_FRONT_OUT, Z_HIGH, Z_SEAT1),  # right
+        _box(-X_POCKET, X_POCKET, Y_POCKET_OUT, Y_FRONT_OUT, Z_HIGH, Z_HIGH + W),  # floor
+    ]
     # Skirts clear the N100 package where they cross it (it is 1.5 mm wider than the heat sink);
     # the relief runs through the whole skirt thickness so no sliver is left.
     soc_relief = _box(
@@ -118,4 +142,7 @@ def get_shape() -> cq.Shape:
     # The right post's notch eats into the right skirt; thicken the skirt outward beside it so a
     # full wall remains.
     patch = _box(13.3, 13.3 + W, -27.4, -25.6, Z_HIGH, 11.75)
-    return duct.cut(bore, soc_relief, *heads, *posts).fuse(patch).clean()
+    # The pocket is fused after the post notches, which would otherwise nick its side walls.
+    return (
+        duct.cut(bore, bore_front, opening, soc_relief, *heads, *posts).fuse(patch, *pocket).clean()
+    )

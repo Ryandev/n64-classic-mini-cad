@@ -143,19 +143,23 @@ def thermal_inputs() -> tuple[thermal.Inputs, dict[str, float]]:
     return i, counts
 
 
-def plenum_leaks(step: float = 0.5) -> tuple[int, list[str]]:
+def plenum_leaks(step: float = 0.5) -> tuple[int, list[str], list[str]]:
     """Flood air from inside the plenum through a voxel grid of every body near the duct.
 
     Air may only leave through the heat sink's rear face (the designed outlet). Any filled voxel
     on the region's boundary elsewhere is a leak path. Openings narrower than one `step` read as
     sealed.
+
+    Also returns the fan-outlet spots that blow outside the plenum: every voxel under the fan's
+    bore must be solid (blocked) or flooded plenum air. The flood treats the fan as a wall, so
+    without this a bore overhanging the duct's front wall bypassed the heat sink unseen.
     """
     import numpy as np
     from OCP.gp import gp_Dir, gp_Lin, gp_Pnt
     from OCP.IntCurvesFace import IntCurvesFace_ShapeIntersector
 
     x0, x1 = cooling_duct.X_OUT_L - 1.5, cooling_duct.X_OUT_R + 1.5
-    y0, y1 = cooling_duct.Y_FRONT_OUT - 1.5, cooling_duct.Y_REAR + 1.0
+    y0, y1 = D.FAN_Y0 - 1.5, cooling_duct.Y_REAR + 1.0  # whole fan footprint
     z0, z1 = D.RADXA_PCB_Z1 - 1.0, cooling_duct.Z_COVER1 + 1.5
     xs = np.arange(x0 + step / 2, x1, step)
     ys = np.arange(y0 + step / 2, y1, step)
@@ -206,7 +210,7 @@ def plenum_leaks(step: float = 0.5) -> tuple[int, list[str]]:
         int(np.argmin(abs(zs - (D.FAN_Z0 - 2.5)))),
     )
     if solid[seed]:
-        return -1, ["seed voxel is solid: the plenum is not where the duct says it is"]
+        return -1, ["seed voxel is solid: the plenum is not where the duct says it is"], []
     from collections import deque
 
     parent: dict[tuple[int, int, int], tuple[int, int, int]] = {seed: seed}
@@ -245,7 +249,18 @@ def plenum_leaks(step: float = 0.5) -> tuple[int, list[str]]:
             + [path[-1]]
         )
         leaks = [f"({xs[i]:.1f}, {ys[j]:.1f}, {zs[k]:.1f})" for i, j, k in turns[-12:]]
-    return n, leaks
+    # The voxel layer just under the fan (its top at or below the fan's bottom face).
+    k_out = int(np.nonzero(zs + step / 2 <= D.FAN_Z0 + 1e-9)[0][-1])
+    fcx, fcy, r = D.FAN_X0 + D.FAN_W / 2.0, D.FAN_Y0 + D.FAN_W / 2.0, D.FAN_BORE_D / 2.0
+    bypass = [
+        f"({x:.2f}, {y:.2f})"
+        for i, x in enumerate(xs)
+        for j, y in enumerate(ys)
+        if (x - fcx) ** 2 + (y - fcy) ** 2 <= r * r
+        and not solid[i, j, k_out]
+        and (i, j, k_out) not in parent
+    ]
+    return n, leaks, bypass
 
 
 def check_all():
@@ -317,13 +332,25 @@ def check_all():
     )
 
     # 2c. Seal: air pushed into the plenum can only leave through the pin fins.
-    n_air, leaks = plenum_leaks()
+    n_air, leaks, bypass = plenum_leaks()
     rows.append(
         (
             "COOL_SEAL plenum air leaves only through the heat sink (openings >= 0.5 mm)",
             n_air > 0 and not leaks,
             f"{n_air} air voxels reached; "
             + ("no leak" if not leaks else "leak route ... " + " -> ".join(leaks)),
+        )
+    )
+    # 2d. The fan blows only into the plenum: the thermal model sends its whole flow through the
+    # pins, so any bore area over open case air is a bypass the model can't see.
+    rows.append(
+        (
+            "COOL_FAN  every part of the fan's bore blows into the plenum or onto a wall",
+            n_air > 0 and not bypass,
+            "whole bore covered"
+            if not bypass
+            else f"{len(bypass) * 0.25:.0f} mm2 of bore over open case air, e.g. "
+            + ", ".join(bypass[:3] + bypass[-3:]),
         )
     )
 
