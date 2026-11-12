@@ -79,16 +79,24 @@ Adapted from `GBA/CAD/notes/TOLERANCES.md` §5 and `BOM_button.md`, verified mec
 - **Movement Differential (`MD_max`):** `0.80 mm` maximum release travel hysteresis.
 - **Operating / Release Force:** `OF_max = 0.49 N` (`50 gf`), `RF_min = 0.06 N` (`6 gf`).
 
-### 4.2 Why Lever Ratio `r = 0.72` + Pre-Loaded Rest `h_rest = +10.40 mm` + Dual `Z = 23.45 mm` Travel Stops & Coaxial Guide Pole Solves the Tolerance Band
-On a bare `Omron SS-5GL` contacted at the lever tip (`r = 1.00`), the `1.60 mm` factory `OP` band (`8.00 .. 9.60 mm`) is wider than the `1.20 mm` minimum overtravel (`OVERTRAVEL_MIN`), and starting from `FP_max = 13.60 mm` would waste `4.00 mm` of dead pre-travel before the earliest click.
+### 4.2 Switch actuation: what presses the lever, and how far (C3)
 
-Our mechanism (`component/omron_ss5gl.py` + `subassembly/top_controls_mech.py` + `part/usb_retainer_bracket.py`) eliminates both issues:
-1. **Precision Switch Locating (`0.075 mm/side`):** Each `Omron SS-5GL` sits on an integral `Ø2.20 mm` front locator pin (`Hole 1`) and is clamped to its tower at `Hole 2` (`9.50 mm` pitch) by a `3 x 10` thread-forming screw driven from behind, through a `Ø3.4 mm` clearance hole, into the switch's own `Ø2.35 mm` hole (C2).
-2. **Pre-Loaded Anti-Rattle Rest (`h_rest = +10.40 mm`) & Coaxial Hole-and-Pole Anti-Tilt Guide:** At button rest (`z = 0.00 mm`, stadium flange held against the `upper_shell` roof up-stop), the lever tip is pre-deflected by `3.20 mm` from `+13.60 mm` to **`h_rest = +10.40 mm`**, while a coaxial **`Ø2.80 mm` vertical guide pole** on `usb_retainer_bracket` (`Z = 23.45 .. 27.10 mm` at `(+-32.32, -32.20)`) engages `1.70 mm` deep inside a **`Ø3.20 mm` blind guide bore** (`0.20 mm/side` radial fit) in the front underside of the button (`3.60 mm` engagement at full press), preventing any front-to-back tilt or rotation.
-   - Because `h_rest = +10.40 mm >= OP_max (+9.60 mm) + MD_max (0.80 mm) = +10.40 mm`, **every switch is 100% guaranteed to release at rest**, while the lever's internal spring (`>= 0.06 N`) holds the button cap snug against the shell ceiling with **zero rattle and zero dead pre-travel** (no separate coil spring needed).
-3. **Lever Contact Ratio (`r = 0.72`, `X_local = +3.44 mm`):** Contacting the blade at `72%` of its span scales plunger stroke `z` to lever-tip travel `dz_tip = z / 0.72`:
-   - **Earliest-clicking switch (`OP_max = +9.60 mm`):** clicks at **`z_earliest = (10.40 - 9.60) x 0.72 = 0.58 mm`** (`>= 0.30 mm` safe pre-travel margin against accidental bumps).
-   - **Nominal switch (`OP_nom = +8.80 mm`):** clicks at **`z_nominal = (10.40 - 8.80) x 0.72 = 1.15 mm`**.
-   - **Latest-clicking switch (`OP_min = +8.00 mm`):** clicks at **`z_latest = (10.40 - 8.00) x 0.72 = 1.73 mm`**.
-4. **Full-Length (`Front + Rear`) Hard Over-Travel Stops at `Z = 23.45 mm` (`z_stop = 1.90..1.95 mm`):**
-   - At `Z = 23.45 mm` (`0.17 mm` past `z_latest = 1.73 mm`, and `0.84 mm` less than the `2.79 mm` vertical height of `Edge35`), both the front/mid `8.80 mm` (`Y = -36.60 .. -27.80 mm` on `usb_retainer_bracket`) and the rear `4.00 mm` (`Y = -20.80 .. -16.80 mm` on `lower_tub`) of the button flange bottom out simultaneously (`h_stop = 10.40 - 1.90 / 0.72 = +7.76 mm`, which is **`0.96 mm` above `h_min_safe = +6.80 mm`**).
+Omron SS-5GL (hinge lever), from Omron's SS-series datasheet, all measured at the lever tip above
+the mounting holes: operating position (click) `OP = 8.8 ± 0.8 mm`, free position `FP ≤ 13.6 mm`,
+release hysteresis `MD ≤ 0.8 mm`, overtravel `OT ≥ 1.2 mm`.
+
+1. **What presses the lever.** A flat button underside meets the lever's raised tip (a 1:1 press,
+   4 mm off the button's centre), and with the old 1.9 mm travel a nominal switch never clicked.
+   Each button's underside is now `0.33 mm` lower, with pockets over the lever either side of a
+   `1.2 mm` ridge under the button centre, `72 %` of the way from the hinge (`lever_pockets()` in
+   `component/omron_ss5gl.py`). Only the ridge touches the lever, so the button moves `0.72 mm`
+   per `1 mm` at the tip, and pushes on its centre.
+2. **Travel.** `RESET_STROKE_Z = 2.10 mm` to the bracket shelf and tub post stops
+   (`BUTTON_STOP_Z`); POWER shares it.
+3. **Measured, not computed (`OMRON_ACT`).** The check moves each real button down the real lever
+   and finds where the tip sits: `10.66 mm` at rest (released for every switch: `≥ 9.6 + 0.8`,
+   margin `0.26`) and `7.82 mm` at the stop (clicks every switch: `≤ 8.0`, margin `0.18`).
+4. **Known limit.** The `1.6 mm` spread of `OP` is wider than the `1.2 mm` guaranteed overtravel,
+   so no fixed stop clicks every switch *and* keeps every switch within its guaranteed overtravel:
+   an earliest-clicking switch (`OP 9.6`) is pressed `1.78 mm` past its click point, `0.58 mm`
+   beyond the guarantee, taken by the steel lever flexing. Test with real switches.

@@ -341,7 +341,6 @@ SLIDER_SLOT_D = SLIDER_NECK_D + 2.0 * SLIDER_CLEAR  # 14.94 mm stadium bore Y le
 SLIDER_FLANGE_W = 11.0
 SLIDER_FLANGE_D = 17.2
 SLIDER_FLANGE_T = 1.6
-SLIDER_STROKE_Z = 1.90
 SLIDER_Z0 = DECK_H - ROOF_T - SLIDER_FLANGE_T - 0.2  # Z = 25.40 mm
 
 # Momentary Reset button stadium plunger (J-04, AC-T18)
@@ -354,8 +353,14 @@ RESET_BORE_LEN_Y = RESET_SHAFT_D + 2.0 * RESET_CLEAR  # 14.94 mm stadium bore Y 
 RESET_FLANGE_W = 11.0
 RESET_FLANGE_D = 17.2
 RESET_FLANGE_T = 1.6
-RESET_STROKE_Z = 1.90  # 1.90 mm vertical stroke arrested by M3x6 ISO 4026 set-screw stop
+RESET_STROKE_Z = 2.10  # button travel to its stops; sized so every SS-5GL clicks (C3)
 RESET_Z0 = DECK_H - ROOF_T - RESET_FLANGE_T - 0.2  # Z = 25.40 mm
+# Both buttons' flat underside sits 0.33 mm below RESET_Z0, with a pocket over the outer lever:
+# the pocket's edge presses the switch lever at OMRON_LEVER_RATIO (C3); the face prints flat.
+BUTTON_UNDERSIDE_Z = RESET_Z0 - 0.33
+BUTTON_POLE_HOLE_Z1 = 28.60  # guide-pole hole top: the pole's cone clears it at full stroke
+BUTTON_STOP_Z = BUTTON_UNDERSIDE_Z - RESET_STROKE_Z  # top of the bracket shelf and tub post stops
+SLIDER_STROKE_Z = RESET_STROKE_Z  # POWER shares RESET's stops
 
 # 2x Omron SS-5GL subminiature hinge-lever microswitches under Power (J-03) and Reset (J-04)
 OMRON_Y = (
@@ -375,8 +380,13 @@ OMRON_SCREW_CLEAR_D = 3.4  # through the tower
 OMRON_SCREW_HEAD_D, OMRON_SCREW_HEAD_H = 6.0, 2.4  # pan-head envelope
 OMRON_TOWER_Y1 = -16.80  # tower rear face: the screw head seats here
 OMRON_HOLE_PITCH = 9.50
-OMRON_LEVER_RATIO = 0.72  # plunger contacts lever at r = 0.72 from hinge (X_local = +3.44 mm)
-OMRON_REST_DEFLECTION = 3.20  # pre-loaded rest tip deflection -> h_rest = 13.6 - 3.2 = 10.40 mm
+# Each button presses its switch lever under the button's centre, 0.72 of the way from the lever's
+# hinge to its tip (the edge of a pocket in the underside). A plain flat underside met the lever's
+# raised tip instead (1:1), and a 1.9 mm stroke then left nominal switches unclicked (C3).
+# Omron's OP/FP are at the tip. OMRON_ACT measures the result on the solids.
+OMRON_LEVER_RATIO = 0.72  # contact at r = 0.72 from the hinge (X_local = +3.44 mm)
+OMRON_REST_TIP_H = 10.60  # drawn rest tip height (released: >= OP+MD 10.4); G13_TOP holds it
+OMRON_REST_DEFLECTION = 13.6 - OMRON_REST_TIP_H  # from FP max, for drawing the switch at rest
 
 TACT_SWITCH_W = 19.8
 TACT_SWITCH_D = 6.4

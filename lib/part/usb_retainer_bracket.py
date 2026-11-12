@@ -13,7 +13,7 @@ cradle walls after the 4 `TE Connectivity 292303-7` USB-A receptacles are droppe
     `Z = 16.85 .. 18.45 mm`) clamps across the `Z = 16.70 mm` top face of all 4 USB-A receptacles
     with `0.15 mm` clearance
   - Extended `8.80 mm` front/mid button travel-stop shelf (`Y = -36.60 .. -27.80 mm`,
-    `Z = 18.45 .. 23.45 mm` at `X = +-32.32 mm`): extends `Face854` all the way back to
+    `Z = 18.45 .. BUTTON_STOP_Z` at `X = +-32.32 mm`): extends `Face854` all the way back to
     `Y = -27.80 mm` (`0.45 mm` ahead of the `Omron SS-5GL` switch body at `Y = -27.35 mm`),
     preventing front-heavy button presses or spring return from tilting or pushing `POWER`/`RESET`
     into the shell
@@ -39,7 +39,7 @@ POLE_R = 1.40  # Ø2.80 mm vertical guide pole (0.20 mm/side fit in Ø3.20 mm bu
 LEG_Z0 = 11.60  # 0.05 mm glue gap above lower_tub's Z = 11.55 mm cradle wall shelf
 BRIDGE_Z0 = 16.85  # 0.15 mm clearance above Z = 16.70 mm USB-A top metal shell
 BRIDGE_Z1 = 18.45
-STOP_Z1 = 23.45  # 1.95 mm button stroke limit below Z = 25.40 mm button bottom face
+STOP_Z1 = D.BUTTON_STOP_Z  # button stroke limit below its Z = 25.40 mm bottom face
 POLE_CYL_Z1 = 26.50
 POLE_TIP_Z1 = 27.10  # 3.65 mm tall pole (engaged 1.70 mm at rest, 3.60 mm at full press)
 

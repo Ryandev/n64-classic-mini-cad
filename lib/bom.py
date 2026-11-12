@@ -372,11 +372,10 @@ def generate_markdown() -> str:
             "microswitches (`0.49 N` operating force, `OP = 8.8 +/- 0.8 mm`). Each switch is "
             "located on a `Ø2.20 mm` pin (Hole 1, `0.075 mm/side` fit) and clamped to its tower "
             "by a `3 x 10` thread-forming screw driven from behind into Hole 2 (C2). "
-            "Pre-loading the lever rest position to `h_rest = +10.40 mm` (`r = 0.72` ratio) "
-            "with the integral `Z = 23.45 mm` front-and-rear bottom-out stops (`z_stop = 1.90 mm`) "
-            "and `Ø2.80 mm` anti-tilt guide poles on `usb_retainer_bracket.py` guarantees every "
-            "switch across the full `OP = 8.0..9.6 mm` tolerance band clicks at `0.58..1.73 mm` "
-            "stroke and stops `0.96 mm` before overtravel without tilting."
+            "Each button presses its switch lever through a ridge under its centre, 72% along "
+            "the lever (C3), with `2.10 mm` of travel to front-and-rear stops and `Ø2.80 mm` "
+            "anti-tilt guide poles on `usb_retainer_bracket.py`: every switch across the full "
+            "`OP = 8.0..9.6 mm` band releases at rest and clicks before the stop (`OMRON_ACT`)."
         ),
         (
             "- **Dual-Colour Front LED (`Kingbright L-819EGW`, `Red = Power`, `Green = ON`):** "

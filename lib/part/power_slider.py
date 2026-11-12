@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
 from assembly import datum as D  # noqa: E402
+from component import omron_ss5gl  # noqa: E402
 from shared import n64_contours as C  # noqa: E402
 from shared import n64_text as T  # noqa: E402
 
@@ -73,14 +74,25 @@ def get_shape() -> cq.Shape:
     # engaging the Ø2.80 mm vertical guide pole on part/usb_retainer_bracket.py (0.20 mm/side fit)
     guide_hole = cq.Solid.makeCylinder(
         1.60,
-        28.25 - 25.20,
-        cq.Vector(D.POWER_SLIDER_X, -32.20, 25.20),
+        D.BUTTON_POLE_HOLE_Z1 - (D.BUTTON_UNDERSIDE_Z - 0.2),
+        cq.Vector(D.POWER_SLIDER_X, -32.20, D.BUTTON_UNDERSIDE_Z - 0.2),
     ).fuse(
         cq.Solid.makeCone(
             1.60,
             0.0,
             1.60,
-            cq.Vector(D.POWER_SLIDER_X, -32.20, 28.25),
+            cq.Vector(D.POWER_SLIDER_X, -32.20, D.BUTTON_POLE_HOLE_Z1),
         )
     )
-    return flange.fuse(cap_body).cut(guide_hole, *glyph_cuts.Solids())
+    # Flat underside 0.45 mm lower, pocketed over the lever's outer part: the pocket's edge
+    # presses the switch lever under the button centre (C3)
+    pad = C.stadium_prism(
+        D.POWER_SLIDER_X,
+        D.CONTROLS_Y,
+        D.SLIDER_FLANGE_W,
+        D.SLIDER_FLANGE_D,
+        D.BUTTON_UNDERSIDE_Z,
+        D.RESET_Z0 - D.BUTTON_UNDERSIDE_Z + 0.05,
+    )
+    pockets = omron_ss5gl.lever_pockets(D.POWER_SLIDER_X)
+    return flange.fuse(cap_body, pad).cut(guide_hole, *pockets, *glyph_cuts.Solids())

@@ -222,7 +222,7 @@ def get_shape() -> cq.Shape:
                 (D.DECK_H - D.ROOF_T) - 21.80,
             )
         )
-        # Rear slot below Z = 23.60 mm clearing Lower_Tub's Z = 23.45 mm button travel-stop post
+        # Rear slot below Z = 23.60 mm clearing Lower_Tub's button travel-stop post (BUTTON_STOP_Z)
         cuts.append(
             cq.Solid.makeBox(
                 5.60,

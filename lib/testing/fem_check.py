@@ -4,11 +4,13 @@ Runs 4 linear-elastic 3D tetrahedral (`C3D4`) FEA load cases (`E = 2200 MPa`, `n
 conservative FDM PETG/PLA inter-layer yield limit `25.0 MPa`, in-plane yield `45.0 MPa`) on the
 actual B-Rep solids from `lib/part/` and `lib/variant/`:
   1. `LC1_BUTTON_MASH_50N`: `part/usb_retainer_bracket.py` under `50 N` (`-Z`) heavy thumb mash on
-     `Face70` (`Z = 23.45 mm`), `15 N` (`-Y`) off-center lateral tilt on the `Ø2.80 mm` guide pole,
+     `Face70` (the button stop, `BUTTON_STOP_Z`), `15 N` (`-Y`) off-center lateral tilt on the
+     `Ø2.80 mm` guide pole,
      and `15 N` (`+Z`) upward USB-A cable pry under the `Z = 16.85 mm` top retainer bridge.
   2. `LC2_TUB_USB_AND_OMRON`: `variant/lower_tub.py` front USB-A & Omron bay under simultaneous
      `40 N` (`+Y`) USB-A plug insertion, `30 N` (`-Y`) USB-A cable yank against the `Z = 5.80 ..
-     10.80 mm` pull-stop step, and `50 N` (`-Z`) rear button mash on the `Z = 23.45 mm` stop post.
+     10.80 mm` pull-stop step, and `50 N` (`-Z`) rear button mash on the button stop post
+     (`BUTTON_STOP_Z`).
   3. `LC3_UPPER_SHELL_DOME_100N`: `variant/upper_shell.py` full top shell under a `100 N` (`~10 kgf`
      `-Z`) crush load across the central barrel dome & 25 parabolic cooling louvers, checking peak
      Von Mises stress, dome vertical sag, and `POWER`/`RESET` guide-chimney radial `XY` distortion.
@@ -32,6 +34,7 @@ from typing import Callable
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
+from assembly.datum import BUTTON_STOP_Z as STOP_Z  # noqa: E402
 from part import usb_retainer_bracket  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
@@ -225,7 +228,7 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
         clmax=1.10,
         fix_pred=lambda x, y, z: z <= 11.75 or (y <= -36.50 and z <= 13.00),
         loads=[
-            (lambda x, y, z: abs(z - 23.45) <= 0.15 and -35.0 <= x <= -29.6, (0.0, 0.0, -50.0)),
+            (lambda x, y, z: abs(z - STOP_Z) <= 0.15 and -35.0 <= x <= -29.6, (0.0, 0.0, -50.0)),
             (lambda x, y, z: z >= 25.00, (0.0, -15.0, 0.0)),
             (
                 lambda x, y, z: (

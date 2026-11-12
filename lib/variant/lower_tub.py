@@ -99,16 +99,16 @@ DEVIATIONS = {
     },
     "omron_stop_l": {
         "kind": "added",
-        "why": "Left Omron SS-5GL tower, Ø2.20 pin, screw clearance & Z=23.45mm stop (J-03)",
+        "why": "Left Omron SS-5GL tower, Ø2.20 pin, screw clearance & button stop (J-03)",
         "bbox": (-36.6, -27.3, 1.5, -21.4, -16.7, 23.6),
-        "volume_mm3": 1072.82,
+        "volume_mm3": 1063.22,
         "tolerance_mm3": 8.0,
     },
     "omron_stop_r": {
         "kind": "added",
-        "why": "Right Omron SS-5GL tower, Ø2.20 pin, screw clearance & Z=23.45mm stop (J-04)",
+        "why": "Right Omron SS-5GL tower, Ø2.20 pin, screw clearance & button stop (J-04)",
         "bbox": (21.4, -27.3, 1.5, 36.6, -16.7, 23.6),
-        "volume_mm3": 1072.82,
+        "volume_mm3": 1063.22,
         "tolerance_mm3": 8.0,
     },
     "front_led_bore": {
@@ -225,8 +225,8 @@ def _omron_stop_posts() -> list[cq.Shape]:
       - `Ø2.20 mm` front locator pin (`Hole 1`) at `(+-24.23, -27.15..-20.80, 14.60)`
       - `Ø3.4 mm` clearance hole through the tower (`Hole 2`) at `(+-33.73, -20.80..-16.80, 14.60)`
         for the switch screw, driven from behind (`OMRON_SCREW_*`, C2)
-      - Integral `Z = 23.45 mm` rear travel-stop post under the `Y = -20.28 mm` rear half of the
-        `POWER` (`J-03`) and `RESET` (`J-04`) buttons (`1.95 mm` stroke limit, paired with the
+      - Integral rear travel-stop post (top at `BUTTON_STOP_Z`) under the `Y = -20.28 mm` rear
+        half of the `POWER` (`J-03`) and `RESET` (`J-04`) buttons (`RESET_STROKE_Z`, paired with the
         separately-printed `part/usb_retainer_bracket.py` front/mid travel-stop shelf at
         `Y = -36.60 .. -27.80 mm`)
     """
@@ -246,7 +246,7 @@ def _omron_stop_posts() -> list[cq.Shape]:
                 cq.Solid.makeBox(
                     5.00,
                     4.0,
-                    23.45 - 17.50,
+                    D.BUTTON_STOP_Z - 17.50,
                     cq.Vector(cx - 2.50, -20.80, 17.50),
                 ),
                 cq.Solid.makeCylinder(

@@ -96,3 +96,14 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   mutations for the rows it touched with `./run selftest --only ROW [ROW...]`.
 - Run heavy jobs one at a time, say when each starts and ends, and leave nothing running.
 - Never `pkill -f NAME` from a shell whose own command line contains NAME: it kills itself.
+
+## Lessons (switch actuation, C3, 2026-11-12)
+
+- **A mechanism check must move the real parts.** `OMRON_ACT` multiplied constants (a 0.72 lever
+  ratio, a 3.2 mm preload) and passed while the button's flat underside actually met the lever's
+  raised tip, 1:1 and 4 mm off-centre, so a nominal switch never clicked. It now lowers each real
+  button onto the real lever and reads off where the tip sits (red-confirmed: the old 1.9 mm
+  travel fails).
+- **Check the agent's arithmetic before the owner decides on it.** The agent told the owner the
+  ridge would keep every switch within Omron's guaranteed overtravel; it can't, because the OP
+  spread (1.6 mm) exceeds OT (1.2 mm) whatever the ratio. Corrected before building.

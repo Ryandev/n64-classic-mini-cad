@@ -45,6 +45,7 @@ PLUNGER_DIA = 2.0
 PLUNGER_Z = 1.2
 
 LEVER_PIVOT_X = -7.0
+LEVER_PIVOT_Z = BODY_HEIGHT - HOLE_Z_FROM_BOTTOM + PLUNGER_Z + 0.1  # 8.6: hinge line
 LEVER_TIP_X = 7.5
 LEVER_WIDTH = 4.0
 LEVER_THICK = 0.3
@@ -107,7 +108,7 @@ def get_shape(lever_deflection: float = 0.0) -> cq.Shape:
     )
 
     tip_z = FREE_POSITION_MAX - lever_deflection
-    root_z = body_z_top + (PLUNGER_Z - plunger_depression) + 0.1
+    root_z = LEVER_PIVOT_Z  # the lever turns about its hinge; only the plunger moves under it
     dx = LEVER_TIP_X - LEVER_PIVOT_X
     dz = tip_z - root_z
     blade_len = math.hypot(dx, dz)
@@ -165,37 +166,34 @@ def placed_at(
     return sw.moved(cq.Location(cq.Vector(x_origin, cy, z_hole)))
 
 
-def activation_metrics(stroke_z: float = D.RESET_STROKE_Z) -> dict[str, float]:
-    """Compute the `Omron SS-5GL` activation & overtravel budget across `OP = 8.8 +/- 0.8 mm`.
+def lever_top_z(local_x: float, tip_h: float) -> float:
+    """Height of the lever's top face above the mounting holes at `local_x`, tip at `tip_h`."""
+    frac = (local_x - LEVER_PIVOT_X) / (LEVER_TIP_X - LEVER_PIVOT_X)
+    return LEVER_PIVOT_Z + frac * (tip_h - LEVER_PIVOT_Z) + LEVER_THICK
 
-    With pre-loaded rest height `h_rest = FP_max - OMRON_REST_DEFLECTION = 10.40 mm`
-    and lever contact ratio `r = OMRON_LEVER_RATIO = 0.72`, a downward plunger stroke `z`
-    produces a lever-tip travel `dz_tip = z / r`.
+
+RIDGE_W = 1.2  # the strip of a button's underside left to press the lever (C3)
+
+
+def lever_pockets(cx: float) -> list[cq.Shape]:
+    """Pockets in a button's underside over its switch lever, either side of a ridge at `cx` (C3).
+
+    Only the ridge, under the button centre (`OMRON_LEVER_RATIO` along the lever), touches the
+    lever: towards the tip the lever rises at rest, towards the hinge it rises once the tip has
+    dropped below the hinge, and a flat underside would press it there instead.
     """
-    r = D.OMRON_LEVER_RATIO
-    h_rest = FREE_POSITION_MAX - D.OMRON_REST_DEFLECTION  # 10.40 mm above mounting holes
-    op_max = OPERATING_POSITION + OPERATING_POSITION_TOL  # 9.60 mm (earliest-clicking switch)
-    op_nom = OPERATING_POSITION  # 8.80 mm (nominal switch)
-    op_min = OPERATING_POSITION - OPERATING_POSITION_TOL  # 8.00 mm (latest-clicking switch)
-    h_min_safe = op_min - OVERTRAVEL_MIN  # 6.80 mm minimum safe tip height
-
-    z_earliest = (h_rest - op_max) * r  # 0.576 mm
-    z_nominal = (h_rest - op_nom) * r  # 1.152 mm
-    z_latest = (h_rest - op_min) * r  # 1.728 mm
-    h_stop = h_rest - (stroke_z / r)  # 7.761 mm at z_stop = 1.90 mm
-    release_margin = h_rest - (op_max + MOVEMENT_DIFF_MAX)  # 10.40 - 10.40 = 0.00 mm
-    return {
-        "h_rest": h_rest,
-        "op_max": op_max,
-        "op_nom": op_nom,
-        "op_min": op_min,
-        "h_min_safe": h_min_safe,
-        "z_earliest": z_earliest,
-        "z_nominal": z_nominal,
-        "z_latest": z_latest,
-        "z_stop": stroke_z,
-        "h_stop": h_stop,
-        "overtravel_margin_to_bottom": h_stop - h_min_safe,
-        "click_margin_before_stop": stroke_z - z_latest,
-        "release_margin": release_margin,
-    }
+    contact_x = LEVER_PIVOT_X + D.OMRON_LEVER_RATIO * (LEVER_TIP_X - LEVER_PIVOT_X)
+    toward_tip = -1.0 if cx < 0.0 else 1.0  # placed_at mirrors the left switch
+    w = LEVER_WIDTH + 1.2
+    z0 = D.BUTTON_UNDERSIDE_Z - 0.1
+    ceiling = D.RESET_Z0 + 0.4  # above the lever tip's top face at rest (25.5)
+    half = RIDGE_W / 2.0
+    tip_reach = LEVER_TIP_X - contact_x + 0.5  # 0.9 mm of wall left at the button's rounded end
+    spans = ((half, half + tip_reach - half), (-half - 6.0, -half))  # (start, end) along the lever
+    out = []
+    for a, b in spans:
+        lo, hi = sorted((cx + toward_tip * a, cx + toward_tip * b))
+        out.append(
+            cq.Solid.makeBox(hi - lo, w, ceiling - z0, cq.Vector(lo, D.OMRON_Y - w / 2.0, z0))
+        )
+    return out

@@ -91,8 +91,15 @@ MUTATIONS = [
     (
         "top_controls_check",
         "assembly/datum.py",
-        "OMRON_REST_DEFLECTION = 3.20",
-        "OMRON_REST_DEFLECTION = 0.50",
+        "BUTTON_UNDERSIDE_Z = RESET_Z0 - 0.33",
+        "BUTTON_UNDERSIDE_Z = RESET_Z0 - 0.60",
+        "OMRON_ACT",
+    ),
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "RESET_STROKE_Z = 2.10",
+        "RESET_STROKE_Z = 1.90",
         "OMRON_ACT",
     ),
     (

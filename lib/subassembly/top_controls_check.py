@@ -141,10 +141,10 @@ def check_all():
             clf_shell.Perform(gp_Pnt(px, py, pz), 1e-4)
             if clf_shell.State() != TopAbs_IN:
                 return False
-        # Extended 8.80mm front/mid Z=23.45mm travel-stop shelf on usb_retainer_bracket
+        # Extended 8.80mm front/mid travel-stop shelf (BUTTON_STOP_Z) on usb_retainer_bracket
         # (Y = -36.60 .. -27.80 mm, extending Face854 back to 0.45mm ahead of Omron SS-5GL)
         for stop_y in (-35.00, -28.20):
-            clf_ret.Perform(gp_Pnt(cx, stop_y, 23.30), 1e-4)
+            clf_ret.Perform(gp_Pnt(cx, stop_y, D.BUTTON_STOP_Z - 0.15), 1e-4)
             if clf_ret.State() != TopAbs_IN:
                 return False
         # Coaxial Ø2.80mm guide pole on usb_retainer_bracket engaged inside Ø3.20mm button hole
@@ -158,8 +158,8 @@ def check_all():
         clf_btn.Perform(gp_Pnt(cx + 2.20, -32.20, 26.20), 1e-4)
         if clf_btn.State() != TopAbs_IN:
             return False
-        # Rear Z=23.45mm travel-stop post on lower_tub (Y = -20.80 .. -16.80 mm)
-        clf_tub.Perform(gp_Pnt(cx, -20.50, 23.30), 1e-4)
+        # Rear travel-stop post on lower_tub (Y = -20.80 .. -16.80 mm)
+        clf_tub.Perform(gp_Pnt(cx, -20.50, D.BUTTON_STOP_Z - 0.15), 1e-4)
         if clf_tub.State() != TopAbs_IN:
             return False
         clf_shell.Perform(gp_Pnt(cx, -31.00, 24.00), 1e-4)
@@ -191,8 +191,10 @@ def check_all():
         (
             "J03_SLIDE momentary power_slider guided in chimney, matches reset & actuates Omron",
             j03_ok,
-            f"radial clear={x_clear:.2f} mm/side, chimney=360deg@Z=24mm, zmax={slider_bb.zmax:.2f} "
-            f"mm, Omron overlap={v_p_sw:.2f} mm^3",
+            f"radial clear={x_clear:.2f} mm/side, "
+            f"chimney guided={_chimney_guided(D.POWER_SLIDER_X)}, "
+            f"same profile={same_profile}, pressed clash={v_p_shell:.3f} mm^3, "
+            f"zmax={slider_bb.zmax:.2f} mm, Omron overlap={v_p_sw:.2f} mm^3",
         )
     )
 
@@ -215,40 +217,64 @@ def check_all():
         (
             "J04_RESET reset_button guided in chimney by 0.22mm/side & actuates Omron SS-5GL",
             j04_ok,
-            f"radial clearance={r_clear:.2f} mm/side, chimney=360deg@Z=24mm, "
-            f"Omron lever overlap={v_sw_press:.2f} mm^3",
+            f"radial clearance={r_clear:.2f} mm/side, "
+            f"chimney guided={_chimney_guided(D.RESET_BTN_X)}, "
+            f"pressed clash={v_shell_press:.3f} mm^3, Omron lever overlap={v_sw_press:.2f} mm^3",
         )
     )
 
-    # 5b. OMRON_ACT: Omron SS-5GL activation tolerance budget + physical mounting pins on lower_tub
-    act = omron_ss5gl.activation_metrics(D.RESET_STROKE_Z)
+    # 5b. OMRON_ACT (C3): move each real button down the real switch lever. For a button offset
+    # `dz`, the lever tip sits at the highest height where the two don't overlap; that is where
+    # the button holds it. Omron SS-5GL datasheet (hinge lever): OP 8.8 +-0.8, MD <= 0.8,
+    # OT >= 1.2, all at the tip, above the mounting holes.
+    def _tip_height(button: cq.Shape, cx: float, dz: float) -> tuple[float, float]:
+        pressed = button.moved(cq.Location(cq.Vector(0.0, 0.0, -dz)))
+        lo, hi = 5.0, omron_ss5gl.FREE_POSITION_MAX
+        for _ in range(14):
+            mid = (lo + hi) / 2.0
+            sw = omron_ss5gl.placed_at(cx, lever_deflection=omron_ss5gl.FREE_POSITION_MAX - mid)
+            lo, hi = (mid, hi) if _common_volume(sw, pressed) <= 1e-4 else (lo, mid)
+        touch = cq.Shape.cast(
+            BRepAlgoAPI_Common(
+                omron_ss5gl.placed_at(
+                    cx, lever_deflection=omron_ss5gl.FREE_POSITION_MAX - (lo + 0.05)
+                ).wrapped,
+                pressed.wrapped,
+            ).Shape()
+        )
+        return lo, touch.Center().x if touch.Volume() > 0 else float("nan")
+
+    op_lo = omron_ss5gl.OPERATING_POSITION - omron_ss5gl.OPERATING_POSITION_TOL
+    op_hi = omron_ss5gl.OPERATING_POSITION + omron_ss5gl.OPERATING_POSITION_TOL
+    act_msgs, act_ok = [], True
+    for name, button, cx in (
+        ("POWER", slider, D.POWER_SLIDER_X),
+        ("RESET", reset, D.RESET_BTN_X),
+    ):
+        h_rest, x_touch = _tip_height(button, cx, 0.0)
+        h_stop, _ = _tip_height(button, cx, D.RESET_STROKE_Z)
+        release = h_rest - (op_hi + omron_ss5gl.MOVEMENT_DIFF_MAX)
+        click = op_lo - h_stop
+        overtravel_lo = h_stop - (op_lo - omron_ss5gl.OVERTRAVEL_MIN)
+        centred = abs(x_touch - cx) <= 1.5
+        act_ok = act_ok and release >= 0.10 and click >= 0.10 and overtravel_lo >= 0 and centred
+        act_msgs.append(
+            f"{name}: tip {h_rest:.2f} -> {h_stop:.2f} mm, release margin {release:.2f}, "
+            f"click margin {click:.2f} (OP {op_lo:.1f}), presses at x {x_touch - cx:+.2f} from "
+            f"centre; earliest switch {op_hi - h_stop:.2f} mm past OP (OT >= "
+            f"{omron_ss5gl.OVERTRAVEL_MIN})"
+        )
     pin_clear = (D.OMRON_HOLE_D - D.OMRON_PIN_D) / 2.0
     clf_pin = BRepClass3d_SolidClassifier(tub.wrapped)
-    pins_and_m2_ok = True
-    for x_pin, x_m2 in ((-24.23, -33.73), (24.23, 33.73)):
+    pins_ok = True
+    for x_pin in (-24.23, 24.23):
         clf_pin.Perform(gp_Pnt(x_pin, -24.00, D.OMRON_HOLE_Z), 1e-4)
-        pin_solid = clf_pin.State() == TopAbs_IN
-        clf_pin.Perform(gp_Pnt(x_m2, -19.50, D.OMRON_HOLE_Z), 1e-4)
-        m2_bore_open = clf_pin.State() == TopAbs_OUT
-        clf_pin.Perform(gp_Pnt(x_m2, -19.50, D.OMRON_HOLE_Z + 2.50), 1e-4)
-        wall_solid = clf_pin.State() == TopAbs_IN
-        pins_and_m2_ok = pins_and_m2_ok and pin_solid and m2_bore_open and wall_solid
-
-    omron_ok = (
-        0.05 <= pin_clear <= 0.15
-        and pins_and_m2_ok
-        and act["release_margin"] >= -1e-6
-        and 0.30 <= act["z_earliest"] < act["z_nominal"] < act["z_latest"]
-        and act["click_margin_before_stop"] >= 0.10
-        and act["overtravel_margin_to_bottom"] >= 0.50
-    )
+        pins_ok = pins_ok and clf_pin.State() == TopAbs_IN
     rows.append(
         (
-            "OMRON_ACT Omron SS-5GL clicks across OP=8.8+-0.8mm band & stops before overtravel",
-            omron_ok,
-            f"click stroke={act['z_earliest']:.2f}/{act['z_nominal']:.2f}/{act['z_latest']:.2f} mm "
-            f"(stop {act['z_stop']:.2f} mm, overtravel margin="
-            f"{act['overtravel_margin_to_bottom']:.2f} mm, pin clear={pin_clear:.3f} mm/side)",
+            "OMRON_ACT every SS-5GL (OP 8.0..9.6) clicks before the stop & releases at rest",
+            act_ok and pins_ok and 0.05 <= pin_clear <= 0.15,
+            "; ".join(act_msgs) + f"; pin clear {pin_clear:.3f} mm/side",
         )
     )
 
