@@ -98,9 +98,30 @@ MUTATIONS = [
     (
         "front_panel_check",
         "assembly/datum.py",
+        "FRONT_BAY_DROP = 2.5",
+        "FRONT_BAY_DROP = 0.0",
+        "J05_COVER",
+    ),
+    (
+        "front_panel_check",
+        "assembly/datum.py",
         "PORT_INSERT_BOSS_D = 7.8",
         "PORT_INSERT_BOSS_D = 8.18",
         "J08_PORT",
+    ),
+    (
+        "radxa_mount_check",
+        "assembly/datum.py",
+        "RADXA_STANDOFF_TOP_D, RADXA_STANDOFF_TOP_H = 6.4, 1.0",
+        "RADXA_STANDOFF_TOP_D, RADXA_STANDOFF_TOP_H = 7.0, 1.0",
+        "G13_CLEAR",
+    ),
+    (
+        "radxa_mount_check",
+        "step/build_radxa_x4.py",
+        "SOLIDS = 363",
+        "SOLIDS = 357",
+        "RADXA_REF",
     ),
     (
         "radxa_mount_check",
@@ -222,10 +243,16 @@ def _make_farm(root: str) -> str:
     return farm
 
 
-def main() -> int:
-    print("=== GATE MUTATION SELF-TEST (REQ-12) ===\n")
+def main(argv: list[str]) -> int:
+    """Run every mutation, or with `--only ROW [ROW...]` those expected to fail rows ROW*."""
+    only = argv[argv.index("--only") + 1 :] if "--only" in argv else []
+    chosen = [m for m in MUTATIONS if not only or any(m[4].startswith(r) for r in only)]
+    if not chosen:
+        print(f"no mutation expects a failure on {only}")
+        return 2
+    print(f"=== GATE MUTATION SELF-TEST (REQ-12): {len(chosen)}/{len(MUTATIONS)} ===\n")
     failed = 0
-    for check_filter, target_rel, old_s, new_s, expected_row in MUTATIONS:
+    for check_filter, target_rel, old_s, new_s, expected_row in chosen:
         with tempfile.TemporaryDirectory(prefix="n64_selftest_") as tmp:
             farm = _make_farm(tmp)
             target_path = os.path.join(farm, target_rel)
@@ -260,9 +287,9 @@ def main() -> int:
                 for ln in proc.stdout.splitlines()[-10:]:
                     print(f"        {ln}")
 
-    print(f"\n{len(MUTATIONS) - failed}/{len(MUTATIONS)} mutations caught by gate.py")
+    print(f"\n{len(chosen) - failed}/{len(chosen)} mutations caught by gate.py")
     return 1 if failed else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

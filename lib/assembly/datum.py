@@ -166,6 +166,9 @@ FOOT_D = 12.7  # 3M Bumpon SJ5012 (cylindrical, flat top), stuck over the 4 corn
 FOOT_H = 3.5  # also the height of the gap feeding the floor vents
 
 STANDOFF_M25_OD = 7.0
+# The Radxa posts step in to this for their top 1.0 mm: Radxa's own model has a 0.4 mm-tall part
+# 3.45 mm from the front-right hole's centre, inside a Ø7.0 contact face (C10, G13_CLEAR).
+RADXA_STANDOFF_TOP_D, RADXA_STANDOFF_TOP_H = 6.4, 1.0
 INSERT_M25_BORE_D = 3.2  # Ruthex RX-M2.5x4.0 heat-set insert bore
 INSERT_M25_DEPTH = 4.2
 
@@ -239,7 +242,14 @@ USB_A_Y0 = -41.70  # TE 292303-7 mouth `2.62 mm` behind closed twin cover & `4.3
 FRONT_BAY_XS = (-25.0, 25.0)  # Left (`P1+P2`) and Right (`P3+P4`) twin-port bay centres
 FRONT_BAY_X = -25.0  # Left (`P1+P2`) bay centre (`part/front_port_cover.py` canonical instance)
 FRONT_BAY_W = 28.4  # X = +-10.8 .. +-39.2 mm -> keeps central 21.6 mm front apron 100% untouched!
-FRONT_BAY_H = 11.4  # Z = 7.49 .. 18.89 mm centred on Z = 13.19 mm
+# The bays' bottom edge, and the doors' bottom edge and hinge with it, sit FRONT_BAY_DROP below
+# the 11.4 mm opening centred on the ports. The glued port bezels stand 2.47 mm proud of the hinge
+# axis; with the hinge this much lower they swing out past the case front before they drop, instead
+# of into the sill (C1: at no drop they hit it from 13 deg open). The ports and bay tops don't move.
+FRONT_BAY_DROP = 2.5  # 2.0 clears with a 0.05 mm gap at 90 deg; 2.5 leaves 0.55 mm
+FRONT_BAY_Z1 = USB_A_Z_CENTRE + 11.4 / 2.0  # 18.89 mm
+FRONT_BAY_Z0 = USB_A_Z_CENTRE - 11.4 / 2.0 - FRONT_BAY_DROP
+FRONT_BAY_H = FRONT_BAY_Z1 - FRONT_BAY_Z0
 FRONT_BAY_Y0 = -46.12  # flush with the curved N64 front wall across the twin controller bays
 FRONT_COVER_CLEAR = 0.20  # J-05 XZ locating clearance per side in each twin-port bay
 FRONT_COVER_T = 2.0  # nominal bay seat depth (each twin hinge cover is 1.8 mm thick)
@@ -250,7 +260,7 @@ HINGE_SOCKET_D = 2.4  # 0.30 mm/side radial pivot clearance
 HINGE_PIN_EXT = 0.8  # pin extension beyond each end of a twin-port cover
 HINGE_SOCKET_DEPTH = 1.2  # blind socket depth in `lower_tub` bay cheeks
 HINGE_Y = FRONT_BAY_Y0 + (FRONT_COVER_T - 0.2) - HINGE_PIN_D / 2.0  # -45.22 mm, flush on +Y bed
-HINGE_Z = 8.59  # bottom pivot axis (0.90 mm above z0 = 7.69 mm bottom edge, inside lower_tub)
+HINGE_Z = FRONT_BAY_Z0 + FRONT_COVER_CLEAR + 0.90  # pivot 0.90 mm above the door's bottom edge
 
 # Top-centre fingernail slit on each twin-port cover (-Y/+Z edge at X = +-25.0 mm)
 FINGER_SLIT_W = 6.4

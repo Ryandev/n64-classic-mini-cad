@@ -1,6 +1,6 @@
 """De-ported Radxa X4 v1.11 SBC (`lib/variant/radxa_x4.py`, `REQ-03`, `REQ-05`).
 
-Derives from `lib/step/radxa_x4.py` (the full 29-solid Radxa X4 STEP) and strips all 6
+Derives from `lib/step/radxa_x4.py` (Radxa's own 363-solid STEP, unedited) and strips all 6
 tall through-hole connector headers so the inverted board fits inside the `36.5 mm`-tall
 50%-scale N64 Classic Mini enclosure:
   - `usb3_dual_stack` (dual stacked USB 3.0 Type-A tower)
@@ -78,36 +78,52 @@ _local_cache: cq.Shape | None = None
 _placed_cache: cq.Shape | None = None
 
 
-def _is_stripped_header(sol: cq.Solid) -> bool:
+def _inside(sol: cq.Solid, bbox: tuple[float, ...]) -> bool:
     b = sol.BoundingBox()
-    if b.xlen > 70.0:  # Never strip the 85 x 56 mm main PCB
-        return False
-    for d in DEVIATIONS.values():
-        x0, y0, z0, x1, y1, z1 = d["bbox"]
-        if (
-            b.xmin >= x0 - 1e-4
-            and b.xmax <= x1 + 1e-4
-            and b.ymin >= y0 - 1e-4
-            and b.ymax <= y1 + 1e-4
-            and b.zmin >= z0 - 1e-4
-            and b.zmax <= z1 + 1e-4
-        ):
-            return True
-    return False
+    x0, y0, z0, x1, y1, z1 = bbox
+    return (
+        b.xmin >= x0 - 1e-4
+        and b.xmax <= x1 + 1e-4
+        and b.ymin >= y0 - 1e-4
+        and b.ymax <= y1 + 1e-4
+        and b.zmin >= z0 - 1e-4
+        and b.zmax <= z1 + 1e-4
+    )
+
+
+def headers(solids: list[cq.Solid]) -> dict[str, cq.Solid]:
+    """Each deviation's header: the one dominant solid of Radxa's that lies wholly in its box.
+
+    Small surface-mount parts sit under the USB stacks and the RJ45 on Radxa's real model, inside
+    the same boxes; they stay. The declared `volume_mm3` is what the manifest measures removed
+    (the header less its pins inside the PCB), so it can't name the solid itself.
+    """
+    found = {}
+    for name, d in DEVIATIONS.items():
+        inside = [s for s in solids if s.BoundingBox().xlen <= 70.0 and _inside(s, d["bbox"])]
+        if not inside:
+            raise ValueError(f"no solid of the reference lies inside {name}'s box {d['bbox']}")
+        biggest, *rest = sorted(inside, key=lambda s: -s.Volume())
+        if rest and rest[0].Volume() > 0.5 * biggest.Volume():
+            raise ValueError(f"{name}'s box holds no one dominant solid: {len(inside)} solids")
+        found[name] = biggest
+    if len(set(found.values())) != len(found):
+        raise ValueError(f"two deviations name the same solid: {sorted(found)}")
+    return found
 
 
 def get_shape() -> cq.Shape:
-    """Return the de-ported 23-solid Radxa X4 in local PCB coordinates."""
+    """Radxa's board without its six tall headers, in local PCB coordinates."""
     global _local_cache
     if _local_cache is None:
-        raw = REFERENCE.get_shape()
-        kept = [s for s in raw.Solids() if not _is_stripped_header(s)]
-        _local_cache = cq.Compound.makeCompound(kept)
+        solids = REFERENCE.get_shape().Solids()
+        stripped = set(headers(solids).values())
+        _local_cache = cq.Compound.makeCompound([s for s in solids if s not in stripped])
     return _local_cache
 
 
 def placed() -> cq.Shape:
-    """Return the de-ported 23-solid Radxa X4 inverted and placed in console coordinates."""
+    """Radxa's board without its six tall headers, inverted and placed in console coordinates."""
     global _placed_cache
     if _placed_cache is None:
         _placed_cache = (

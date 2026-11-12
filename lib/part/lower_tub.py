@@ -15,7 +15,7 @@ measured off `Console N64` (`lib/step/n64_shell.py`):
   - Untouched `21.60 mm` central front apron (`X = -10.80 .. +10.80 mm`) carrying the authentic
     `6.36 x 1.76 mm` horizontal lenticular Power LED lens outline (`Face[1823]`, `Z = 8.24 mm`)
   - Lower halves of the Left (`P1+P2` at `X = -25.0`) and Right (`P3+P4` at `X = +25.0`) twin
-    controller bays (`Z = 7.49 .. 12.94 mm`) with coaxial bottom pivot sockets (`Z = 8.59 mm`),
+    controller bays (`Z = 4.99 .. 12.94 mm`) with coaxial bottom pivot sockets (`Z = 6.09 mm`),
     lower USB-A access windows, and lower keeper magnet pockets (`J-05`)
 """
 
@@ -244,7 +244,7 @@ def get_shape() -> cq.Shape:
     )
 
     # Lower half of Left (P1+P2 at X = -25.0) and Right (P3+P4 at X = +25.0) twin-port bays
-    z_bay0 = D.USB_A_Z_CENTRE - D.FRONT_BAY_H / 2.0  # 7.49 mm
+    z_bay0 = D.FRONT_BAY_Z0
     y_seat = D.FRONT_BAY_Y0 + D.FRONT_COVER_T  # -44.12 mm
     for bx in D.FRONT_BAY_XS:
         cuts.append(

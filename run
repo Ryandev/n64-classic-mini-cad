@@ -48,6 +48,9 @@ case "$target" in
     fem)
         $PY python3 lib/testing/fem_check.py "$@"
         ;;
+    radxa-ref)
+        $PY python3 lib/step/build_radxa_x4.py "$@"
+        ;;
     all)
         ./run lint
         ./run gate
@@ -63,13 +66,14 @@ targets:
   format           ruff check --fix + ruff format
   test [parts...]  geometry test harness (all parts, or only the named ones)
   gate [checks...] subassembly / assembly check rows (PASS/FAIL gate)
-  selftest         mutation self-test proving gate rows fail on planted defects
+  selftest [--only ROW..]  mutation self-test proving gate rows fail on planted defects
   export [--printable-only]  STEP / SVG exports and print plate into export/
                    (--printable-only: printed parts only, no reference models needed)
   plate            orient and pack all 12 FDM parts onto export/plate/print_plate.step
   export-validate  verify exported files exist, match 3D solids, and fit bed
   bom              generate notes/BOM_COMPLETE.md from parametric subassemblies
   fem              Gmsh + CalculiX 3D tetrahedral FEM structural verification
+  radxa-ref [ZIP]  rebuild lib/step/radxa_x4.step from Radxa's download (SHA-256 checked)
   all              lint + gate + export + export-validate
 EOF
         [[ "$target" == "help" ]]

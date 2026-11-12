@@ -1,9 +1,9 @@
-"""radxa_x4 -- unmodified 29-solid Radxa X4 v1.11 vendor reference STEP.
+"""radxa_x4 -- Radxa's own Radxa X4 v1.11 STEP, unedited: all 363 solids (C10).
 
-Aligned to local PCB origin (`58.0 x 49.0 mm` mounting holes at `(-39/+19, +-24.5) mm`)
-with all 6 tall through-hole headers (`usb3_dual_stack`, `usb2_dual_stack`,
-`rj45_ethernet_tower`, `poe_4pin_header`, `fan_2pin_header`, `gpio_40pin_header`) intact.
-Stripped in `lib/variant/radxa_x4.py` and verified by `lib/testing/variant_manifest.py`.
+Built by `step/build_radxa_x4.py` from Radxa's download (SHA-256 checked), moved by translation
+only so its four mounting holes sit on the local PCB frame (`58.0 x 49.0 mm` at x -39/+19,
+y ±24.5). The six tall headers the console desolders are removed, by identity, in
+`lib/variant/radxa_x4.py` and verified by `lib/testing/variant_manifest.py`.
 """
 
 import os

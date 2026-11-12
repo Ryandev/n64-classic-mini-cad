@@ -26,6 +26,7 @@ import printable  # noqa: E402
 from assembly import datum as D  # noqa: E402
 from component import led_l819, radxa_x4  # noqa: E402
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
+from OCP.BRepExtrema import BRepExtrema_DistShapeShape  # noqa: E402
 from part import (  # noqa: E402
     front_port_cover,
     led_light_pipe,
@@ -123,11 +124,24 @@ def check_all():
     hinge_rad_clear = (D.HINGE_SOCKET_D - D.HINGE_PIN_D) / 2.0
     usb_y_gap = usb_bb.ymin - cov_bb.ymax
     pair_span = abs(D.FRONT_PORT_XS[0] - D.FRONT_PORT_XS[1]) + D.PORT_INSERT_OD
+    # The doors swing with their glued port bezels (which stand proud of the hinge axis): the
+    # whole 0..90 deg arc in 5 deg steps, not a couple of poses (C1: the bezels hit the sill from
+    # 13 deg while the bare doors passed at 30 and 80).
+    pivot = cq.Vector(0.0, D.HINGE_Y, D.HINGE_Z)
+    door_and_bezels = cq.Compound.makeCompound([*front_panel_mech.covers(), *inserts])
     swing_clash = max(
-        _common_volume(tub, front_panel_mech.cover_open(deg))
-        + _common_volume(pipe, front_panel_mech.cover_open(deg))
-        for deg in (30.0, 80.0)
+        _common_volume(tub, opened) + _common_volume(pipe, opened)
+        for deg in range(5, 91, 5)
+        for opened in [door_and_bezels.rotate(pivot, pivot + cq.Vector(1.0, 0.0, 0.0), deg)]
     )
+    flat = BRepExtrema_DistShapeShape(
+        tub.wrapped,
+        cq.Compound.makeCompound(inserts)
+        .rotate(pivot, pivot + cq.Vector(1.0, 0.0, 0.0), 90.0)
+        .wrapped,
+    )
+    flat.Perform()
+    bezel_gap = flat.Value()
     j05_ok = (
         len(front_panel_mech.covers()) == 2
         and plate_w >= pair_span
@@ -140,14 +154,16 @@ def check_all():
         and len(usb.Solids()) == 16
         and len(mags.Solids()) == 8
         and swing_clash <= 1e-3
+        and bezel_gap >= 0.3
     )
     rows.append(
         (
-            "J05_COVER twin front_port_cover doors seat & swing open 0..80 deg clash-free",
+            "J05_COVER twin front_port_cover doors + bezels seat & swing open 0..90 deg clash-free",
             j05_ok,
             f"covers=2x{plate_w:.1f} mm, XZ clear=({xz_clear_w:.2f},{xz_clear_h:.2f}) mm/side, "
             f"hinge radial={hinge_rad_clear:.2f} mm, USB gap={usb_y_gap:.2f} mm, "
-            f"swing clash={swing_clash:.3f} mm^3",
+            f"swing clash={swing_clash:.3f} mm^3 (doors + bezels, 0..90 deg), "
+            f"bezel gap open flat={bezel_gap:.2f} mm (min 0.3)",
         )
     )
 

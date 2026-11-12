@@ -24,6 +24,8 @@ from OCP.BRepClass3d import BRepClass3d_SolidClassifier  # noqa: E402
 from OCP.gp import gp_Pnt  # noqa: E402
 from OCP.TopAbs import TopAbs_IN, TopAbs_OUT  # noqa: E402
 from part import usb_retainer_bracket  # noqa: E402
+from step import build_radxa_x4  # noqa: E402
+from step import radxa_x4 as radxa_ref  # noqa: E402
 from subassembly import radxa_mount_mech  # noqa: E402
 from testing import variant_manifest  # noqa: E402
 from testing.load import load_by_path  # noqa: E402
@@ -74,6 +76,21 @@ def check_all():
             f"vendor STEP zmin={step_bb.zmin:.2f} mm"
             if not unstripped
             else f"UNSTRIPPED headers detected: {unstripped} (zmin={step_bb.zmin:.2f} mm)",
+        )
+    )
+
+    # 1d. C10: the reference is Radxa's own STEP, whole and moved only to the datum's hole pattern
+    ref = radxa_ref.get_shape()
+    n_ref = len(ref.Solids())
+    cx, cy = build_radxa_x4.pattern_centre(ref)
+    want_x, want_y = build_radxa_x4.local_hole_centre()
+    off = max(abs(cx - want_x), abs(cy - want_y))
+    rows.append(
+        (
+            "RADXA_REF Radxa's own STEP, every solid, holes on the datum",
+            n_ref == build_radxa_x4.SOLIDS and off <= 0.01,
+            f"{n_ref} solids (Radxa's file: {build_radxa_x4.SOLIDS}); 58 x 49 mm hole pattern "
+            f"centred at ({cx:.3f}, {cy:.3f}), datum ({want_x:.3f}, {want_y:.3f})",
         )
     )
 

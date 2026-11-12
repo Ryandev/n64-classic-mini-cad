@@ -54,6 +54,22 @@ jobs:
             dist/print_plate.step
           if-no-files-found: error
 
+  radxa-reference:
+    # The Radxa X4 reference is built from Radxa's own download, never edited (C10). This proves
+    # the download still matches the pinned SHA-256 and builds: 363 solids, one 58 x 49 mm hole
+    # pattern. The clearance rows themselves need models CI doesn't have (see above).
+    name: Radxa X4 reference builds from Radxa's download
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2.0.7
+        with:
+          environment-name: cadquery
+          environment-file: environment.yml
+      - name: Build the reference
+        shell: bash -el {0}
+        run: python3 lib/step/build_radxa_x4.py --out "$RUNNER_TEMP/radxa_x4.step"
+
   release:
     # Only main publishes. The `latest` tag is moved to this commit each time so the release's
     # source archives match its assets; README links use releases/latest/download/.

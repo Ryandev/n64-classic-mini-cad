@@ -93,7 +93,7 @@ def get_shape() -> cq.Shape:
     #    - 2x stadium backing bosses under the POWER and RESET thumb wells
     #    - Central front nose backing block behind the Clear Acrylic N64 jewel pocket (J-06)
     #    - Left (X = -25.0) and Right (X = +25.0) upper twin-port bay keeper blocks
-    bay_top_z = D.USB_A_Z_CENTRE + D.FRONT_BAY_H / 2.0
+    bay_top_z = D.FRONT_BAY_Z1
     boss_raw = (
         [
             cq.Solid.makeCylinder(

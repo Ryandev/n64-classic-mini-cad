@@ -60,3 +60,31 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   The fix made the old `COOL_SEAL` selftest mutation (a slot through the front wall) harmless,
   since that wall now opens into the pocket: the selftest flagged it as uncaught. A planted defect
   must stay a defect after a design change; it now removes the pocket floor instead.
+
+## Lessons (Radxa reference, C10, 2026-11-12)
+
+- **A reference model is built by a script, never by hand.** `lib/step/radxa_x4.step` had been
+  assembled by hand: connectors picked by index, an invented HDMI shield, a USB-C socket with a
+  corner cut away "to clear the standoff". Every clearance row graded the case against a board
+  edited to pass. `./run radxa-ref` now builds it from Radxa's download (SHA-256 pinned), whole,
+  moved only onto the datum's hole pattern; `RADXA_REF` holds it to Radxa's 363 solids. On the
+  real board the duct, the upper shell and a Radxa standoff all touched parts the edited model
+  lacked (G13_COOL, G13_FULL, G13_CLEAR); each got a relief, and the standoffs a Ø6.4 top step.
+- **A boolean that never finishes is a failing check, not a slow one.** The variant manifest cut
+  the whole 363-solid board in one boolean: 887 s, then "Null TopoDS_Shape". Unchanged solids are
+  now matched by geometry and only the changed ones are cut (147 s). Matching by identity
+  (`isSame`) silently matched nothing: the base and variant each import the STEP.
+- **One number, one meaning.** A deviation's `volume_mm3` is what the manifest measures removed
+  (a header less its pins inside the PCB). Reusing it to *find* the header solid broke both; the
+  header is now the dominant solid in its box, and an ambiguous box fails loud.
+
+## Lessons (port doors, C1, 2026-11-12)
+
+- **A moving part's check must move everything attached to it, through the whole arc.** J05 swung
+  the bare doors at 30 and 80 deg and passed; the glued port bezels, which stand 2.47 mm proud of
+  the hinge, hit the sill from 13 deg. J05 now swings doors + bezels every 5 deg to 90 deg and
+  requires 0.3 mm clear when open flat (red-confirmed: 48.9 mm3 with the old hinge).
+- **The owner's idea beat the agent's options.** Asked to fix it, the agent offered a sill notch,
+  an external hinge or trimmed bezels, and argued a lower hinge couldn't help (it only looked at
+  how far the bezel drops below the pin, not that the case front is ~1 mm ahead of it). The owner's
+  lower hinge with a taller door clears with no visible change. Model a suggestion before arguing.

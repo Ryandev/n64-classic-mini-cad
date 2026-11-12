@@ -48,7 +48,7 @@ Y_PLATE1 = -9.0  # plate rear edge, ahead of the RAM (Y >= -8.71) and over the b
 Y_REAR = D.HS_Y0 + D.HS_W  # heat sink rear face: air leaves into the case here
 Z_HIGH = 10.4  # front strip floor: above the front USB sockets' tops (Z <= 10.2), measured by
 # point classification (a clash bounding box had wrongly suggested tub structure up to Z 11.6)
-Z_PLATE0 = D.RADXA_PCB_Z1 + 0.2  # 10.0: just above the board-edge parts (Z <= 9.8)
+Z_PLATE0 = D.RADXA_PCB_Z1 + 0.2  # 10.0, relieved over taller parts (BOARD_PART_RELIEFS)
 Z_PLATE1 = Z_PLATE0 + W
 Z_SKIRT = D.RADXA_PCB_Z1 + D.DUCT_SKIRT_GAP  # 10.3 over the board
 Z_SKIRT_SOC = D.RADXA_PCB_Z1 + D.SOC_H + CLEAR  # 11.6 where the skirts cross the N100 package
@@ -56,6 +56,17 @@ Z_COVER0 = D.HS_Z1  # cover rests on the pin tips
 Z_COVER1 = Z_COVER0 + D.DUCT_COVER_T
 Z_SEAT1 = D.FAN_Z0  # fan seat plate top = fan bottom
 Z_SEAT0 = Z_SEAT1 - W
+# Small parts on the board's top side under the duct, measured on Radxa's own STEP (lib/step/
+# build_radxa_x4.py) in console coordinates, each grown 0.2 mm: x0, x1, y0, y1, z0, z1. The
+# duct can't read the board at build time (CI builds the printed parts without it), so the
+# G13_COOL row is what proves these cover the real parts.
+BOARD_PART_RELIEFS = (
+    # a row of six pins under the plate's rear edge: out through the edge, or a lip is left
+    (-15.56, -12.23, -10.53, Y_PLATE1 + 0.1, Z_PLATE0 - 0.1, 10.35),
+    # a 0.8 x 1.6 mm part under the left skirt: through its full thickness, or a sliver is left
+    (-22.98, X_IN_L + 0.1, -8.59, -6.59, Z_SKIRT - 0.1, 10.6),
+    (-23.28, -21.28, 33.77, 34.97, Z_SKIRT - 0.1, 10.6),  # another, at the skirt's rear end
+)
 FAN_Y1 = D.FAN_Y0 + D.FAN_W
 
 
@@ -139,10 +150,15 @@ def get_shape() -> cq.Shape:
         _box(x0 - 0.2, x1 + 0.2, -27.6, -25.6, Z_HIGH - 0.1, 11.75)
         for x0, x1 in ((-13.1, -9.0), (9.0, 13.1))
     ]
+    # Reliefs over the board's small top-side parts under the plate and the left skirt, which
+    # Radxa's own model has and the hand-edited one didn't (C10).
+    parts = [_box(*box) for box in BOARD_PART_RELIEFS]
     # The right post's notch eats into the right skirt; thicken the skirt outward beside it so a
     # full wall remains.
     patch = _box(13.3, 13.3 + W, -27.4, -25.6, Z_HIGH, 11.75)
     # The pocket is fused after the post notches, which would otherwise nick its side walls.
     return (
-        duct.cut(bore, bore_front, opening, soc_relief, *heads, *posts).fuse(patch, *pocket).clean()
+        duct.cut(bore, bore_front, opening, soc_relief, *heads, *posts, *parts)
+        .fuse(patch, *pocket)
+        .clean()
     )

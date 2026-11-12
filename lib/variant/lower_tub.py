@@ -59,28 +59,28 @@ DEVIATIONS = {
         "kind": "added",
         "why": "Front-left M2.5 standoff (Z=8.2mm datum, RX-M2.5x4.0) for inverted Radxa X4 (J-02)",
         "bbox": (-48.5, -9.7, 1.5, -40.5, -1.7, 8.3),
-        "volume_mm3": 220.22,
+        "volume_mm3": 213.91,
         "tolerance_mm3": 2.5,
     },
     "radxa_standoff_fr": {
         "kind": "added",
         "why": "Front-right M2.5 standoff (Z=8.2mm, RX-M2.5x4.0) for inverted Radxa X4 (J-02)",
         "bbox": (9.5, -9.7, 1.5, 17.5, -1.7, 8.3),
-        "volume_mm3": 220.22,
+        "volume_mm3": 213.91,
         "tolerance_mm3": 2.5,
     },
     "radxa_standoff_rl": {
         "kind": "added",
         "why": "Rear-left M2.5 standoff (Z=8.2mm datum, RX-M2.5x4.0) for inverted Radxa X4 (J-02)",
         "bbox": (-48.5, 39.3, 1.5, -40.5, 47.3, 8.3),
-        "volume_mm3": 220.22,
+        "volume_mm3": 213.91,
         "tolerance_mm3": 2.5,
     },
     "radxa_standoff_rr": {
         "kind": "added",
         "why": "Rear-right M2.5 standoff (Z=8.2mm datum, RX-M2.5x4.0) for inverted Radxa X4 (J-02)",
         "bbox": (9.5, 39.3, 1.5, 17.5, 47.3, 8.3),
-        "volume_mm3": 220.22,
+        "volume_mm3": 213.91,
         "tolerance_mm3": 2.5,
     },
     "led_holder_cradle": {
@@ -265,12 +265,19 @@ def get_shape() -> cq.Shape:
     base = FAITHFUL.get_shape()
 
     # 1. Additive 4x Radxa X4 M2.5 standoffs + LED cradle + RJ45 cradle + Omron M3 stop bosses
+    post_h = D.RADXA_STANDOFF_H + 0.5
     post_base = standoff(
         bore_dia=D.INSERT_M25_BORE_D,
-        height=D.RADXA_STANDOFF_H + 0.5,
+        height=post_h,
         outer_dia=D.STANDOFF_M25_OD,
         bore_depth=D.INSERT_M25_DEPTH,
     )
+    # The top steps in to the Ø6.4 contact face that clears Radxa's parts round the holes.
+    z_step = post_h - D.RADXA_STANDOFF_TOP_H
+    step_ring = cq.Solid.makeCylinder(D.STANDOFF_M25_OD, 1.0, cq.Vector(0, 0, z_step)).cut(
+        cq.Solid.makeCylinder(D.RADXA_STANDOFF_TOP_D / 2.0, 1.0, cq.Vector(0, 0, z_step))
+    )
+    post_base = post_base.cut(step_ring)
     additions = (
         [
             post_base.moved(cq.Location(cq.Vector(hx, hy, D.FLOOR_T - 0.5)))

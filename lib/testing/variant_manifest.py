@@ -12,6 +12,7 @@ Adapted from `GBA/CAD/lib/testing/variant_manifest.py`:
 """
 
 import os
+from collections import Counter
 
 LIB_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VARIANT_DIR = os.path.join(LIB_DIR, "variant")
@@ -30,15 +31,62 @@ def variant_names():
     )
 
 
+def _solid_key(s) -> tuple:
+    """A solid's geometry, to the micron: faces, volume, centre and bounding box."""
+    c, b = s.Center(), s.BoundingBox()
+    return (
+        len(s.Faces()),
+        round(s.Volume(), 3),
+        *(round(v, 3) for v in (c.x, c.y, c.z, b.xmin, b.ymin, b.zmin, b.xmax, b.ymax, b.zmax)),
+    )
+
+
+def _overlaps(p, q) -> bool:
+    """Whether bounding boxes `p` and `q` touch."""
+    return all(
+        lo_p <= hi_q and lo_q <= hi_p
+        for lo_p, hi_p, lo_q, hi_q in (
+            (p.xmin, p.xmax, q.xmin, q.xmax),
+            (p.ymin, p.ymax, q.ymin, q.ymax),
+            (p.zmin, p.zmax, q.zmin, q.zmax),
+        )
+    )
+
+
 def _chunks(a, b):
-    """Solids of `a` that are not in `b`, biggest first, noise dropped."""
+    """Solids of `a` that are not in `b`, biggest first, noise dropped.
+
+    A component variant keeps most of its reference's solids unchanged (Radxa's board: 357 of
+    363). An unchanged solid subtracts to nothing, so only the solids of `a` that `b` lacks are
+    cut, each against the solids of `b` near it: the same result as `a.cut(b)` without one
+    boolean over hundreds of solids, which outran the gate's timeout. Solids are matched by
+    geometry, not identity: the base and the variant each import the STEP, so the same solid is
+    two different shapes.
+    """
+    import cadquery as cq  # noqa: PLC0415
+
+    a_solids, b_solids = a.Solids(), b.Solids()
+    unmatched = Counter(_solid_key(t) for t in b_solids)
+    rest = []
+    for s in a_solids:
+        k = _solid_key(s)
+        if unmatched[k] > 0:
+            unmatched[k] -= 1
+        else:
+            rest.append(s)
     try:
-        out = a.cut(b)
+        if len(rest) == len(a_solids):
+            out = a.cut(b).Solids()
+        else:
+            boxes = [s.BoundingBox() for s in rest]
+            near = [t for t in b_solids if any(_overlaps(sb, t.BoundingBox()) for sb in boxes)]
+            changed = cq.Compound.makeCompound(rest)
+            out = changed.cut(*near).Solids() if near else changed.Solids()
     except Exception as exc:
         print(f"variant_manifest: _chunks cut failed: {exc}")
         return None
     return sorted(
-        (s for s in out.Solids() if s.Volume() > CHUNK_IGNORE_MM3),
+        (s for s in out if s.Volume() > CHUNK_IGNORE_MM3),
         key=lambda s: -s.Volume(),
     )
 

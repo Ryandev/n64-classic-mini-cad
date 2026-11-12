@@ -1,14 +1,14 @@
 """50%-scale N64 Twin-Port Hinged Front Controller Cover (`front_port_cover.py`, `J-05`).
 
 Charcoal Grey bottom-hinged, magnet-latched twin-port front controller cover
-(`28.0 x 11.0 x 1.8 mm`, `2` instances per console: Left `P1+P2` at `X = -25.0 mm` and Right
+(`28.0 x 13.5 x 1.8 mm`, `2` instances per console: Left `P1+P2` at `X = -25.0 mm` and Right
 `P3+P4` at `X = +25.0 mm`) seated at the authentic N64 controller port centreline
 (`Z = 13.19 mm`, straddling `SPLIT_Z = 12.94 mm`) with `0.20 mm/side` XZ clearance (`J-05`).
 Features:
   - Leaves the `21.60 mm` central front apron (`X = -10.80 .. +10.80 mm`), flush Clear Acrylic
     N64 jewel, and horizontal lenticular red Power LED lens 100% untouched authentic N64 shell
-  - Coaxial bottom pivot pins (`Ø1.8 mm` at `Z = 8.59 mm`) engaging `Ø2.4 mm` sockets in
-    `lower_tub` plus 45-degree bottom swing-relief bevels (`0.000 mm^3` clash across `0..85 deg`)
+  - Coaxial bottom pivot pins (`Ø1.8 mm` at `Z = 6.09 mm`) engaging `Ø2.4 mm` sockets in
+    `lower_tub` plus 45-degree bottom swing-relief bevels (doors + bezels clear `0..90 deg`)
   - Continuous `Z = 12.56 .. 12.94 mm` exterior parting-line shadow groove across the front face
   - Top-centre fingernail slit (`6.4 x 1.1 x 0.9 mm`) to flip down each twin cover and reveal
     its pair of horizontal `TE Connectivity 292303-7` USB-A receptacles
@@ -36,11 +36,11 @@ VISIBLE_FACES = ("-Y",)
 def cover_at(bay_x: float = D.FRONT_BAY_X) -> cq.Shape:
     """Build one twin-port (`P1+P2` or `P3+P4`) hinged front controller cover at `bay_x`."""
     w = D.FRONT_BAY_W - 2.0 * D.FRONT_COVER_CLEAR  # 28.0 mm
-    h = D.FRONT_BAY_H - 2.0 * D.FRONT_COVER_CLEAR  # 11.0 mm
+    h = D.FRONT_BAY_H - 2.0 * D.FRONT_COVER_CLEAR  # 13.5 mm
     t = D.FRONT_COVER_T - 0.2  # 1.8 mm
     y_front = D.FRONT_BAY_Y0  # -46.12 mm
     y_back = y_front + t  # -44.32 mm
-    z0 = D.USB_A_Z_CENTRE - h / 2.0  # 7.69 mm
+    z0 = D.FRONT_BAY_Z0 + D.FRONT_COVER_CLEAR
 
     plate = cq.Solid.makeBox(
         w,

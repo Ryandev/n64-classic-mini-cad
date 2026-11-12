@@ -20,7 +20,7 @@ All 15 printed parts are pre-oriented and packed onto a single `240.6 x 229.0 x 
 Set at `205–215 °C` (PLA) or `235–245 °C` (PETG) using a vertical soldering-iron press with conical heat-set tips:
 
 1. **Radxa X4 standoffs in `lower_tub` (`4x Ruthex RX-M2.5x4.0`):**
-   - Printed bore: `Ø3.20 mm`, depth `4.5 mm` inside `Ø7.0 mm` standoff post (`wall = 1.90 mm`).
+   - Printed bore: `Ø3.20 mm`, depth `4.5 mm` inside `Ø7.0 mm` standoff post (`wall = 1.90 mm`; `1.60 mm` in the top `1.0 mm`, stepped to `Ø6.4 mm` to clear Radxa's parts).
    - Set flush with the `Z = 8.20 mm` standoff top datum.
 2. **2.5GbE RJ45 carrier standoffs in `lower_tub` (`2x Ruthex RX-M2.5x4.0`):**
    - Printed bore: `Ø3.20 mm` at `(43.00, 23.00)` and `(51.50, 28.50)`.
