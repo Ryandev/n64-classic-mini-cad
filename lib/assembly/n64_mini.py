@@ -74,7 +74,7 @@ def named_bodies() -> list[tuple[str, tuple[float, float, float], cq.Shape]]:
         ("n64_port_p4", cool_grey, inserts[3]),
         ("led_light_pipe", led_red, led_light_pipe.get_shape()),
         ("wired_led_3mm", (0.98, 0.22, 0.18), front_panel_mech.wired_led_3mm()),
-        ("radxa_x4_deported", pcb_green, radxa_x4.vendor_step_compound()),
+        ("radxa_x4", pcb_green, radxa_x4.vendor_step_compound()),
         ("hsb26_heatsink", matte_black, radxa_x4.heatsink_solid()),
         ("m2_2230_nvme", nvme_dark, radxa_x4.m2_keepout()),
         ("front_usb_a_x4", silver, radxa_x4.usb_a_cluster()),

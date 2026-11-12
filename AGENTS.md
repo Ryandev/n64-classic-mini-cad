@@ -88,3 +88,11 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   an external hinge or trimmed bezels, and argued a lower hinge couldn't help (it only looked at
   how far the bezel drops below the pin, not that the case front is ~1 mm ahead of it). The owner's
   lower hinge with a taller door clears with no visible change. Model a suggestion before arguing.
+
+## Running the heavy checks (the owner's laptop)
+
+- `./run gate` takes ~5–10 min at full load; `N64_GATE_JOBS=2 ./run gate` caps the workers.
+- `./run selftest` reruns a 3–6 min check per mutation (hours in all): after a change, run the
+  mutations for the rows it touched with `./run selftest --only ROW [ROW...]`.
+- Run heavy jobs one at a time, say when each starts and ends, and leave nothing running.
+- Never `pkill -f NAME` from a shell whose own command line contains NAME: it kills itself.

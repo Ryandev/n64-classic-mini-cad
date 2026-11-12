@@ -48,8 +48,8 @@ def bodies() -> list[tuple[str, cq.Shape]]:
 def interference(threshold_mm3: float = 0.01) -> list[tuple[str, str, float]]:
     """Return overlapping `(name_a, name_b, volume_mm3)` pairs exceeding `threshold_mm3`."""
     items = bodies()
-    # Skip m2_2230_nvme keepout against radxa_x4_deported (which includes the M.2 socket)
-    skip = {frozenset(("radxa_x4_deported", "m2_2230_nvme"))}
+    # Skip m2_2230_nvme keepout against radxa_x4 (whose model includes the M.2 socket)
+    skip = {frozenset(("radxa_x4", "m2_2230_nvme"))}
     clashes = []
     for i, (na, sa) in enumerate(items):
         ba = sa.BoundingBox()
