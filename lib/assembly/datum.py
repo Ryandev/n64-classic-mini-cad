@@ -216,7 +216,6 @@ REAR_IO_Z_CENTRE = 6.55
 
 # Rear-right panel-mount RJ45 Ethernet bay (to the +X right of the Radxa X4 PCB)
 REAR_RJ45_X = 43.2
-REAR_RJ45_BAY_W = 20.5
 REAR_RJ45_W = 10.4
 REAR_RJ45_D = 19.5
 REAR_RJ45_H = 10.4

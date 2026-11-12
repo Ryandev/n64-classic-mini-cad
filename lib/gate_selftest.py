@@ -20,6 +20,13 @@ GATE = os.path.join(HERE, "gate.py")
 MUTATIONS = [
     (
         "datum_check",
+        "component/radxa_x4.py",
+        "cq.Solid.makeBox(10.40, 20.80, 10.40, cq.Vector(38.00, 27.50, 2.00))",
+        "cq.Solid.makeBox(10.40, 20.80, 10.40, cq.Vector(36.50, 27.50, 2.00))",
+        "REAR_IO",
+    ),
+    (
+        "datum_check",
         "assembly/datum.py",
         "SCALE = 0.50",
         "SCALE = 0.65",

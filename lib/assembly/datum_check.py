@@ -107,15 +107,18 @@ def check_all():
     # 4. REQ-04 (cooling) is measured in subassembly/cooling_check.py.
 
     # 5. REQ-05: Rear-right RJ45 bay beside shifted Radxa X4
-    rj45_bay_avail = inner_xmax - pcb_bb.xmax
+    # The bay must hold the real jack assembly (connector + breakout), not a nominal width (C5:
+    # a hand-set 24.0 had been relaxed to 20.5 to pass, the label still saying 24).
     rj45_bb = radxa_x4.rj45_jack().BoundingBox()
+    rj45_bay_avail = inner_xmax - pcb_bb.xmax
     rj45_gap_to_pcb = rj45_bb.xmin - pcb_bb.xmax
+    rj45_gap_to_wall = inner_xmax - rj45_bb.xmax
     rows.append(
         (
-            "REAR_IO   shifted Radxa X4 opens >= 24.0 mm rear-right bay for RJ45 jack",
-            rj45_bay_avail >= D.REAR_RJ45_BAY_W and rj45_gap_to_pcb >= 1.0,
-            f"rear-right bay width={rj45_bay_avail:.1f} mm (min {D.REAR_RJ45_BAY_W:.1f} mm), "
-            f"RJ45-to-PCB gap={rj45_gap_to_pcb:.1f} mm",
+            "REAR_IO   rear-right bay holds the RJ45 jack: >= 1.0 mm to the board, >= 0.5 to wall",
+            rj45_gap_to_pcb >= 1.0 and rj45_gap_to_wall >= 0.5,
+            f"bay {rj45_bay_avail:.1f} mm wide holds the {rj45_bb.xlen:.1f} mm jack with "
+            f"{rj45_gap_to_pcb:.1f} mm to the board and {rj45_gap_to_wall:.1f} mm to the wall",
         )
     )
 
