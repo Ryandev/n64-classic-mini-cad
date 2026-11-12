@@ -275,26 +275,12 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
             },
             {
                 "item": (
-                    "Ruthex RX-M2x4.0 brass heat-set insert (`M2 x 4.0 mm`, `OD 3.2 mm`, "
-                    "1 per `Omron SS-5GL` switch in `lower_tub` Hole 2 — shared GBA BOM part)"
+                    "3 x 10 mm pan-head thread-forming screw for plastics (PT type, e.g. EJOT "
+                    "DELTA PT 30 x 10 or equivalent; 1 per `Omron SS-5GL`, driven from behind the "
+                    "switch tower into the switch's `Ø2.35 mm` Hole 2, before the Radxa board; "
+                    "bench-test on a spare switch first)"
                 ),
-                "spec": "Ruthex RX-M2x4.0",
-                "qty": 2,
-            },
-            {
-                "item": (
-                    "M2 x 10 DIN 912 socket-head cap screw (A2-70, 1 per `Omron SS-5GL` switch "
-                    "through `Ø2.35 mm` Hole 2, paired with integral `Ø2.20 mm` Pin 1 — shared GBA)"
-                ),
-                "spec": "M2 x 10 DIN 912 SHCS",
-                "qty": 2,
-            },
-            {
-                "item": (
-                    "M2 flat washer (`DIN 125` A2, `Ø5.0 x 0.3 mm`, under `M2 x 10` heads on "
-                    "`Omron SS-5GL` — shared GBA BOM part)"
-                ),
-                "spec": "M2 DIN 125 washer",
+                "spec": "3 x 10 thread-forming screw for plastics, pan head",
                 "qty": 2,
             },
             {
@@ -384,8 +370,8 @@ def generate_markdown() -> str:
             "Both top-deck buttons use the exact same smooth cylindrical-crowned stadium profile "
             "(transverse slider nub removed from `POWER`) and actuate `2x Omron SS-5GL` "
             "microswitches (`0.49 N` operating force, `OP = 8.8 +/- 0.8 mm`). Each switch is "
-            "located on `2x Ø2.20 mm` pins (`9.50 mm` pitch, `0.075 mm/side` fit) and clamped with "
-            "`M2 x 10 DIN 912` SHCS + `M2 DIN 125` washers into `Ruthex RX-M2x4.0` inserts. "
+            "located on a `Ø2.20 mm` pin (Hole 1, `0.075 mm/side` fit) and clamped to its tower "
+            "by a `3 x 10` thread-forming screw driven from behind into Hole 2 (C2). "
             "Pre-loading the lever rest position to `h_rest = +10.40 mm` (`r = 0.72` ratio) "
             "with the integral `Z = 23.45 mm` front-and-rear bottom-out stops (`z_stop = 1.90 mm`) "
             "and `Ø2.80 mm` anti-tilt guide poles on `usb_retainer_bracket.py` guarantees every "

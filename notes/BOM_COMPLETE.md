@@ -19,7 +19,7 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 - **Recommended Capacity:** **64 GB or 128 GB M.2 2230 NVMe** (e.g. *Kioxia BG4 / BG5 128GB M.2 2230*, *WD PC SN530 / SN740 128GB M.2 2230*, or *Sabrent Rocket 2230*, `~$15–$22`).
 
 ### 3. Shared GBA BOM Parts: `Omron SS-5GL` Buttons & `Kingbright L-819EGW` LED
-- **Momentary `POWER` (`J-03`) & `RESET` (`J-04`) Buttons with `Omron SS-5GL`:** Both top-deck buttons use the exact same smooth cylindrical-crowned stadium profile (transverse slider nub removed from `POWER`) and actuate `2x Omron SS-5GL` microswitches (`0.49 N` operating force, `OP = 8.8 +/- 0.8 mm`). Each switch is located on `2x Ø2.20 mm` pins (`9.50 mm` pitch, `0.075 mm/side` fit) and clamped with `M2 x 10 DIN 912` SHCS + `M2 DIN 125` washers into `Ruthex RX-M2x4.0` inserts. Pre-loading the lever rest position to `h_rest = +10.40 mm` (`r = 0.72` ratio) with the integral `Z = 23.45 mm` front-and-rear bottom-out stops (`z_stop = 1.90 mm`) and `Ø2.80 mm` anti-tilt guide poles on `usb_retainer_bracket.py` guarantees every switch across the full `OP = 8.0..9.6 mm` tolerance band clicks at `0.58..1.73 mm` stroke and stops `0.96 mm` before overtravel without tilting.
+- **Momentary `POWER` (`J-03`) & `RESET` (`J-04`) Buttons with `Omron SS-5GL`:** Both top-deck buttons use the exact same smooth cylindrical-crowned stadium profile (transverse slider nub removed from `POWER`) and actuate `2x Omron SS-5GL` microswitches (`0.49 N` operating force, `OP = 8.8 +/- 0.8 mm`). Each switch is located on a `Ø2.20 mm` pin (Hole 1, `0.075 mm/side` fit) and clamped to its tower by a `3 x 10` thread-forming screw driven from behind into Hole 2 (C2). Pre-loading the lever rest position to `h_rest = +10.40 mm` (`r = 0.72` ratio) with the integral `Z = 23.45 mm` front-and-rear bottom-out stops (`z_stop = 1.90 mm`) and `Ø2.80 mm` anti-tilt guide poles on `usb_retainer_bracket.py` guarantees every switch across the full `OP = 8.0..9.6 mm` tolerance band clicks at `0.58..1.73 mm` stroke and stops `0.96 mm` before overtravel without tilting.
 - **Dual-Colour Front LED (`Kingbright L-819EGW`, `Red = Power`, `Green = ON`):** Wire **Pin 2 (Common Cathode)** to `GND` (Pin 9), **Pin 1 (Red Anode)** via `330 Ω` to `GP4` (Pin 7), and **Pin 3 (Green Anode)** via `330 Ω` to `GP5` (Pin 29) on the Radxa X4's always-on RP2040 (`firmware/rp2040_reset/code.py`). When USB-C power is connected in standby (`S5`), the front light pipe glows **RED (`Power`)**; when the console is running (`S0`), it switches to **GREEN (`ON`)**.
 - **Hard Power-Off Resilience (Pulling the Plug Without Safe Shutdown):** Batocera's root OS (`/boot/batocera`) is a read-only SquashFS image in RAM that cannot be corrupted by a sudden power cut; `n64mini.console.suspend` flushes save states with `os.fsync()` before atomic `replace()`, ignores `0`-byte interrupted files, and `n64mini-service.sh` cleans up any orphaned `.tmp`/`.pending` files on boot. Set BIOS `Chipset -> PCH-IO Configuration -> State After G3 -> S0` (or `Last State`) if switching power at the wall socket.
 
@@ -78,9 +78,7 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 | Item | Specification | Qty |
 |---|---|---:|
 | Omron SS-5GL subminiature hinge-lever SPDT microswitch (`19.8 x 6.4 x 10.2 mm`, `0.49 N` max operating force, `OP = 8.8 +/- 0.8 mm` — shared GBA BOM part; 1 under `POWER`, 1 under `RESET`) | `Omron SS-5GL microswitch` | 2 |
-| Ruthex RX-M2x4.0 brass heat-set insert (`M2 x 4.0 mm`, `OD 3.2 mm`, 1 per `Omron SS-5GL` switch in `lower_tub` Hole 2 — shared GBA BOM part) | `Ruthex RX-M2x4.0` | 2 |
-| M2 x 10 DIN 912 socket-head cap screw (A2-70, 1 per `Omron SS-5GL` switch through `Ø2.35 mm` Hole 2, paired with integral `Ø2.20 mm` Pin 1 — shared GBA) | `M2 x 10 DIN 912 SHCS` | 2 |
-| M2 flat washer (`DIN 125` A2, `Ø5.0 x 0.3 mm`, under `M2 x 10` heads on `Omron SS-5GL` — shared GBA BOM part) | `M2 DIN 125 washer` | 2 |
+| 3 x 10 mm pan-head thread-forming screw for plastics (PT type, e.g. EJOT DELTA PT 30 x 10 or equivalent; 1 per `Omron SS-5GL`, driven from behind the switch tower into the switch's `Ø2.35 mm` Hole 2, before the Radxa board; bench-test on a spare switch first) | `3 x 10 thread-forming screw for plastics, pan head` | 2 |
 | Ruthex RX-M3x5.7 brass heat-set insert (`M3 x 5.7 mm`, `OD 4.0 mm`, 4 in `upper_shell` corner bosses — shared GBA BOM part) | `Ruthex RX-M3x5.7` | 4 |
 | M3 x 12 DIN 912 socket-head cap screw (A2-70, 4 corner enclosure bolts) | `M3 x 12 DIN 912 SHCS` | 4 |
 | 2.0 mm Clear Cast Acrylic sheet blank (`>= 35 x 25 mm`) + Cricut adhesive vinyl (Matte Black background + Red/Blue/Green/Yellow/White N64 logo) | `2.0mm Clear Cast Acrylic + Cricut vinyl` | 1 |
@@ -90,14 +88,13 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 | Specification | Description | Total Qty |
 |---|---|---:|
 | `2.0mm Clear Cast Acrylic + Cricut vinyl` | 2.0 mm Clear Cast Acrylic sheet blank (`>= 35 x 25 mm`) + Cricut adhesive vinyl (Matte Black background + Red/Blue/Green/Yellow/White N64 logo) | 1 |
+| `3 x 10 thread-forming screw for plastics, pan head` | 3 x 10 mm pan-head thread-forming screw for plastics (PT type, e.g. EJOT DELTA PT 30 x 10 or equivalent; 1 per `Omron SS-5GL`, driven from behind the switch tower into the switch's `Ø2.35 mm` Hole 2, before the Radxa board; bench-test on a spare switch first) | 2 |
 | `3.0 x 1.0 mm N52 magnet` | Neodymium disc magnet (`Ø3.0 x 1.0 mm`, N52 — 2 per cover + 2 per bay) | 8 |
 | `330R 0.25W 1% axial resistor` | 330 Ohm 0.25 W metal-film axial resistor (`1%`, current-limiting on Pin 1 Red anode & Pin 3 Green anode — shared GBA BOM part) | 2 |
 | `3M Bumpon SJ5012` | 3M Bumpon SJ5012 rubber foot (`12.7 mm` cylindrical, flat top, `3.5 mm` tall): one over each corner screw counterbore; the gap feeds the floor vents | 4 |
 | `Foam tape 1 x 3 mm` | Closed-cell foam tape, `1 mm` thick, `3 mm` wide: seals the intake hood's wall tops to the roof underside (~200 mm) | 1 |
 | `Kingbright L-93WEGW (Rapid 55-0155) 3 mm bi-colour LED` | Kingbright L-93WEGW (`Rapid 55-0155`) 3 mm Red/Green bi-colour 3-lead common-cathode through-hole LED (Pin 1 Red `625 nm` = Power/Standby, Pin 2 Common Cathode = `GND`, Pin 3 Green `565 nm` = ON) | 1 |
 | `M.2 2230 NVMe SSD (64GB / 128GB)` | M.2 **2230** NVMe PCIe Gen3 x4 SSD — **64GB or 128GB** (M-key, `22 x 30 mm`; e.g. Kioxia BG4/BG5 128GB or WD SN530/SN740 128GB; full N64 library + Batocera OS + 1080p artwork uses only ~12–15 GB) | 1 |
-| `M2 DIN 125 washer` | M2 flat washer (`DIN 125` A2, `Ø5.0 x 0.3 mm`, under `M2 x 10` heads on `Omron SS-5GL` — shared GBA BOM part) | 2 |
-| `M2 x 10 DIN 912 SHCS` | M2 x 10 DIN 912 socket-head cap screw (A2-70, 1 per `Omron SS-5GL` switch through `Ø2.35 mm` Hole 2, paired with integral `Ø2.20 mm` Pin 1 — shared GBA) | 2 |
 | `M2.5 x 6 ISO 7380 BHCS` | M2.5 x 6 ISO 7380 button-head socket screw (A2 stainless: 4 for Radxa X4 + 2 for 2.5GbE RJ45 Ethernet carrier) | 6 |
 | `M3 x 12 DIN 912 SHCS` | M3 x 12 DIN 912 socket-head cap screw (A2-70, 4 corner enclosure bolts) | 4 |
 | `Non-conductive thermal paste` | Thermal paste, non-conductive (e.g. Arctic MX-4 or Noctua NT-H1): thin layer between the N100 die and the heat sink. No thermal pad. | 1 |
@@ -105,7 +102,6 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 | `Panel-mount RJ45 jack` | 2.5GbE 8P8C shielded RJ45 Ethernet receptacle on M2.5 breakout carrier (`2x Ø2.70 mm` mounting ears at `(43.00, 23.00)` & `(51.50, 28.50)`) | 1 |
 | `Radxa X4 4GB/8GB (RS119-D4E0 / RS119-D8E0, no GPIO header)` | Radxa X4 SBC — **4GB or 8GB LPDDR5, NO eMMC, NO 40-pin GPIO header** (SKU `RS119-D4E0` 4GB or `RS119-D8E0` 8GB; Intel Processor N100, mounted upside-down so SoC & heatsink face `+Z` up into the dome) | 1 |
 | `Ruthex RX-M2.5x4.0` | Ruthex RX-M2.5x4.0 brass heat-set insert (`M2.5 x 4.0 mm`, `OD 3.2 mm`: 4 for Radxa X4 standoffs + 2 for 2.5GbE RJ45 Ethernet carrier standoffs) | 6 |
-| `Ruthex RX-M2x4.0` | Ruthex RX-M2x4.0 brass heat-set insert (`M2 x 4.0 mm`, `OD 3.2 mm`, 1 per `Omron SS-5GL` switch in `lower_tub` Hole 2 — shared GBA BOM part) | 2 |
 | `Ruthex RX-M3x5.7` | Ruthex RX-M3x5.7 brass heat-set insert (`M3 x 5.7 mm`, `OD 4.0 mm`, 4 in `upper_shell` corner bosses — shared GBA BOM part) | 4 |
 | `Same Sky HSB26-343408` | Same Sky HSB26-343408 BGA pin-fin heat sink (`33.5 x 33.5 x 10 mm`, 14 x 14 pins, black anodised AL6063; on the N100 with paste, clamped by the printed duct; replaces the stock silicone pad, which limits the stock cooler) | 1 |
 | `Silicone pad 0.5 mm` | Self-adhesive silicone rubber pad, `0.5 mm`, ~`30 x 12 mm`: on the duct cover under the cartridge cradle; closing the shell presses the heat sink onto the die | 1 |

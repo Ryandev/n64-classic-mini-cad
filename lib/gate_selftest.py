@@ -84,6 +84,13 @@ MUTATIONS = [
     (
         "top_controls_check",
         "assembly/datum.py",
+        "OMRON_SCREW_L = 10.0",
+        "OMRON_SCREW_L = 12.0",
+        "OMRON_SCREW",
+    ),
+    (
+        "top_controls_check",
+        "assembly/datum.py",
         "OMRON_REST_DEFLECTION = 3.20",
         "OMRON_REST_DEFLECTION = 0.50",
         "OMRON_ACT",

@@ -30,6 +30,33 @@ def omron_switches() -> list[cq.Shape]:
     ]
 
 
+def omron_screws() -> list[cq.Shape]:
+    """2x switch screws (hole 2), head on the tower's rear face, tip inside the switch (C2).
+
+    The thread-forming screw is modelled as its head, its Ø3.0 shank through the tower's clearance
+    hole, and the Ø2.35 pilot it fills in the switch, where it rolls its own thread.
+    """
+    y = cq.Vector(0.0, -1.0, 0.0)
+    out = []
+    for x in (-33.73, 33.73):
+        y1 = D.OMRON_TOWER_Y1
+        y_switch = D.OMRON_Y + omron_ss5gl.BODY_WIDTH / 2.0  # switch rear face (-20.95)
+        y_tip = y1 - D.OMRON_SCREW_L
+        z = D.OMRON_HOLE_Z
+        head = cq.Solid.makeCylinder(
+            D.OMRON_SCREW_HEAD_D / 2.0,
+            D.OMRON_SCREW_HEAD_H,
+            cq.Vector(x, y1 + D.OMRON_SCREW_HEAD_H, z),
+            y,
+        )
+        shank = cq.Solid.makeCylinder(D.OMRON_SCREW_D / 2.0, y1 - y_switch, cq.Vector(x, y1, z), y)
+        core = cq.Solid.makeCylinder(
+            D.OMRON_HOLE_D / 2.0, y_switch - y_tip, cq.Vector(x, y_switch, z), y
+        )
+        out.append(cq.Compound.makeCompound([head, shank, core]))  # touching, not overlapping
+    return out
+
+
 def tactile_switches() -> list[cq.Shape]:
     """Alias for `omron_switches()` returning the 2x `Omron SS-5GL` microswitches."""
     return omron_switches()

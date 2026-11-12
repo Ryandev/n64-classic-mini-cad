@@ -25,9 +25,9 @@ Set at `205–215 °C` (PLA) or `235–245 °C` (PETG) using a vertical solderin
 2. **2.5GbE RJ45 carrier standoffs in `lower_tub` (`2x Ruthex RX-M2.5x4.0`):**
    - Printed bore: `Ø3.20 mm` at `(43.00, 23.00)` and `(51.50, 28.50)`.
    - Set flush with the `Z = 5.60 mm` standoff top datum.
-3. **Omron SS-5GL switch mounts in `lower_tub` (`2x Ruthex RX-M2x4.0`):**
-   - Printed bore: `Ø3.20 mm`, depth `4.8 mm` in rear Hole 2 (`Y = -16.95 mm`, `X = ±32.32 mm`).
-   - Set flush with the vertical switch-mounting cheek face.
+3. **Omron SS-5GL switch mounts in `lower_tub`: no inserts (C2).** Hole 2 is a `Ø3.4 mm`
+   clearance hole through each tower (`X = ±33.73 mm`, `Z = 14.60 mm`); the switch screw threads
+   into the switch itself (see the assembly step).
 4. **Enclosure corner bosses in `upper_shell` (`4x Ruthex RX-M3x5.7`):**
    - Printed bore: `Ø4.00 mm`, depth `7.0 mm` inside `Ø8.5 mm` corner boss (`wall = 2.25 mm`).
    - Set flush with the `Z = 16.00 mm` upper-shell parting face.
@@ -58,7 +58,9 @@ When the Radxa X4 (`RS119-D4E0` / `RS119-D8E0`, ordered **without** the pre-sold
 2. **Glue `2x usb_retainer_bracket` Bridges:**
    - Apply a drop of CA / epoxy to the outer, centre (`X = ±25.00 mm`), and inner USB divider walls of `lower_tub` and press the Left and Right `usb_retainer_bracket` pieces down until their `Z = 16.85 mm` bridges seat over the `4x` USB-A metal shells (`0.15 mm` top clearance) and their `Z = 23.45 mm` stop blocks (`Face854` extended to `Y = -27.80 mm`) and `Ø2.80 mm` guide poles stand vertical at `(±32.32, -32.20)`.
 3. **Omron SS-5GL Microswitches (`POWER` & `RESET`):**
-   - Slide each `Omron SS-5GL` onto its integral `Ø2.20 mm` front locating pin (`Y = -26.45 mm`) with the hinge lever extending forward (`-Y`) over the `usb_retainer_bracket` stop block, and clamp Hole 2 (`Y = -16.95 mm`) with an `M2 x 10 DIN 912` SHCS + `M2 DIN 125` washer.
+   - Slide each `Omron SS-5GL` onto its integral `Ø2.20 mm` locating pin (Hole 1) with the hinge lever extending forward (`-Y`) over the `usb_retainer_bracket` stop block.
+   - **Before the Radxa X4 goes in**, drive a `3 x 10` pan-head thread-forming screw for plastics from behind each tower, through its `Ø3.4 mm` clearance hole, into the switch's `Ø2.35 mm` Hole 2 until the switch is snug against the tower. Don't over-tighten: the screw rolls its own thread in the switch case. The USB-A socket in front of the switch leaves no room for a screw from the front (C2).
+   - **Bench-test first:** drive one screw into a spare `SS-5GL`, snug it, and check the case doesn't crack and the switch still clicks cleanly. If it fails, see C2 in the release todo for the screw-as-pin fallback.
 4. **Front Power LED & Light Pipe:**
    - Slide `led_light_pipe` (Clear PETG) into the `X = 0` front aperture and seat the `Kingbright L-93WEGW` 3-lead bi-colour LED (`330 Ω` resistors on Red & Green anodes) into the rear cradle.
 5. **Inverted Radxa X4 + M.2 2230 SSD + RJ45 Breakout:**

@@ -99,16 +99,16 @@ DEVIATIONS = {
     },
     "omron_stop_l": {
         "kind": "added",
-        "why": "Left Omron SS-5GL switch mount tower, Ø2.20 pin, M2 bore & Z=23.45mm stop (J-03)",
+        "why": "Left Omron SS-5GL tower, Ø2.20 pin, screw clearance & Z=23.45mm stop (J-03)",
         "bbox": (-36.6, -27.3, 1.5, -21.4, -16.7, 23.6),
-        "volume_mm3": 1083.40,
+        "volume_mm3": 1072.82,
         "tolerance_mm3": 8.0,
     },
     "omron_stop_r": {
         "kind": "added",
-        "why": "Right Omron SS-5GL switch mount tower, Ø2.20 pin, M2 bore & Z=23.45mm stop (J-04)",
+        "why": "Right Omron SS-5GL tower, Ø2.20 pin, screw clearance & Z=23.45mm stop (J-04)",
         "bbox": (21.4, -27.3, 1.5, 36.6, -16.7, 23.6),
-        "volume_mm3": 1083.40,
+        "volume_mm3": 1072.82,
         "tolerance_mm3": 8.0,
     },
     "front_led_bore": {
@@ -223,8 +223,8 @@ def _omron_stop_posts() -> list[cq.Shape]:
     Each tower rises from the `Z = 1.60 mm` floor of `lower_tub` (`Y = -20.80 .. -16.80 mm`) and
     provides:
       - `Ø2.20 mm` front locator pin (`Hole 1`) at `(+-24.23, -27.15..-20.80, 14.60)`
-      - `Ruthex RX-M2x4.0` heat-set insert bore (`Hole 2`, `Ø3.20 x 3.20 mm`) at
-        `(+-33.73, -20.80, 14.60)`
+      - `Ø3.4 mm` clearance hole through the tower (`Hole 2`) at `(+-33.73, -20.80..-16.80, 14.60)`
+        for the switch screw, driven from behind (`OMRON_SCREW_*`, C2)
       - Integral `Z = 23.45 mm` rear travel-stop post under the `Y = -20.28 mm` rear half of the
         `POWER` (`J-03`) and `RESET` (`J-04`) buttons (`1.95 mm` stroke limit, paired with the
         separately-printed `part/usb_retainer_bracket.py` front/mid travel-stop shelf at
@@ -310,13 +310,13 @@ def get_shape() -> cq.Shape:
             ),
         ),
     ]
-    # 2x Ruthex RX-M2x4.0 heat-set insert bores in the Omron SS-5GL mounting towers
+    # 2x clearance holes through the Omron SS-5GL towers for the switch screws, driven from behind
     for x_m2 in (-33.73, 33.73):
         cuts.append(
             cq.Solid.makeCylinder(
-                1.60,
-                3.25,
-                cq.Vector(x_m2, -20.85, D.OMRON_HOLE_Z),
+                D.OMRON_SCREW_CLEAR_D / 2.0,
+                D.OMRON_TOWER_Y1 + 0.1 - (-20.90),
+                cq.Vector(x_m2, -20.90, D.OMRON_HOLE_Z),
                 cq.Vector(0.0, 1.0, 0.0),
             )
         )

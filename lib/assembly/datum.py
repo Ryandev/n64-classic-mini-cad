@@ -364,6 +364,16 @@ OMRON_Y = (
 OMRON_HOLE_Z = 14.60  # mounting-hole Z datum (body Z=11.70..21.90, lever rest Z=25.30)
 OMRON_PIN_D = 2.20  # Ø2.20 mm printed locator pins in Ø2.35 mm switch holes (0.075 mm/side)
 OMRON_HOLE_D = 2.35
+# Hole 2 holds the switch with a ~3 mm thread-forming screw for plastics, driven from behind the
+# tower (before the Radxa board goes in) through a clearance hole and rolling its own thread in
+# the switch's Ø2.35 hole (≈ the 0.8 x d pilot such screws want). It clamps the switch to the
+# tower: no play, and nothing on the switch's front, where the USB-A socket leaves no room (C2).
+# Bench-test it on a spare switch: the case's wall below the thread is ~1.4 mm.
+OMRON_SCREW_D = 3.0
+OMRON_SCREW_L = 10.0  # under the head: tower 4.0 + gap 0.15 + 5.85 into the switch
+OMRON_SCREW_CLEAR_D = 3.4  # through the tower
+OMRON_SCREW_HEAD_D, OMRON_SCREW_HEAD_H = 6.0, 2.4  # pan-head envelope
+OMRON_TOWER_Y1 = -16.80  # tower rear face: the screw head seats here
 OMRON_HOLE_PITCH = 9.50
 OMRON_LEVER_RATIO = 0.72  # plunger contacts lever at r = 0.72 from hinge (X_local = +3.44 mm)
 OMRON_REST_DEFLECTION = 3.20  # pre-loaded rest tip deflection -> h_rest = 13.6 - 3.2 = 10.40 mm

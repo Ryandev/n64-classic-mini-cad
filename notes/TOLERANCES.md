@@ -15,7 +15,7 @@ Every figure here is stated with its source (process specification or measured h
 
 ### Heat-set brass inserts (Ruthex — shared with GBA BOM)
 
-    RX-M2x4.0 (Omron SS-5GL switch brackets & Kingbright L-819EGW LED clamp)
+    RX-M2x4.0 (Kingbright L-819EGW LED clamp; the Omron switches no longer use inserts, C2)
         thread              M2
         insert length       4.0 mm
         printed bore OD     3.2 mm       (`min boss OD 6.0 mm`)
@@ -83,7 +83,7 @@ Adapted from `GBA/CAD/notes/TOLERANCES.md` §5 and `BOM_button.md`, verified mec
 On a bare `Omron SS-5GL` contacted at the lever tip (`r = 1.00`), the `1.60 mm` factory `OP` band (`8.00 .. 9.60 mm`) is wider than the `1.20 mm` minimum overtravel (`OVERTRAVEL_MIN`), and starting from `FP_max = 13.60 mm` would waste `4.00 mm` of dead pre-travel before the earliest click.
 
 Our mechanism (`component/omron_ss5gl.py` + `subassembly/top_controls_mech.py` + `part/usb_retainer_bracket.py`) eliminates both issues:
-1. **Precision Switch Locating (`0.075 mm/side`):** Each `Omron SS-5GL` sits on an integral `Ø2.20 mm` front locator pin (`Hole 1`) and is clamped at `Hole 2` (`9.50 mm` pitch) by an `M2 x 10 DIN 912` SHCS + `M2 DIN 125` washer into a `Ruthex RX-M2x4.0` brass insert on `lower_tub`.
+1. **Precision Switch Locating (`0.075 mm/side`):** Each `Omron SS-5GL` sits on an integral `Ø2.20 mm` front locator pin (`Hole 1`) and is clamped to its tower at `Hole 2` (`9.50 mm` pitch) by a `3 x 10` thread-forming screw driven from behind, through a `Ø3.4 mm` clearance hole, into the switch's own `Ø2.35 mm` hole (C2).
 2. **Pre-Loaded Anti-Rattle Rest (`h_rest = +10.40 mm`) & Coaxial Hole-and-Pole Anti-Tilt Guide:** At button rest (`z = 0.00 mm`, stadium flange held against the `upper_shell` roof up-stop), the lever tip is pre-deflected by `3.20 mm` from `+13.60 mm` to **`h_rest = +10.40 mm`**, while a coaxial **`Ø2.80 mm` vertical guide pole** on `usb_retainer_bracket` (`Z = 23.45 .. 27.10 mm` at `(+-32.32, -32.20)`) engages `1.70 mm` deep inside a **`Ø3.20 mm` blind guide bore** (`0.20 mm/side` radial fit) in the front underside of the button (`3.60 mm` engagement at full press), preventing any front-to-back tilt or rotation.
    - Because `h_rest = +10.40 mm >= OP_max (+9.60 mm) + MD_max (0.80 mm) = +10.40 mm`, **every switch is 100% guaranteed to release at rest**, while the lever's internal spring (`>= 0.06 N`) holds the button cap snug against the shell ceiling with **zero rattle and zero dead pre-travel** (no separate coil spring needed).
 3. **Lever Contact Ratio (`r = 0.72`, `X_local = +3.44 mm`):** Contacting the blade at `72%` of its span scales plunger stroke `z` to lever-tip travel `dz_tip = z / 0.72`:

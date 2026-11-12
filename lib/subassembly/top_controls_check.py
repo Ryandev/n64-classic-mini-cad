@@ -29,7 +29,7 @@ import cadquery as cq  # noqa: E402
 import printable  # noqa: E402
 from assembly import datum as D  # noqa: E402
 from assembly import n64_scan_profiles as S  # noqa: E402
-from component import omron_ss5gl  # noqa: E402
+from component import omron_ss5gl, radxa_x4  # noqa: E402
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
 from OCP.BRepClass3d import BRepClass3d_SolidClassifier  # noqa: E402
 from OCP.gp import gp_Pnt  # noqa: E402
@@ -43,7 +43,7 @@ from part import (  # noqa: E402
     usb_retainer_bracket,
 )
 from part.shared import n64_text as T  # noqa: E402
-from subassembly import top_controls_mech  # noqa: E402
+from subassembly import front_panel_mech, top_controls_mech  # noqa: E402
 from testing import variant_manifest  # noqa: E402
 from testing.load import load_by_path  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
@@ -249,6 +249,54 @@ def check_all():
             f"click stroke={act['z_earliest']:.2f}/{act['z_nominal']:.2f}/{act['z_latest']:.2f} mm "
             f"(stop {act['z_stop']:.2f} mm, overtravel margin="
             f"{act['overtravel_margin_to_bottom']:.2f} mm, pin clear={pin_clear:.3f} mm/side)",
+        )
+    )
+
+    # 5c. OMRON_SCREW (C2): each switch's hole-2 screw, driven from behind the tower, threads into
+    # the switch and stops short of its front face; nothing on the switch's front side, where the
+    # USB-A socket is; a straight driver path behind the head through the lower tub.
+    screws = top_controls_mech.omron_screws()
+    usb = radxa_x4.usb_a_cluster()
+    bracket = front_panel_mech.usb_retainer_compound()
+    screw_bad = []
+    for (name, sw), screw in zip((("POWER", sw_left), ("RESET", sw_right)), screws, strict=True):
+        sb, wb = screw.BoundingBox(), sw.BoundingBox()
+        engaged = (D.OMRON_Y + omron_ss5gl.BODY_WIDTH / 2.0) - sb.ymin
+        tip_margin = sb.ymin - wb.ymin
+        clashes = {
+            k: _common_volume(v, screw)
+            for k, v in (("tub", tub), ("switch", sw), ("usb", usb), ("bracket", bracket))
+        }
+        x = (sb.xmin + sb.xmax) / 2.0
+        driver = cq.Solid.makeCylinder(
+            D.OMRON_SCREW_HEAD_D / 2.0,
+            40.0,
+            cq.Vector(x, D.OMRON_TOWER_Y1 + D.OMRON_SCREW_HEAD_H + 0.05, D.OMRON_HOLE_Z),
+            cq.Vector(0.0, 1.0, 0.0),
+        )
+        path = _common_volume(tub, driver)
+        if (
+            any(v > 1e-3 for v in clashes.values())
+            or tip_margin < 0.3
+            or engaged < 4.0
+            or path > 1e-3
+        ):
+            screw_bad.append(
+                f"{name}: tip {tip_margin:.2f} mm inside the switch front, "
+                f"{engaged:.2f} mm engaged, "
+                f"clash { ({k: round(v, 3) for k, v in clashes.items() if v > 1e-3}) }, "
+                f"driver path {path:.3f} mm^3"
+            )
+    rows.append(
+        (
+            "OMRON_SCREW switch screws from behind: thread in the switch, clear of USB, tool path",
+            not screw_bad,
+            f"{D.OMRON_SCREW_D:.0f} x {D.OMRON_SCREW_L:.0f} mm screws: tip "
+            f"{screws[0].BoundingBox().ymin - sw_left.BoundingBox().ymin:.2f} mm short of the "
+            "switch front (min 0.3), >= 4 mm in the switch, 0 mm^3 with tub/switch/USB/bracket, "
+            "40 mm driver path clear"
+            if not screw_bad
+            else "; ".join(screw_bad),
         )
     )
 
