@@ -32,13 +32,14 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 
 | Part | Material | Qty |
 |---|---|---:|
-| Lower Tub (`lib/variant/lower_tub.py`, `130.00 x 99.88 x 14.74 mm` with integrated bi-colour LED & Clear PETG Light-Pipe Holder Cradle) | Charcoal Grey PETG / Matte PLA | 1 |
-| Twin-Port Hinged Front Controller Covers (`lib/part/front_port_cover.py`, `28.0 x 11.0 x 1.8 mm`: Left `P1+P2` at `X=-25.0`, Right `P3+P4` at `X=+25.0`) | Charcoal Grey PETG / Matte PLA | 2 |
-| USB-A Top Retainer & Button Travel-Stop Brackets (`lib/part/usb_retainer_bracket.py`, `31.6 x 8.8 x 11.85 mm`, glued onto `lower_tub` USB-A cradle walls after seating the 4 USB-A receptacles) | Charcoal Grey PETG / Matte PLA | 2 |
-| Shallow N64 Controller Port Inserts (`lib/part/n64_port_insert.py`, `Ø10.88 x 1.92 mm` with `R=0.50mm` front rim fillet & `P1..P4` tactile pips) | Light Cool Grey PLA / PETG | 4 |
+| Lower Tub (`lib/variant/lower_tub.py`, `130.00 x 99.88 x 14.74 mm` with integrated bi-colour LED & Clear PETG Light-Pipe Holder Cradle) | Charcoal Grey PETG Basic | 1 |
+| Twin-Port Hinged Front Controller Covers (`lib/part/front_port_cover.py`, `28.0 x 11.0 x 1.8 mm`: Left `P1+P2` at `X=-25.0`, Right `P3+P4` at `X=+25.0`) | Charcoal Grey PETG Basic | 2 |
+| USB-A Top Retainer & Button Travel-Stop Brackets (`lib/part/usb_retainer_bracket.py`, `31.6 x 8.8 x 11.85 mm`, glued onto `lower_tub` USB-A cradle walls after seating the 4 USB-A receptacles) | Charcoal Grey PETG Basic | 2 |
+| Shallow N64 Controller Port Inserts (`lib/part/n64_port_insert.py`, `Ø10.88 x 1.92 mm` with `R=0.50mm` front rim fillet & `P1..P4` tactile pips) | Light Cool Grey PETG Basic | 4 |
 | Lenticular N64 Power LED Light Pipe (`lib/part/led_light_pipe.py`, `6.36 x 1.76 mm` authentic N64 almond front lens + rear optical barrel) | Clear / Transparent PETG (100% infill) | 1 |
-| Cooling duct (`lib/part/cooling_duct.py`): fan seat, plenum, chamber and the cover that clamps the heat sink; printed cover-side down | PETG or ASA (the heat sink runs ~60-70 C; not PLA) | 1 |
-| Intake hood (`lib/part/cooling_hood.py`): seals the 25 top louvers to the fan; printed floor-side down | PETG or ASA | 1 |
+| Cooling duct (`lib/part/cooling_duct.py`): fan seat, plenum, chamber and the cover that clamps the heat sink; printed cover-side down | PETG Basic (the heat sink runs ~60-70 C, near its limit: check it in the on-console thermal test) | 1 |
+| Duct floor plate (`lib/part/duct_floor.py`): the plenum floor, printed flat and glued into the duct's frame with 2-part epoxy (the bead seals the plenum) | PETG Basic (same as the duct) | 1 |
+| Intake hood (`lib/part/cooling_hood.py`): seals the 25 top louvers to the fan; printed floor-side down | PETG Basic | 1 |
 
 ### Bought Hardware & Electronics
 
@@ -66,12 +67,12 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 
 | Part | Material | Qty |
 |---|---|---:|
-| Upper Shell (`lib/variant/upper_shell.py`, `130.00 x 99.88 x 20.56 mm` sculpted N64 top deck with 25 parabolic louvers & engraved lettering) | Charcoal Grey PETG / Matte PLA | 1 |
+| Upper Shell (`lib/variant/upper_shell.py`, `130.00 x 99.88 x 20.56 mm` sculpted N64 top deck with 25 parabolic louvers & engraved lettering) | Charcoal Grey PETG Basic | 1 |
 | Front N64 Emblem Jewel (`lib/part/front_bezel.py`, `24.14 x 15.50 x 2.00 mm` shaped from Clear Acrylic with Cricut vinyl N64 decal on flat `+Y` back) | 2.0mm Clear Cast Acrylic + Rear Cricut Vinyl Sticker | 1 |
 | Diode-Laser Birch Plywood Cutting & Cricut Alignment Jig (`lib/part/bezel_laser_jig.py` -> `export/bezel_laser_jig/bezel_laser_jig_0.svg`) | 3.0mm Laser-Grade Birch Plywood (cut on diode laser) | 1 |
-| Cartridge Slot Dust-Flap Insert (`lib/part/cartridge_flaps.py`, `57.50 x 10.00 x 1.35 mm` with central parting seam & semicircular end tabs) | Light Cool Grey PLA / PETG | 1 |
-| Momentary Power Button Plunger (`lib/part/power_slider.py`, smooth cylindrical-crowned stadium cap matching Reset, 3D-engraved `POWER`) | Light Cool Grey PLA / PETG | 1 |
-| Momentary Reset Button Plunger (`lib/part/reset_button.py`, smooth cylindrical-crowned stadium cap, 3D-engraved `RESET`) | Light Cool Grey PLA / PETG | 1 |
+| Cartridge Slot Dust-Flap Insert (`lib/part/cartridge_flaps.py`, `57.50 x 10.00 x 1.35 mm` with central parting seam & semicircular end tabs) | Light Cool Grey PETG Basic | 1 |
+| Momentary Power Button Plunger (`lib/part/power_slider.py`, smooth cylindrical-crowned stadium cap matching Reset, 3D-engraved `POWER`) | Light Cool Grey PETG Basic | 1 |
+| Momentary Reset Button Plunger (`lib/part/reset_button.py`, smooth cylindrical-crowned stadium cap, 3D-engraved `RESET`) | Light Cool Grey PETG Basic | 1 |
 
 ### Bought Hardware & Electronics
 

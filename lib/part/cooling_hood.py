@@ -3,7 +3,7 @@
 Plan outline = louver field (rect A) joined to the fan top (rect B). Over the fan the walls stand
 on the fan frame's rim; elsewhere a floor plate closes the hood off from the case. Wall tops follow
 the roof underside (ray-cast against the upper shell variant) less `HOOD_ROOF_GAP`, closed with
-foam tape when the shell goes on. Print floor-down in PETG or ASA.
+foam tape when the shell goes on. Print floor-down in PETG Basic.
 """
 
 import os

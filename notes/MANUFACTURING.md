@@ -6,15 +6,15 @@ All 15 printed parts are pre-oriented and packed onto a single `240.6 x 229.0 x 
 
 | Parameter | Structural enclosure (`lower_tub`, `upper_shell`, `usb_retainer_bracket`, `front_port_cover`) | Cosmetic caps & inserts (`power_slider`, `reset_button`, `cartridge_flaps`, `n64_port_insert`) | Optical lens (`led_light_pipe`) |
 |---|---|---|---|
-| **Material** | Charcoal Grey PETG (not PLA: it softens at ~55 °C, `PRINTING.md`) | Light Cool Grey PETG | Clear / Transparent PETG |
+| **Material** | Charcoal Grey PETG Basic (`PRINTING.md`) | Light Cool Grey PETG Basic | Clear / Transparent PETG |
 | **Nozzle** | `0.4 mm` | `0.4 mm` (or `0.2 mm` for crisp button text) | `0.4 mm` |
 | **Layer height** | `0.16 mm` (adaptive `0.08 mm` on `upper_shell` domes) | `0.12 mm` | `0.12 mm` |
 | **Wall loops** | `4` (`1.6 mm`) | `3` (`1.2 mm`) | `100%` aligned rectilinear infill |
 | **Infill** | `20%` gyroid | `25%` gyroid | `100%` |
 | **Print orientation** | `lower_tub`, `upper_shell`: `PRINT_NORMAL = (0, 0, 1)`; `usb_retainer_bracket`, `front_port_cover`: `PRINT_NORMAL = (0, 1, 0)` (support-free) | `PRINT_NORMAL = (0, 0, 1)` (support-free) | `PRINT_NORMAL = (0, -1, 0)` (support-free) |
 
-**Before printing, read [`PRINTING.md`](PRINTING.md):** the printer, materials (no PLA in the
-console; ASA or PETG for the duct and hood), supports (PETG body, PLA interface), the fits
+**Before printing, read [`PRINTING.md`](PRINTING.md):** the printer, materials (PETG Basic for every
+printed part), printing for paint, supports (PETG body, PLA interface), the fits
 measured on the owner's GBA prints, and the print-test coupons (`./run coupons`).
 
 ---

@@ -54,6 +54,9 @@ case "$target" in
     coupons)
         $PY python3 lib/coupons.py "$@"
         ;;
+    orient)
+        $PY python3 lib/orientation_study.py "$@"
+        ;;
     all)
         ./run lint
         ./run gate
@@ -77,6 +80,7 @@ targets:
   bom              generate notes/BOM_COMPLETE.md from parametric subassemblies
   fem              Gmsh + CalculiX 3D tetrahedral FEM structural verification
   coupons [NAME..] print-test coupons cut from the real parts into export/coupons/
+  orient [PART..]  how each visible part's skin prints (wall/terraced/support...) per orientation
   radxa-ref [ZIP]  rebuild lib/step/radxa_x4.step from Radxa's download (SHA-256 checked)
   all              lint + gate + export + export-validate
 EOF

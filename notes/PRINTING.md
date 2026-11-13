@@ -21,15 +21,31 @@ are named in brackets: `PRINTING.md` is `GBA/CAD/lib/slicing/PRINTING.md`, `TOLE
 
 ## Materials
 
-| Parts | Material | Why |
-|---|---|---|
-| Tub, shell, bracket, doors, buttons | PETG | tough, takes heat-set inserts; the GBA run's material |
-| Cooling duct and intake hood | ASA, or PETG | the heat sink runs at 60–70 °C, close to PETG's ~70 °C limit, and the duct clamps it, so PETG may creep |
-| Light pipe | clear PETG | |
-| Supports' interface only | PLA | see below |
+**Every printed part is PETG Basic** (owner, 2026-11-13: no PETG-CF, no ASA, no resin). Clear PETG
+for the light pipe. PLA only as the support interface (below).
 
-**No PLA in the console itself.** It softens at about 55 °C (GBA rejected it: HDT ~55 °C, creeps).
+| Considered | Why not |
+|---|---|
+| PLA in the console | softens at about 55 °C, below the heat sink's 60–70 °C (GBA rejected it too) |
+| ASA for the duct and hood | ~95 °C would give heat margin, but the owner keeps one material. PETG's ~70 °C is close to the heat sink, so the on-console thermal test (`n64mini.console.thermal_test`) should also check the duct holds its clamp |
+| PETG-CF | stiffer and flatter, but brittle at thin pins and hinges, a fibrous finish, a hardened nozzle |
+| Resin (PCBWay) plus paint | was for less sanding before paint; PETG printed for paint (below) instead |
+
 **Dry the PETG and the PLA interface spool** before use (G10).
+
+## Printing for paint (fewer layer lines to sand)
+
+- **Orientation does most of it.** A shallow slope printed face-up terraces in rings (about
+  0.2 mm / tan(slope) wide per layer); the same surface printed as a wall comes out smooth (GBA's
+  d-pad cross, DECISIONS 10-30). Check how each visible face prints before a full part.
+- **Variable layer height** in Bambu Studio: 0.08 mm on the shell's sloped deck and domes,
+  0.2 mm elsewhere.
+- **Ironing** on flat top faces; **seam** at a rear corner, away from the faces that show.
+- **2K high-build filler primer**, 3–5 coats sanded back. 1K primer shrinks back and the layer
+  lines reappear weeks later (GBA `MANUFACTURING.md`).
+- **Paint builds up ~0.4 mm** on visible faces, and on *both* faces of a sliding fit, so a fit
+  closes by up to 0.8 mm. The buttons have 0.22 mm a side in their chimneys: mask the chimney
+  insides and button sides, or open the fit up first (owner to decide which parts get painted).
 
 ## Supports
 

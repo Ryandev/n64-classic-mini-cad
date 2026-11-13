@@ -6,8 +6,9 @@ a cover over the pin tips force the air through the 14 x 14 pin fins, front to r
 under the fan's front strip, between the USB retainer brackets, keeps that part of the bore
 blowing into the plenum too. The cover
 rests on the pin tips and clamps the heat sink onto the N100 when the duct is screwed down.
-Print in PETG or ASA (the heat sink runs at ~60-70 C), cover-side down. The plenum floor is a
-separate plate (`floor_plate()`, `part/duct_floor.py`) glued into a frame with a ledge.
+Print in PETG Basic (the heat sink runs at ~60-70 C, near its limit), cover-side down. The
+plenum floor is a separate plate (`floor_plate()`, `part/duct_floor.py`) glued into a frame
+with a ledge.
 
 Clearances measured against the assembly (2026-11-11): the left plenum wall stands inside the fan
 footprint, clear of the power-switch tower (X <= -19.0); the front strip sits above the front

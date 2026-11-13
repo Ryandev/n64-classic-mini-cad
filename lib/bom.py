@@ -34,7 +34,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Lower Tub (`lib/variant/lower_tub.py`, `130.00 x 99.88 x 14.74 mm` with "
                     "integrated bi-colour LED & Clear PETG Light-Pipe Holder Cradle)"
                 ),
-                "material": "Charcoal Grey PETG / Matte PLA",
+                "material": "Charcoal Grey PETG Basic",
                 "qty": 1,
             },
             {
@@ -42,7 +42,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Twin-Port Hinged Front Controller Covers (`lib/part/front_port_cover.py`, "
                     "`28.0 x 11.0 x 1.8 mm`: Left `P1+P2` at `X=-25.0`, Right `P3+P4` at `X=+25.0`)"
                 ),
-                "material": "Charcoal Grey PETG / Matte PLA",
+                "material": "Charcoal Grey PETG Basic",
                 "qty": 2,
             },
             {
@@ -51,7 +51,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "(`lib/part/usb_retainer_bracket.py`, `31.6 x 8.8 x 11.85 mm`, glued onto "
                     "`lower_tub` USB-A cradle walls after seating the 4 USB-A receptacles)"
                 ),
-                "material": "Charcoal Grey PETG / Matte PLA",
+                "material": "Charcoal Grey PETG Basic",
                 "qty": 2,
             },
             {
@@ -59,7 +59,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Shallow N64 Controller Port Inserts (`lib/part/n64_port_insert.py`, "
                     "`Ø10.88 x 1.92 mm` with `R=0.50mm` front rim fillet & `P1..P4` tactile pips)"
                 ),
-                "material": "Light Cool Grey PLA / PETG",
+                "material": "Light Cool Grey PETG Basic",
                 "qty": 4,
             },
             {
@@ -75,7 +75,10 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Cooling duct (`lib/part/cooling_duct.py`): fan seat, plenum, chamber and the "
                     "cover that clamps the heat sink; printed cover-side down"
                 ),
-                "material": "PETG or ASA (the heat sink runs ~60-70 C; not PLA)",
+                "material": (
+                    "PETG Basic (the heat sink runs ~60-70 C, near its limit: check it in the "
+                    "on-console thermal test)"
+                ),
                 "qty": 1,
             },
             {
@@ -83,7 +86,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Duct floor plate (`lib/part/duct_floor.py`): the plenum floor, printed flat "
                     "and glued into the duct's frame with 2-part epoxy (the bead seals the plenum)"
                 ),
-                "material": "PETG or ASA (same as the duct)",
+                "material": "PETG Basic (same as the duct)",
                 "qty": 1,
             },
             {
@@ -91,7 +94,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Intake hood (`lib/part/cooling_hood.py`): seals the 25 top louvers to the "
                     "fan; printed floor-side down"
                 ),
-                "material": "PETG or ASA",
+                "material": "PETG Basic",
                 "qty": 1,
             },
         ],
@@ -230,7 +233,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Upper Shell (`lib/variant/upper_shell.py`, `130.00 x 99.88 x 20.56 mm` "
                     "sculpted N64 top deck with 25 parabolic louvers & engraved lettering)"
                 ),
-                "material": "Charcoal Grey PETG / Matte PLA",
+                "material": "Charcoal Grey PETG Basic",
                 "qty": 1,
             },
             {
@@ -255,7 +258,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Cartridge Slot Dust-Flap Insert (`lib/part/cartridge_flaps.py`, "
                     "`57.50 x 10.00 x 1.35 mm` with central parting seam & semicircular end tabs)"
                 ),
-                "material": "Light Cool Grey PLA / PETG",
+                "material": "Light Cool Grey PETG Basic",
                 "qty": 1,
             },
             {
@@ -263,7 +266,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Momentary Power Button Plunger (`lib/part/power_slider.py`, smooth "
                     "cylindrical-crowned stadium cap matching Reset, 3D-engraved `POWER`)"
                 ),
-                "material": "Light Cool Grey PLA / PETG",
+                "material": "Light Cool Grey PETG Basic",
                 "qty": 1,
             },
             {
@@ -271,7 +274,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Momentary Reset Button Plunger (`lib/part/reset_button.py`, smooth "
                     "cylindrical-crowned stadium cap, 3D-engraved `RESET`)"
                 ),
-                "material": "Light Cool Grey PLA / PETG",
+                "material": "Light Cool Grey PETG Basic",
                 "qty": 1,
             },
         ],
