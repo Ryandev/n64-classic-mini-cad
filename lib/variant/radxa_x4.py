@@ -1,7 +1,7 @@
 """De-ported Radxa X4 v1.11 SBC (`lib/variant/radxa_x4.py`, `REQ-03`, `REQ-05`).
 
 Derives from `lib/step/radxa_x4.py` (Radxa's own 363-solid STEP, unedited) and strips all 6
-tall through-hole connector headers so the inverted board fits inside the `36.5 mm`-tall
+tall through-hole connector headers so the inverted board fits inside the `33.5 mm`-tall
 50%-scale N64 Classic Mini enclosure:
   - `usb3_dual_stack` (dual stacked USB 3.0 Type-A tower)
   - `usb2_dual_stack` (dual stacked USB 2.0 Type-A tower)

@@ -2,7 +2,7 @@
 
 Writes `notes/BOM_COMPLETE.md` with per-subassembly tables, master bought-hardware rollup,
 and detailed buyer's guide for the Radxa X4 SBC, M.2 2230 NVMe storage sizing, shared GBA
-components (`Omron SS-5GL` microswitches, `Kingbright L-819EGW` Red/Green bi-colour LED,
+components (`Omron SS-5GL` microswitches, `Kingbright L-93WEGW` Red/Green bi-colour LED,
 `Ruthex` inserts, `DIN 912` / `ISO 4026` fasteners), and Clear Acrylic + Cricut front jewel.
 """
 
@@ -14,6 +14,10 @@ from collections import defaultdict
 from typing import Any
 
 _LIB_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _LIB_DIR)
+
+from assembly import datum as D  # noqa: E402
+
 _REPO_DIR = os.path.dirname(_LIB_DIR)
 BOM_MD_PATH = os.path.join(_REPO_DIR, "notes", "BOM_COMPLETE.md")
 
@@ -292,8 +296,11 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                 "qty": 4,
             },
             {
-                "item": "M3 x 12 DIN 912 socket-head cap screw (A2-70, 4 corner enclosure bolts)",
-                "spec": "M3 x 12 DIN 912 SHCS",
+                "item": (
+                    f"M3 x {D.CORNER_SCREW_L:.0f} DIN 912 socket-head cap screw (A2-70, 4 corner "
+                    "enclosure bolts; length checked by J01_SCREW)"
+                ),
+                "spec": f"M3 x {D.CORNER_SCREW_L:.0f} DIN 912 SHCS",
                 "qty": 4,
             },
             {
@@ -364,7 +371,7 @@ def generate_markdown() -> str:
             "`~$15–$22`)."
         ),
         "",
-        "### 3. Shared GBA BOM Parts: `Omron SS-5GL` Buttons & `Kingbright L-819EGW` LED",
+        "### 3. Shared GBA BOM Parts: `Omron SS-5GL` Buttons & `Kingbright L-93WEGW` LED",
         (
             "- **Momentary `POWER` (`J-03`) & `RESET` (`J-04`) Buttons with `Omron SS-5GL`:** "
             "Both top-deck buttons use the exact same smooth cylindrical-crowned stadium profile "
@@ -378,12 +385,11 @@ def generate_markdown() -> str:
             "`OP = 8.0..9.6 mm` band releases at rest and clicks before the stop (`OMRON_ACT`)."
         ),
         (
-            "- **Dual-Colour Front LED (`Kingbright L-819EGW`, `Red = Power`, `Green = ON`):** "
-            "Wire **Pin 2 (Common Cathode)** to `GND` (Pin 9), **Pin 1 (Red Anode)** via `330 Ω` "
-            "to `GP4` (Pin 7), and **Pin 3 (Green Anode)** via `330 Ω` to `GP5` (Pin 29) on the "
-            "Radxa X4's always-on RP2040 (`firmware/rp2040_reset/code.py`). When USB-C power is "
-            "connected in standby (`S5`), the front light pipe glows **RED (`Power`)**; when the "
-            "console is running (`S0`), it switches to **GREEN (`ON`)**."
+            "- **Dual-Colour Front LED (`Kingbright L-93WEGW`, 3 mm, `Green = ON`):** "
+            "Wire **Pin 2 (Common Cathode)** to `GND` (header pin 9), **Pin 1 (Red Anode)** via "
+            "`330 Ω` to `GP4` (pin 7), and **Pin 3 (Green Anode)** via `330 Ω` to `GP7` (pin 29) "
+            "on the Radxa X4's RP2040 (`firmware/rp2040_reset/code.py`). The RP2040 only runs "
+            "while the PC is on, so the light is green when on and dark in standby (C7)."
         ),
         (
             "- **Hard Power-Off Resilience (Pulling the Plug Without Safe Shutdown):** Batocera's "

@@ -18,6 +18,70 @@ GATE = os.path.join(HERE, "gate.py")
 
 # (check_filter, target_relpath, old_snippet, new_snippet, expected_failed_row_prefix)
 MUTATIONS = [
+    # C8: every row that measures the solids has a planted defect it must catch
+    (
+        "console_check",
+        "assembly/datum.py",
+        "CORNER_SCREW_L = 14.0",
+        "CORNER_SCREW_L = 12.0",
+        "J01_SCREW",
+    ),
+    (
+        "datum_check",
+        "assembly/datum.py",
+        "RADXA_X_CENTRE = -5.5",
+        "RADXA_X_CENTRE = -6.5",
+        "RADXA_FIT",
+    ),
+    (
+        "radxa_mount_check",
+        "assembly/datum.py",
+        "RADXA_STANDOFF_H = 6.6",
+        "RADXA_STANDOFF_H = 6.0",
+        "M2_CLEAR",
+    ),
+    (
+        "console_check",
+        "assembly/datum.py",
+        "RADXA_STANDOFF_H = 6.6",
+        "RADXA_STANDOFF_H = 9.6",
+        "G13_FULL",
+    ),
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "RESET_FLANGE_W = 11.0",
+        "RESET_FLANGE_W = 14.0",
+        "G13_TOP",
+    ),
+    (
+        "top_controls_check",
+        "part/reset_button.py",
+        "        D.RESET_SHAFT_W,\n",
+        "        D.RESET_SHAFT_W + 0.6,\n",
+        "J04_RESET",
+    ),
+    (
+        "top_controls_check",
+        "part/front_bezel.py",
+        "y0=D.BEZEL_Y0,",
+        "y0=D.BEZEL_Y0 + 1.5,",
+        "J06_BEZEL",
+    ),
+    (
+        "front_panel_check",
+        "part/led_light_pipe.py",
+        "width_x=D.LED_FLANGE_W,",
+        "width_x=D.LED_FLANGE_W + 0.6,",
+        "J07_PIPE",
+    ),
+    (
+        "front_panel_check",
+        "part/front_port_cover.py",
+        "t = D.FRONT_COVER_T - 0.2",
+        "t = D.FRONT_COVER_T + 0.6",
+        "G13_FRONT",
+    ),
     (
         "datum_check",
         "component/radxa_x4.py",
@@ -34,9 +98,9 @@ MUTATIONS = [
     ),
     (
         "datum_check",
-        "assembly/datum.py",
-        "(0.0, 0.0, 1.0),  # +Z: up",
-        "(0.0, 0.0, -1.0),  # +Z: flipped reflection",
+        "subassembly/front_panel_mech.py",
+        "    return cq.Compound.makeCompound(covers())\n",
+        '    return cq.Compound.makeCompound(covers()).mirror("XZ")\n',
         "HANDED",
     ),
     (

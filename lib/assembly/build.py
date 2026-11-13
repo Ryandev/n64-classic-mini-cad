@@ -1,7 +1,7 @@
 """Fit report, body census, and pairwise collision check for the N64 Classic Mini (`build.py`).
 
 Mirrors `GBA/CAD/lib/assembly/build.py`: summarises internal fit margins (Radxa X4 PCB to
-recessed `120 mm` N64 waist, finned SoC heatsink plenum inside the `36.5 mm` barrel dome,
+recessed `120 mm` N64 waist, finned SoC heatsink plenum inside the `33.5 mm` barrel dome,
 rear-right `25.5 mm` RJ45 bay, and M.2 2230 NVMe floor clearance) and checks pairwise
 boolean interference across all assembled bodies.
 """

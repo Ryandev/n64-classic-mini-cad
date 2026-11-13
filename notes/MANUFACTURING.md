@@ -30,7 +30,7 @@ Set at `205–215 °C` (PLA) or `235–245 °C` (PETG) using a vertical solderin
    into the switch itself (see the assembly step).
 4. **Enclosure corner bosses in `upper_shell` (`4x Ruthex RX-M3x5.7`):**
    - Printed bore: `Ø4.00 mm`, depth `7.0 mm` inside `Ø8.5 mm` corner boss (`wall = 2.25 mm`).
-   - Set flush with the `Z = 16.00 mm` upper-shell parting face.
+   - Set flush with the `Z = 12.94 mm` (`SPLIT_Z`) upper-shell parting face.
 
 ---
 

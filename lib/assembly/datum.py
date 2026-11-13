@@ -100,6 +100,9 @@ M3_CBORE_D = 6.5
 M3_CBORE_H = 3.5
 INSERT_M3_BORE_D = 4.0
 INSERT_M3_DEPTH = 5.8
+# Corner screws, from the tub's counterbore up into the shell's RX-M3x5.7 insert: 14 mm engages
+# 4.8 mm and stops 1.0 mm short of the insert bore's end; 12 mm engaged only 2.8 (J01_SCREW, C9)
+CORNER_SCREW_L = 14.0
 
 # ---------------------------------------------------------------------------
 # 3. Radxa X4 SBC mounting datum (REQ-03, REQ-04, J-02)

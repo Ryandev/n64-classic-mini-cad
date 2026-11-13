@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import cadquery as cq  # noqa: E402
 import printable  # noqa: E402
 from assembly import datum as D  # noqa: E402
-from component import led_l819, radxa_x4  # noqa: E402
+from component import radxa_x4  # noqa: E402
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
 from OCP.BRepExtrema import BRepExtrema_DistShapeShape  # noqa: E402
 from part import (  # noqa: E402
@@ -34,6 +34,7 @@ from part import (  # noqa: E402
     usb_retainer_bracket,
 )
 from subassembly import front_panel_mech  # noqa: E402
+from testing import probe  # noqa: E402
 from variant import lower_tub  # noqa: E402
 
 
@@ -167,28 +168,37 @@ def check_all():
         )
     )
 
-    # 4. J-07: Clear PETG lenticular light-pipe + 3-lead bi-colour Red/Green LED in holder cradle
-    rad_clear = (D.LED_BORE_D - D.LED_SHAFT_D) / 2.0
+    # 4. J-07: the light pipe sits in the tub's lens bore with a real clearance, flush with the
+    # front, and the LED sits just behind it: measured on the solids (C8), not from the datums.
+    dist = BRepExtrema_DistShapeShape(tub.wrapped, pipe.wrapped)
+    dist.Perform()
+    pipe_clear = dist.Value()
     pipe_bb = pipe.BoundingBox()
     led3_bb = led3.BoundingBox()
+    led_gap = led3_bb.ymin - pipe_bb.ymax
+    # the tub's front face beside the bore, found by stepping in from outside
+    z_face = pipe_bb.zmax + 1.5
+    to_front = probe.first_hit(tub, (0.0, pipe_bb.ymin - 3.0, z_face), (0, 1, 0), max_len=6.0)
+    flush = None if to_front is None else pipe_bb.ymin - (pipe_bb.ymin - 3.0 + to_front)
     j07_ok = (
-        abs(rad_clear - 0.10) < 1e-6
-        and abs(pipe_bb.xlen - D.LED_FLANGE_W) < 0.05
-        and abs(pipe_bb.zlen - D.LED_FLANGE_D) < 0.05
-        and abs(pipe_bb.ymin - D.LED_PIPE_Y0) < 0.05
-        and 0.10 <= (led3_bb.ymin - pipe_bb.ymax) <= 0.50
-        and len(led_l819.LEAD_XS) == 3
-        and abs(led_l819.LENS_DIA - 3.0) < 1e-6
-        and abs(led3_bb.xlen - led_l819.RIM_DIA) < 0.05
+        0.05 <= pipe_clear <= 0.20
+        and flush is not None
+        and abs(flush) <= 0.30
+        and 0.10 <= led_gap <= 0.50
         and _common_volume(tub, pipe) <= 1e-3
         and _common_volume(tub, led3) <= 1e-3
     )
     rows.append(
         (
-            "J07_PIPE  Clear PETG lenticular led_light_pipe & 3-lead Red/Green LED seat in holder",
+            "J07_PIPE  light pipe in the lens bore (measured gap), flush at the front, LED behind",
             j07_ok,
-            f"lens clear={rad_clear:.2f} mm/side, collar={pipe_bb.xlen:.2f}x{pipe_bb.zlen:.2f} mm, "
-            f"bi-colour 3-lead gap={led3_bb.ymin - pipe_bb.ymax:.2f} mm",
+            f"pipe-to-tub gap {pipe_clear:.3f} mm (0.05..0.20), pipe face "
+            + (
+                f"{flush:+.2f} mm from the front (±0.30)"
+                if flush is not None
+                else "FRONT NOT FOUND"
+            )
+            + f", LED {led_gap:.2f} mm behind the pipe (0.10..0.50)",
         )
     )
 

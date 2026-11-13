@@ -107,3 +107,13 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
 - **Check the agent's arithmetic before the owner decides on it.** The agent told the owner the
   ridge would keep every switch within Omron's guaranteed overtravel; it can't, because the OP
   spread (1.6 mm) exceeds OT (1.2 mm) whatever the ratio. Corrected before building.
+
+## Lessons (self-graded rows, C8, 2026-11-13)
+
+- **A planted defect must change the geometry the row measures.** Two C8 mutations proved
+  nothing: one changed `LED_SHAFT_D`, which no part uses (it only fed the old constant-based J07),
+  and one swapped the button X datums, which crashed the part builds instead of making a wrong
+  console. Mutate something a part is built from, and confirm the row (not the build) fails.
+- **Measuring finds what constants hide.** On the solids: the light pipe's tightest gap is
+  0.06 mm (the datum claimed 0.10), the RJ45 jack is 1.7 mm from the wall (constants said 3.0),
+  and the M3x12 corner screws engaged only 2.8 mm of their insert (now M3x14, J01_SCREW).

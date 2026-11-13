@@ -18,9 +18,9 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
   - Adding Batocera Linux OS (`~4 GB`) + 1080p box art, cartridge textures, and preview videos (`~2.5 GB`) brings a **complete every-N64-game build to ~13 GB total**.
 - **Recommended Capacity:** **64 GB or 128 GB M.2 2230 NVMe** (e.g. *Kioxia BG4 / BG5 128GB M.2 2230*, *WD PC SN530 / SN740 128GB M.2 2230*, or *Sabrent Rocket 2230*, `~$15–$22`).
 
-### 3. Shared GBA BOM Parts: `Omron SS-5GL` Buttons & `Kingbright L-819EGW` LED
+### 3. Shared GBA BOM Parts: `Omron SS-5GL` Buttons & `Kingbright L-93WEGW` LED
 - **Momentary `POWER` (`J-03`) & `RESET` (`J-04`) Buttons with `Omron SS-5GL`:** Both top-deck buttons use the exact same smooth cylindrical-crowned stadium profile (transverse slider nub removed from `POWER`) and actuate `2x Omron SS-5GL` microswitches (`0.49 N` operating force, `OP = 8.8 +/- 0.8 mm`). Each switch is located on a `Ø2.20 mm` pin (Hole 1, `0.075 mm/side` fit) and clamped to its tower by a `3 x 10` thread-forming screw driven from behind into Hole 2 (C2). Each button presses its switch lever through a ridge under its centre, 72% along the lever (C3), with `2.10 mm` of travel to front-and-rear stops and `Ø2.80 mm` anti-tilt guide poles on `usb_retainer_bracket.py`: every switch across the full `OP = 8.0..9.6 mm` band releases at rest and clicks before the stop (`OMRON_ACT`).
-- **Dual-Colour Front LED (`Kingbright L-819EGW`, `Red = Power`, `Green = ON`):** Wire **Pin 2 (Common Cathode)** to `GND` (Pin 9), **Pin 1 (Red Anode)** via `330 Ω` to `GP4` (Pin 7), and **Pin 3 (Green Anode)** via `330 Ω` to `GP5` (Pin 29) on the Radxa X4's always-on RP2040 (`firmware/rp2040_reset/code.py`). When USB-C power is connected in standby (`S5`), the front light pipe glows **RED (`Power`)**; when the console is running (`S0`), it switches to **GREEN (`ON`)**.
+- **Dual-Colour Front LED (`Kingbright L-93WEGW`, 3 mm, `Green = ON`):** Wire **Pin 2 (Common Cathode)** to `GND` (header pin 9), **Pin 1 (Red Anode)** via `330 Ω` to `GP4` (pin 7), and **Pin 3 (Green Anode)** via `330 Ω` to `GP7` (pin 29) on the Radxa X4's RP2040 (`firmware/rp2040_reset/code.py`). The RP2040 only runs while the PC is on, so the light is green when on and dark in standby (C7).
 - **Hard Power-Off Resilience (Pulling the Plug Without Safe Shutdown):** Batocera's root OS (`/boot/batocera`) is a read-only SquashFS image in RAM that cannot be corrupted by a sudden power cut; `n64mini.console.suspend` flushes save states with `os.fsync()` before atomic `replace()`, ignores `0`-byte interrupted files, and `n64mini-service.sh` cleans up any orphaned `.tmp`/`.pending` files on boot. Set BIOS `Chipset -> PCH-IO Configuration -> State After G3 -> S0` (or `Last State`) if switching power at the wall socket.
 
 ### 4. Clear Acrylic Front Jewel (`front_bezel.py`) with Diode Laser + Cricut
@@ -80,7 +80,7 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 | Omron SS-5GL subminiature hinge-lever SPDT microswitch (`19.8 x 6.4 x 10.2 mm`, `0.49 N` max operating force, `OP = 8.8 +/- 0.8 mm` — shared GBA BOM part; 1 under `POWER`, 1 under `RESET`) | `Omron SS-5GL microswitch` | 2 |
 | 3 x 10 mm pan-head thread-forming screw for plastics (PT type, e.g. EJOT DELTA PT 30 x 10 or equivalent; 1 per `Omron SS-5GL`, driven from behind the switch tower into the switch's `Ø2.35 mm` Hole 2, before the Radxa board; bench-test on a spare switch first) | `3 x 10 thread-forming screw for plastics, pan head` | 2 |
 | Ruthex RX-M3x5.7 brass heat-set insert (`M3 x 5.7 mm`, `OD 4.0 mm`, 4 in `upper_shell` corner bosses — shared GBA BOM part) | `Ruthex RX-M3x5.7` | 4 |
-| M3 x 12 DIN 912 socket-head cap screw (A2-70, 4 corner enclosure bolts) | `M3 x 12 DIN 912 SHCS` | 4 |
+| M3 x 14 DIN 912 socket-head cap screw (A2-70, 4 corner enclosure bolts; length checked by J01_SCREW) | `M3 x 14 DIN 912 SHCS` | 4 |
 | 2.0 mm Clear Cast Acrylic sheet blank (`>= 35 x 25 mm`) + Cricut adhesive vinyl (Matte Black background + Red/Blue/Green/Yellow/White N64 logo) | `2.0mm Clear Cast Acrylic + Cricut vinyl` | 1 |
 
 ## Master Bought-Hardware Rollup
@@ -96,7 +96,7 @@ Generated programmatically by `./run bom` (`lib/bom.py`).
 | `Kingbright L-93WEGW (Rapid 55-0155) 3 mm bi-colour LED` | Kingbright L-93WEGW (`Rapid 55-0155`) 3 mm Red/Green bi-colour 3-lead common-cathode through-hole LED (Pin 1 Red `625 nm` = Power/Standby, Pin 2 Common Cathode = `GND`, Pin 3 Green `565 nm` = ON) | 1 |
 | `M.2 2230 NVMe SSD (64GB / 128GB)` | M.2 **2230** NVMe PCIe Gen3 x4 SSD — **64GB or 128GB** (M-key, `22 x 30 mm`; e.g. Kioxia BG4/BG5 128GB or WD SN530/SN740 128GB; full N64 library + Batocera OS + 1080p artwork uses only ~12–15 GB) | 1 |
 | `M2.5 x 6 ISO 7380 BHCS` | M2.5 x 6 ISO 7380 button-head socket screw (A2 stainless: 4 for Radxa X4 + 2 for 2.5GbE RJ45 Ethernet carrier) | 6 |
-| `M3 x 12 DIN 912 SHCS` | M3 x 12 DIN 912 socket-head cap screw (A2-70, 4 corner enclosure bolts) | 4 |
+| `M3 x 14 DIN 912 SHCS` | M3 x 14 DIN 912 socket-head cap screw (A2-70, 4 corner enclosure bolts; length checked by J01_SCREW) | 4 |
 | `Non-conductive thermal paste` | Thermal paste, non-conductive (e.g. Arctic MX-4 or Noctua NT-H1): thin layer between the N100 die and the heat sink. No thermal pad. | 1 |
 | `Omron SS-5GL microswitch` | Omron SS-5GL subminiature hinge-lever SPDT microswitch (`19.8 x 6.4 x 10.2 mm`, `0.49 N` max operating force, `OP = 8.8 +/- 0.8 mm` — shared GBA BOM part; 1 under `POWER`, 1 under `RESET`) | 2 |
 | `Panel-mount RJ45 jack` | 2.5GbE 8P8C shielded RJ45 Ethernet receptacle on M2.5 breakout carrier (`2x Ø2.70 mm` mounting ears at `(43.00, 23.00)` & `(51.50, 28.50)`) | 1 |

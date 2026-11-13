@@ -1,16 +1,16 @@
 """Whole-console assembly & outer-surface fidelity gate checks (`lib/assembly/console_check.py`).
 
 Verifies:
-  - `J-01`: `upper_shell` and `lower_tub` mate across `SPLIT_Z = 16.0 mm` with `0.15 mm/side`
+  - `J-01`: `upper_shell` and `lower_tub` mate across `SPLIT_Z = 12.94 mm` with `0.15 mm/side`
     perimeter lip locating clearance (`0.000 mm^3` boolean intersection), combined outer
-    envelope `130.0 x 95.0 x 36.5 mm`, and coaxial M3 corner bores at all 4 corners
+    envelope (the real N64 model at 50 %), and coaxial M3 corner bores at all 4 corners
   - `VARIANT n64_console`: `variant/n64_console.py` removes external power brick/cord,
     RCA cable, and SolidWorks construction planes from `step/n64_console_raw.py`
   - `SH_OUTSIDE`: Ray-cast outer-surface fidelity against the downloaded `step/n64_shell.py`
     reference (`BRepIntCurveSurface_Inter`, adapted from `GBA/CAD/lib/assembly/shell_check.py`):
     proves the assembled shell has protruding `+-65.0 mm` front pods, recessed `-44.15 mm`
     front apron, `+-60.0 mm` tapered waist, swept front-pod dome shoulders, `10.27 deg`
-    sloped wing decks, `36.5 mm` convex front barrel dome, and concave rear cartridge cradle
+    sloped wing decks, `33.5 mm` convex front barrel dome, and concave rear cartridge cradle
     (a boxy prism fails immediately!)
   - `G13_FULL`: `0.000 mm^3` pairwise boolean interference across all printed parts and
     placed bought electronics (`variant/radxa_x4`, the HSB26 heat sink, USB-A, RJ45, switches)
@@ -40,7 +40,7 @@ from part import (  # noqa: E402
 )
 from step import n64_shell as _ref_n64_shell  # noqa: E402
 from subassembly import front_panel_mech, top_controls_mech  # noqa: E402
-from testing import variant_manifest  # noqa: E402
+from testing import probe, variant_manifest  # noqa: E402
 from testing.load import load_by_path  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
@@ -185,28 +185,43 @@ def check_all():
     sw_l, sw_r = top_controls_mech.tactile_switches()
     elec = radxa_x4.get_shape()
 
-    # 1. J-01: Combined console outer envelope (130.0 x 95.0 x 36.5 mm) & zero shell-to-shell clash
+    # 1. J-01: the two halves together have the real N64's outline at 50 %, don't overlap, and the
+    # tub's lip sits in the shell's rebate with the intended clearance, all measured (C8).
     console_shells = cq.Compound.makeCompound([tub, top])
     bb = console_shells.BoundingBox()
+    ref = _ref_n64_shell.get_shape().BoundingBox()
+    ref_w, ref_d, ref_h = ref.xlen * D.SCALE, ref.ylen * D.SCALE, ref.zlen * D.SCALE
     shell_clash = _common_volume(tub, top)
-    lip_gap = (D.SHELL_WALL_T * 0.5 + D.LIP_CLEAR) - D.RABBET_INSET
+    # Lip gap at the +X side wall: find the lip's outer face from outside, then step on to the shell
+    z_lip = D.SPLIT_Z + D.LIP_H / 2.0
+    x_out = D.SHELL_W / 2.0 + 2.0  # just outside the side wall
+    to_lip = probe.first_hit(tub, (x_out, 0.0, z_lip), (-1, 0, 0), max_len=10.0, step=0.005)
+    lip_gap = None
+    if to_lip is not None:
+        x_lip = x_out - to_lip
+        lip_gap = probe.first_hit(
+            top, (x_lip + 0.001, 0.0, z_lip), (1, 0, 0), max_len=3.0, step=0.005
+        )
     env_ok = (
-        abs(bb.xlen - D.SHELL_W) < 0.05
-        and abs(bb.ylen - D.SHELL_D) < 0.05
-        and abs(bb.zlen - D.SHELL_H) < 0.05
+        abs(bb.xlen - ref_w) < 0.25
+        and abs(bb.ylen - ref_d) < 0.25
+        and abs(bb.zlen - ref_h) < 0.25
         and shell_clash <= 1e-3
-        and abs(lip_gap - D.LIP_CLEAR) < 1e-6
+        and lip_gap is not None
+        and 0.10 <= lip_gap <= 0.25
     )
     rows.append(
         (
-            "J01_SPLIT upper_shell + lower_tub mate at Z=16.0mm to form 130.0x95.0x36.5mm envelope",
+            "J01_SPLIT upper_shell + lower_tub make the real N64 outline; lip in rebate, no clash",
             env_ok,
-            f"envelope={bb.xlen:.2f}x{bb.ylen:.2f}x{bb.zlen:.2f} mm, "
-            f"lip clearance={lip_gap:.2f} mm/side, intersection={shell_clash:.3f} mm^3",
+            f"envelope {bb.xlen:.2f}x{bb.ylen:.2f}x{bb.zlen:.2f} mm vs N64 model x{D.SCALE:.2f} "
+            f"{ref_w:.2f}x{ref_d:.2f}x{ref_h:.2f}; measured lip gap "
+            + (f"{lip_gap:.3f} mm (0.10..0.25)" if lip_gap is not None else "NOT FOUND")
+            + f", overlap {shell_clash:.3f} mm^3",
         )
     )
 
-    # 2. J-01: Coaxial 4x corner M3 bores + solid annular boss faces across Z = 16.0 mm split
+    # 2. J-01: Coaxial 4x corner M3 bores + solid annular boss faces across the SPLIT_Z split
     clf_tub = BRepClass3d_SolidClassifier(tub.wrapped)
     clf_top = BRepClass3d_SolidClassifier(top.wrapped)
     bad_bosses = []
@@ -226,9 +241,34 @@ def check_all():
         (
             "J01_M3    all 4 corner M3 bosses & RX-M3x5.7 insert bores coaxial across split",
             not bad_bosses,
-            "4/4 corner bosses verified coaxial across Z=16.0 mm by 3D point classification"
+            f"4/4 corner bosses coaxial across Z={D.SPLIT_Z:.2f} mm (3D point classification)"
             if not bad_bosses
             else f"misaligned bosses: {bad_bosses}",
+        )
+    )
+
+    # 2b. J01_SCREW (C9): the corner screw the BOM buys reaches far enough into the shell's insert
+    # and not past its bore: measured from the tub's counterbore seat and the bore's end
+    screw_bad, screw_msg = [], ""
+    for bx in D.CORNER_BOSS_XS:
+        for by in D.CORNER_BOSS_YS:
+            up = probe.first_hit(tub, (bx + 2.5, by, -1.0), (0, 0, 1), max_len=20.0, step=0.01)
+            down = probe.first_hit(top, (bx, by, D.SPLIT_Z + 0.05), (0, 0, 1), max_len=20.0)
+            if up is None or down is None:
+                screw_bad.append(f"({bx:+.1f},{by:+.1f}) seat or bore end not found")
+                continue
+            tip = -1.0 + up + D.CORNER_SCREW_L
+            engaged, spare = tip - D.SPLIT_Z, (D.SPLIT_Z + 0.05 + down) - tip
+            screw_msg = f"{engaged:.2f} mm into the insert, {spare:.2f} mm short of the bore end"
+            if engaged < 4.5 or spare < 0.5:
+                screw_bad.append(f"({bx:+.1f},{by:+.1f}): {screw_msg}")
+    rows.append(
+        (
+            "J01_SCREW corner M3 screws engage >= 4.5 mm in the insert, >= 0.5 mm short of its end",
+            not screw_bad,
+            f"M3 x {D.CORNER_SCREW_L:.0f}: {screw_msg} (all 4 corners)"
+            if not screw_bad
+            else "; ".join(screw_bad),
         )
     )
 
