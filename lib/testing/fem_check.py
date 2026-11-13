@@ -1,6 +1,7 @@
 """3D Tetrahedral Finite Element Analysis (`Gmsh` + `CalculiX ccx`) for the N64 Classic Mini.
 
-Runs 4 linear-elastic 3D tetrahedral (`C3D4`) FEA load cases (`E = 2200 MPa`, `nu = 0.36`,
+Runs 4 linear-elastic 3D tetrahedral (`C3D10`, mesh-converged) FEA load cases
+(`E = 2200 MPa`, `nu = 0.36`,
 conservative FDM PETG/PLA inter-layer yield limit `25.0 MPa`, in-plane yield `45.0 MPa`) on the
 actual B-Rep solids from `lib/part/` and `lib/variant/`:
   1. `LC1_BUTTON_MASH_50N`: `part/usb_retainer_bracket.py` under `50 N` (`-Z`) heavy thumb mash on
@@ -34,7 +35,11 @@ from typing import Callable
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
+from assembly import datum as D  # noqa: E402
 from assembly.datum import BUTTON_STOP_Z as STOP_Z  # noqa: E402
+from assembly.datum import CORNER_BOSS_XS as CORNER_XS  # noqa: E402
+from assembly.datum import CORNER_BOSS_YS as CORNER_YS  # noqa: E402
+from assembly.datum import FOOT_D  # noqa: E402
 from part import usb_retainer_bracket  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
@@ -47,10 +52,68 @@ def _find_binary(name: str) -> str:
     found = shutil.which(name)
     if found:
         return found
-    matches = sorted(glob.glob(f"/tmp/.mount_freeca*/usr/bin/{name}"))
+    # FreeCAD AppImage mounts are /tmp/.mount_FreeCA<random> (C4: a lowercase glob never matched)
+    matches = sorted(glob.glob(f"/tmp/.mount_[Ff]ree[Cc][Aa]*/usr/bin/{name}"))
     if matches:
         return matches[-1]
-    raise RuntimeError(f"Required FEM binary {name!r} not found on PATH or in /tmp/.mount_freeca*")
+    raise RuntimeError(f"FEM binary {name!r} not on PATH (environment.yml) or in FreeCAD")
+
+
+ORDER = 2  # 10-node tetrahedra (C3D10): 4-node ones are too stiff to resolve stress (C4)
+REFINE = 0.7  # the convergence mesh is this much finer
+CONVERGED = 0.15  # the two meshes must agree this closely
+# Stress is judged at this percentile of the integration points clear of loads and supports:
+# the model's sharp inside corners are true stress singularities, so the maximum never converges
+STRESS_PERCENTILE = 0.99
+
+
+def _parse_inp(path: str) -> tuple[dict[int, tuple[float, float, float]], list[list[int]]]:
+    """Nodes and C3D10 elements (id + 10 nodes, possibly wrapped over lines) from Gmsh's INP."""
+    nodes: dict[int, tuple[float, float, float]] = {}
+    elems: list[list[int]] = []
+    mode: str | None = None
+    pending: list[int] = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            s = line.strip()
+            if not s or s.startswith("**"):
+                continue
+            if s.startswith("*"):
+                mode = "node" if s.upper().startswith("*NODE") else None
+                if s.upper().startswith("*ELEMENT") and "C3D10" in s.upper():
+                    mode = "c3d10"
+                continue
+            if mode == "node":
+                parts = [p.strip() for p in s.split(",")]
+                nodes[int(parts[0])] = (float(parts[1]), float(parts[2]), float(parts[3]))
+            elif mode == "c3d10":
+                pending += [int(p) for p in s.split(",") if p.strip()]
+                if len(pending) >= 11:
+                    elems.append(pending[:11])
+                    pending = []
+    if not elems:
+        raise RuntimeError(f"{path}: no C3D10 elements (Gmsh -order {ORDER} produced none)")
+    return nodes, elems
+
+
+def _near_any(points: list[tuple[float, float, float]], radius: float):
+    """A test `f(xyz) -> bool`: is xyz within `radius` of any of `points` (grid hashed)."""
+    grid: dict[tuple[int, int, int], list[tuple[float, float, float]]] = {}
+    for p in points:
+        grid.setdefault(tuple(int(math.floor(c / radius)) for c in p), []).append(p)
+    r2 = radius * radius
+
+    def near(xyz: tuple[float, float, float]) -> bool:
+        cx, cy, cz = (int(math.floor(c / radius)) for c in xyz)
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    for q in grid.get((cx + dx, cy + dy, cz + dz), ()):
+                        if sum((a - b) ** 2 for a, b in zip(xyz, q, strict=True)) <= r2:
+                            return True
+        return False
+
+    return near
 
 
 def solve_calculix(
@@ -61,8 +124,15 @@ def solve_calculix(
     fix_pred: Callable[[float, float, float], bool],
     loads: list[tuple[Callable[[float, float, float], bool], tuple[float, float, float]]],
     out_dir: str | None = None,
+    roller_pred: Callable[[float, float, float], bool] | None = None,
 ) -> dict[str, object]:
-    """Mesh `shape` with Gmsh, solve linear static FEA with CalculiX, and return peak metrics."""
+    """Mesh `shape` with Gmsh (C3D10), solve linear statics with CalculiX, return metrics.
+
+    `fix_pred` nodes are held in all directions; `roller_pred` nodes only vertically (a part
+    resting on a surface). `max_vm_mpa` is the `STRESS_PERCENTILE` von Mises stress away from
+    the loaded and held nodes (within `2 x clmax` of them a point load or a clamp makes a spike
+    that grows as the mesh is refined); `peak_vm_mpa` is the raw peak, for information.
+    """
     gmsh_bin = _find_binary("gmsh")
     ccx_bin = _find_binary("ccx")
 
@@ -73,91 +143,72 @@ def solve_calculix(
         step_f = os.path.join(work_dir, "part.step")
         inp_mesh = os.path.join(work_dir, "mesh.inp")
         cq.exporters.export(shape, step_f)
-
         cmd_gmsh = [
-            gmsh_bin,
-            step_f,
-            "-3",
-            "-clmin",
-            str(clmin),
-            "-clmax",
-            str(clmax),
-            "-optimize_netgen",
-            "-format",
-            "inp",
-            "-o",
-            inp_mesh,
-            "-v",
-            "1",
-        ]
+            # straight-sided C3D10: curving mid-edge nodes onto the tub's surfaces inverted some
+            # elements ("nonpositive jacobian" in CalculiX)
+            gmsh_bin, step_f, "-3", "-optimize_netgen", "-order", str(ORDER),
+            "-setnumber", "Mesh.SecondOrderLinear", "1",
+            "-clmin", str(clmin), "-clmax", str(clmax),
+            "-format", "inp", "-o", inp_mesh, "-v", "1",
+        ]  # fmt: skip
         subprocess.run(cmd_gmsh, check=True, capture_output=True, text=True)
-
-        nodes: dict[int, tuple[float, float, float]] = {}
-        elems: list[list[int]] = []
-        mode: str | None = None
-        with open(inp_mesh, encoding="utf-8") as f:
-            for line in f:
-                s = line.strip()
-                if not s or s.startswith("**"):
-                    continue
-                if s.upper().startswith("*NODE"):
-                    mode = "node"
-                    continue
-                if s.upper().startswith("*ELEMENT"):
-                    mode = "c3d4" if "C3D4" in s.upper() else None
-                    continue
-                if s.startswith("*"):
-                    mode = None
-                    continue
-                if mode == "node":
-                    parts = [p.strip() for p in s.split(",")]
-                    nodes[int(parts[0])] = (float(parts[1]), float(parts[2]), float(parts[3]))
-                elif mode == "c3d4":
-                    elems.append([int(p.strip()) for p in s.split(",") if p.strip()])
+        nodes, elems = _parse_inp(inp_mesh)
 
         fix_nodes = [nid for nid, xyz in nodes.items() if fix_pred(*xyz)]
         if not fix_nodes:
             raise RuntimeError(f"{name}: fix_pred matched 0 nodes")
+        roll_nodes = (
+            [n for n, xyz in nodes.items() if roller_pred(*xyz) and n not in set(fix_nodes)]
+            if roller_pred
+            else []
+        )
+        held = set(fix_nodes) | set(roll_nodes)
 
         job_inp = os.path.join(work_dir, "job.inp")
+        load_nodes: list[int] = []
         with open(job_inp, "w", encoding="utf-8") as out:
             out.write(f"*HEADING\n{name}\n*NODE, NSET=Nall\n")
             for nid, (x, y, z) in sorted(nodes.items()):
                 out.write(f"{nid}, {x:.6f}, {y:.6f}, {z:.6f}\n")
-            out.write("*ELEMENT, TYPE=C3D4, ELSET=Eall\n")
+            out.write("*ELEMENT, TYPE=C3D10, ELSET=Eall\n")
             for idx, el in enumerate(elems, 1):
-                out.write(f"{idx}, {el[1]}, {el[2]}, {el[3]}, {el[4]}\n")
-            out.write("*NSET, NSET=Nfix\n")
-            for i in range(0, len(fix_nodes), 10):
-                out.write(", ".join(str(n) for n in fix_nodes[i : i + 10]) + "\n")
+                ns = el[1:]
+                out.write(f"{idx}, " + ", ".join(str(n) for n in ns[:7]) + ",\n")
+                out.write(", ".join(str(n) for n in ns[7:]) + "\n")
+            for set_name, members in (("Nfix", fix_nodes), ("Nroll", roll_nodes)):
+                if members:
+                    out.write(f"*NSET, NSET={set_name}\n")
+                    for k in range(0, len(members), 10):
+                        out.write(", ".join(str(n) for n in members[k : k + 10]) + "\n")
             out.write(f"*MATERIAL, NAME=PETG\n*ELASTIC\n{PETG_E_MPA:.1f}, {PETG_NU:.3f}\n")
             out.write("*SOLID SECTION, ELSET=Eall, MATERIAL=PETG\n")
-            out.write("*STEP\n*STATIC\n*BOUNDARY\nNfix, 1, 3, 0.0\n*CLOAD\n")
-            fix_set = set(fix_nodes)
+            out.write("*STEP\n*STATIC\n*BOUNDARY\nNfix, 1, 3, 0.0\n")
+            if roll_nodes:
+                out.write("Nroll, 3, 3, 0.0\n")
+            out.write("*CLOAD\n")
             for load_pred, (fx, fy, fz) in loads:
-                lnodes = [
-                    nid for nid, xyz in nodes.items() if load_pred(*xyz) and nid not in fix_set
-                ]
+                lnodes = [n for n, xyz in nodes.items() if load_pred(*xyz) and n not in held]
                 if not lnodes:
                     raise RuntimeError(f"{name}: load predicate matched 0 free nodes")
-                n_l = len(lnodes)
+                load_nodes += lnodes
                 for nid in lnodes:
-                    if abs(fx) > 1e-9:
-                        out.write(f"{nid}, 1, {fx / n_l:.6f}\n")
-                    if abs(fy) > 1e-9:
-                        out.write(f"{nid}, 2, {fy / n_l:.6f}\n")
-                    if abs(fz) > 1e-9:
-                        out.write(f"{nid}, 3, {fz / n_l:.6f}\n")
+                    for dof, f in ((1, fx), (2, fy), (3, fz)):
+                        if abs(f) > 1e-9:
+                            out.write(f"{nid}, {dof}, {f / len(lnodes):.6f}\n")
             out.write("*NODE FILE\nU\n*EL FILE\nS\n")
             out.write("*NODE PRINT, NSET=Nall\nU\n*EL PRINT, ELSET=Eall\nS\n*END STEP\n")
 
         subprocess.run([ccx_bin, "job"], cwd=work_dir, check=True, capture_output=True, text=True)
 
-        max_u = 0.0
+        near_bc = _near_any([nodes[n] for n in (*held, *load_nodes)], 2.0 * clmax)
+        centroid = {
+            idx: tuple(sum(nodes[n][k] for n in el[1:5]) / 4.0 for k in range(3))
+            for idx, el in enumerate(elems, 1)
+        }
+        away = {idx for idx, c in centroid.items() if not near_bc(c)}
+        max_u, max_chimney_xy_u, peak_vm = 0.0, 0.0, 0.0
         max_u_at = (0.0, 0.0, 0.0)
-        max_chimney_xy_u = 0.0
-        max_vm = 0.0
-        max_vm_at = (0.0, 0.0, 0.0)
+        away_vm: list[float] = []
         with open(os.path.join(work_dir, "job.dat"), encoding="utf-8") as f:
             sec: str | None = None
             for line in f:
@@ -172,56 +223,94 @@ def solve_calculix(
                     continue
                 p = s.split()
                 if sec == "u" and len(p) == 4 and p[0].isdigit():
-                    nid = int(p[0])
                     ux, uy, uz = float(p[1]), float(p[2]), float(p[3])
-                    umag = math.sqrt(ux * ux + uy * uy + uz * uz)
-                    nx, ny, nz = nodes[nid]
-                    if umag > max_u:
-                        max_u = umag
-                        max_u_at = (nx, ny, nz)
+                    nx, ny, nz = nodes[int(p[0])]
+                    if math.sqrt(ux * ux + uy * uy + uz * uz) > max_u:
+                        max_u, max_u_at = math.sqrt(ux * ux + uy * uy + uz * uz), (nx, ny, nz)
                     if abs(abs(nx) - 32.32) <= 7.0 and -39.0 <= ny <= -19.0 and 23.5 <= nz <= 30.0:
                         max_chimney_xy_u = max(max_chimney_xy_u, math.sqrt(ux * ux + uy * uy))
                 elif sec == "s" and len(p) == 8 and p[0].isdigit():
-                    eid = int(p[0])
                     sxx, syy, szz = float(p[2]), float(p[3]), float(p[4])
                     sxy, sxz, syz = float(p[5]), float(p[6]), float(p[7])
                     vm = math.sqrt(
-                        0.5
-                        * (
-                            (sxx - syy) ** 2
-                            + (syy - szz) ** 2
-                            + (szz - sxx) ** 2
-                            + 6.0 * (sxy**2 + sxz**2 + syz**2)
-                        )
+                        0.5 * ((sxx - syy) ** 2 + (syy - szz) ** 2 + (szz - sxx) ** 2)
+                        + 3.0 * (sxy**2 + sxz**2 + syz**2)
                     )
-                    if vm > max_vm:
-                        max_vm = vm
-                        el_ns = elems[eid - 1][1:5]
-                        max_vm_at = (
-                            sum(nodes[n][0] for n in el_ns) / 4.0,
-                            sum(nodes[n][1] for n in el_ns) / 4.0,
-                            sum(nodes[n][2] for n in el_ns) / 4.0,
-                        )
+                    peak_vm = max(peak_vm, vm)
+                    if int(p[0]) in away:
+                        away_vm.append(vm)
 
+        if not away_vm:
+            raise RuntimeError(f"{name}: no element is clear of the loads and supports")
+        away_vm.sort()
+        max_vm = away_vm[min(len(away_vm) - 1, int(STRESS_PERCENTILE * len(away_vm)))]
         return {
             "name": name,
             "nodes": len(nodes),
             "elems": len(elems),
             "max_u_mm": max_u,
             "max_u_at": max_u_at,
+            "load_nodes": len(load_nodes),
             "max_chimney_xy_u_mm": max_chimney_xy_u,
             "max_vm_mpa": max_vm,
-            "max_vm_at": max_vm_at,
+            "peak_vm_mpa": peak_vm,
             "frd_path": os.path.join(work_dir, "job.frd") if out_dir else None,
         }
 
 
+def solve_converged(name: str, shape: cq.Shape, clmin: float, clmax: float, **kw) -> dict:
+    """Solve on the given mesh and on one `REFINE` x finer; report the fine one and the change."""
+    coarse = solve_calculix(name, shape, clmin, clmax, **kw)
+    fine = solve_calculix(f"{name}_fine", shape, clmin * REFINE, clmax * REFINE, **kw)
+    for key in ("max_vm_mpa", "max_u_mm"):
+        c, f = float(coarse[key]), float(fine[key])
+        fine[f"{key}_change"] = abs(f - c) / f if f > 0 else 0.0
+    fine["converged"] = all(fine[f"{k}_change"] <= CONVERGED for k in ("max_vm_mpa", "max_u_mm"))
+    return fine
+
+
+def _row(label: str, r: dict, vm_limit: float, u_limit: float) -> tuple[str, bool, str]:
+    vm, u = float(r["max_vm_mpa"]), float(r["max_u_mm"])
+    ok = vm <= vm_limit and u <= u_limit and bool(r["converged"])
+    return (
+        label,
+        ok,
+        f"{r['elems']} C3D10: von Mises {vm:.2f} MPa (p{100 * STRESS_PERCENTILE:.0f}, away from "
+        f"loads/supports; limit "
+        f"{vm_limit:.1f}; raw peak {float(r['peak_vm_mpa']):.1f}), disp {u:.3f} mm (limit "
+        f"{u_limit:.3f}) at ({', '.join(f'{c:.1f}' for c in r['max_u_at'])}), "
+        f"{r['load_nodes']} loaded nodes; mesh x{REFINE} changes them "
+        f"{100 * r['max_vm_mpa_change']:.0f}% / {100 * r['max_u_mm_change']:.0f}% "
+        f"(max {100 * CONVERGED:.0f}%)",
+    )
+
+
+def _under_a_foot(x: float, y: float, z: float) -> bool:
+    """On the tub's underside under one of the 4 rubber feet, which grip the table."""
+    return z <= 0.05 and _near_corner_screw(x, y, r=FOOT_D / 2.0)
+
+
+def _on_a_standoff_top(x: float, y: float, z: float) -> bool:
+    """On the top face of one of the 4 Radxa or 2 RJ45 standoffs (where the screws clamp)."""
+    tops = [(hx, hy, D.RADXA_PCB_Z0) for hx, hy in D.radxa_hole_centres()]
+    tops += [(rx, ry, D.RJ45_SEAT_Z) for rx, ry in D.RJ45_MOUNT_HOLES]
+    return any(
+        abs(z - tz) <= 0.15 and (x - tx) ** 2 + (y - ty) ** 2 <= 3.6**2 for tx, ty, tz in tops
+    )
+
+
+def _near_corner_screw(x: float, y: float, r: float = 2.6) -> bool:
+    """Within the M3 corner boss at (x, y): where the screws hold the halves together."""
+    return any((x - bx) ** 2 + (y - by) ** 2 <= r * r for bx in CORNER_XS for by in CORNER_YS)
+
+
 def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
-    """Run all 4 Gmsh + CalculiX 3D FEM load cases and return `(label, ok, msg)` rows."""
+    """Run all 4 Gmsh + CalculiX 3D FEM load cases (C3D10, mesh-converged) as gate rows."""
     rows: list[tuple[str, bool, str]] = []
 
-    # 1. LC1: usb_retainer_bracket under 50N downward mash + 15N pole tilt + 15N USB-A upward pry
-    r1 = solve_calculix(
+    # 1. LC1: usb_retainer_bracket (glued along its base) under a 50 N mash on the button stop,
+    #    15 N sideways on the guide pole and a 15 N USB-A pry under the top bridge
+    r1 = solve_converged(
         "LC1_BUTTON_MASH_50N",
         usb_retainer_bracket.get_shape(),
         clmin=0.45,
@@ -239,26 +328,26 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
         ],
         out_dir=out_dir,
     )
-    vm1 = float(r1["max_vm_mpa"])
-    u1 = float(r1["max_u_mm"])
     rows.append(
-        (
+        _row(
             "FEM_LC1   usb_retainer_bracket 50N button mash + 15N pole tilt + 15N USB pry",
-            vm1 <= 25.0 and u1 <= 0.25,
-            f"{r1['elems']} C3D4 elems: max von Mises={vm1:.2f} MPa (limit 25.0), "
-            f"max disp={u1:.3f} mm (limit 0.250)",
+            r1,
+            25.0,
+            0.25,
         )
     )
 
-    # 2. LC2: Lower_Tub front-left USB-A & Omron bay (40N +Y insert, 30N -Y yank, 50N -Z stop mash)
+    # 2. LC2: the tub's front-left USB-A & Omron bay, cut from the tub (the cut faces held as the
+    #    rest of the tub would hold them), resting on its floor
     tub = lower_tub.get_shape()
     tub_fl = tub.intersect(cq.Solid.makeBox(66.0, 36.0, 25.0, cq.Vector(-66.0, -50.0, -0.5)))
-    r2 = solve_calculix(
+    r2 = solve_converged(
         "LC2_TUB_USB_AND_OMRON",
         tub_fl,
         clmin=0.80,
         clmax=2.20,
-        fix_pred=lambda x, y, z: z <= 1.65 or y >= -14.2 or x >= -0.2,
+        fix_pred=lambda x, y, z: y >= -14.2 or x >= -0.2 or _under_a_foot(x, y, z),
+        roller_pred=lambda x, y, z: z <= 0.05,
         loads=[
             (
                 lambda x, y, z: -40.5 <= x <= -9.5 and -26.80 <= y <= -25.70 and 9.60 <= z <= 11.60,
@@ -269,31 +358,33 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
                 (0.0, -30.0, 0.0),
             ),
             (
-                lambda x, y, z: -35.0 <= x <= -29.5 and -20.90 <= y <= -16.70 and z >= 23.20,
+                lambda x, y, z: (
+                    -35.0 <= x <= -29.5 and -20.90 <= y <= -16.70 and z >= STOP_Z - 0.25
+                ),
                 (0.0, 0.0, -50.0),
             ),
         ],
         out_dir=out_dir,
     )
-    vm2 = float(r2["max_vm_mpa"])
-    u2 = float(r2["max_u_mm"])
     rows.append(
-        (
+        _row(
             "FEM_LC2   lower_tub USB-A cradle (40N insert, 30N yank) & 50N Omron rear stop",
-            vm2 <= 20.0 and u2 <= 0.10,
-            f"{r2['elems']} C3D4 elems: max von Mises={vm2:.2f} MPa (limit 20.0), "
-            f"max disp={u2:.3f} mm (limit 0.100)",
+            r2,
+            20.0,
+            0.10,
         )
     )
 
-    # 3. LC3: Full Upper_Shell under 100N (~10 kgf) downward top-dome & louver crush load
+    # 3. LC3: the upper shell resting on the tub's rim (held vertically) and screwed at its four
+    #    corners (held fully; C4: holding the whole rim fully over-stiffened it), 100 N on the dome
     sh = upper_shell.get_shape()
-    r3 = solve_calculix(
+    r3 = solve_converged(
         "LC3_UPPER_SHELL_DOME_100N",
         sh,
         clmin=1.10,
         clmax=2.80,
-        fix_pred=lambda x, y, z: z <= 13.20,
+        fix_pred=lambda x, y, z: z <= 13.20 and _near_corner_screw(x, y),
+        roller_pred=lambda x, y, z: z <= 13.00,
         loads=[
             (
                 lambda x, y, z: -28.0 <= x <= 28.0 and -35.0 <= y <= 10.0 and z >= 31.0,
@@ -302,45 +393,32 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
         ],
         out_dir=out_dir,
     )
-    vm3 = float(r3["max_vm_mpa"])
-    u3 = float(r3["max_u_mm"])
-    uc3 = float(r3["max_chimney_xy_u_mm"])
-    rows.append(
-        (
-            "FEM_LC3   upper_shell 100N top-dome crush across 25 louvers & button chimneys",
-            vm3 <= 25.0 and u3 <= 0.50 and uc3 <= 0.08,
-            f"{r3['elems']} C3D4 elems: max von Mises={vm3:.2f} MPa, "
-            f"dome sag={u3:.3f} mm, chimney XY={uc3:.3f} mm (clear 0.22 mm)",
-        )
+    label, ok, msg = _row(
+        "FEM_LC3   upper_shell 100N top-dome crush; button chimneys stay round", r3, 25.0, 0.50
     )
+    uc3 = float(r3["max_chimney_xy_u_mm"])
+    rows.append((label, ok and uc3 <= 0.08, f"{msg}; chimney XY {uc3:.3f} mm (limit 0.080)"))
 
-    # 4. LC4: Lower_Tub rear half (4x Radxa + 2x RJ45 standoffs under 30N -Y push + 60N -Z preload)
+    # 4. LC4: the tub's rear half on its floor (held vertically), the cut face held, 30 N rear plug
+    #    push + 60 N screw preload on the 4 Radxa and 2 RJ45 standoffs
     tub_rear = tub.intersect(cq.Solid.makeBox(132.0, 63.0, 16.0, cq.Vector(-66.0, -12.0, -0.5)))
-    r4 = solve_calculix(
+    r4 = solve_converged(
         "LC4_RADXA_RJ45_STANDOFFS",
         tub_rear,
         clmin=1.00,
         clmax=2.80,
-        fix_pred=lambda x, y, z: z <= 0.95 or y <= -11.8,
-        loads=[
-            (
-                lambda x, y, z: (
-                    (z >= 7.8 and (-49.0 <= x <= 18.0) and (-10.0 <= y <= 48.0))
-                    or (z >= 5.2 and 38.0 <= x <= 55.0 and 20.0 <= y <= 33.0)
-                ),
-                (0.0, -30.0, -60.0),
-            ),
-        ],
+        fix_pred=lambda x, y, z: y <= -11.8 or _under_a_foot(x, y, z),
+        roller_pred=lambda x, y, z: z <= 0.05,
+        # on the 6 standoff tops only (C4: a box here also caught the rear wall's top edge)
+        loads=[(_on_a_standoff_top, (0.0, -30.0, -60.0))],
         out_dir=out_dir,
     )
-    vm4 = float(r4["max_vm_mpa"])
-    u4 = float(r4["max_u_mm"])
     rows.append(
-        (
+        _row(
             "FEM_LC4   lower_tub Radxa X4 & RJ45 standoffs (30N -Y plug push + 60N preload)",
-            vm4 <= 15.0 and u4 <= 0.10,
-            f"{r4['elems']} C3D4 elems: max von Mises={vm4:.2f} MPa (limit 15.0), "
-            f"max disp={u4:.3f} mm (limit 0.100)",
+            r4,
+            15.0,
+            0.10,
         )
     )
 

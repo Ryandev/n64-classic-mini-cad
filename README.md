@@ -4,7 +4,7 @@
 
 A 100% parametric **CadQuery (OpenCASCADE B-Rep)** enclosure reproducing the classic 64-bit console silhouette at **exact 50% linear scale (`130.0 x 99.9 x 33.5 mm`)**, engineered around an inverted **Radxa X4 (`Intel Processor N100`)** single-board computer, 4 front USB-A controller ports hidden behind magnetic hinged doors, tactile **`Omron SS-5GL`** microswitches under both **`POWER`** and **`RESET`** with coaxial anti-tilt guide poles, and a `Kingbright L-93WEGW` dual-colour front status LED.
 
-The case is checked by **135 geometry, interference and printability gate rows** (`./run gate`, which needs the reference models listed under [External sources](#external-sources)) and a first-pass FEM run (`./run fem`, see the caveat below).
+The case is checked by **155 geometry, interference and printability gate rows** (`./run gate`, which needs the reference models listed under [External sources](#external-sources)) and a first-pass FEM run (`./run fem`, see the caveat below).
 
 ---
 
@@ -65,27 +65,35 @@ For the front nose jewel (`front_bezel.py`), cut `bezel_laser_jig/bezel_laser_ji
 
 ## 🔬 3D Tetrahedral FEM Structural Verification (`./run fem`)
 
-> **Caveat (2026-11-11):** these results are not yet mesh-converged. Peak stresses sit at the
-> point-load nodes, and refining LC1's mesh to half size takes it past the 25 MPa limit. The
-> FEM is not part of the gate. Treat the table as a first pass, not a structural sign-off.
+[`lib/testing/fem_check.py`](lib/testing/fem_check.py) meshes the actual B-Rep solids with
+**Gmsh** (10-node `C3D10` tetrahedra) and solves 4 linear-elastic load cases in **CalculiX**
+(PETG, $E = 2200\,\text{MPa}$, $\nu = 0.36$). Each case is solved on two meshes (the second
+`0.7x` finer) and must agree within 15 %. Stress is judged at the 99th percentile of the points
+clear of loads and supports, since point loads, clamps and the model's sharp inside corners are
+true stress singularities whose maximum never converges. Supports follow the real console: the
+tub rests on its floor, held sideways only under the rubber feet; the shell rests on the tub's
+rim and is screwed at its 4 corners.
 
-[`lib/testing/fem_check.py`](lib/testing/fem_check.py) meshes the actual B-Rep solids with **Gmsh (`C3D4` tetrahedra)** and solves 4 linear-elastic load cases in **CalculiX (`ccx`)** ($E = 2200\,\text{MPa}$, $\nu = 0.36$, conservative FDM inter-layer tension limit $25.0\,\text{MPa}$, in-plane yield $45.0\,\text{MPa}$):
+> **Status (2026-11-13, C4): not a sign-off, and not in the gate.** Stress is well inside every
+> limit. Deflection exceeds the limits in all 4 cases: the earlier `C3D4` model was 5–15x too
+> stiff, and the limits were set against it. Whether to reinforce the parts or revise the limits
+> is an open decision; the FEM joins the gate once it is made.
 
-| Load Case | Component | `C3D4` Mesh | Load & Boundary Conditions | Peak Von Mises | Peak Deflection | Status |
-|---|---|---|---|---|---|---|
-| **`FEM_LC1`** | `usb_retainer_bracket.py` | `5,781` elems | `50 N` (`~5 kgf` `-Z`) button mash on `Z = 23.45 mm` stop block + `15 N` (`-Y`) tilt on `Ø2.80 mm` guide pole + `15 N` (`+Z`) USB-A pry | **`18.00 MPa`** (`< 25.0 MPa`) | **`0.171 mm`** at pole tip | **PASS** |
-| **`FEM_LC2`** | `lower_tub.py` *(front USB & Omron bay)* | `17,096` elems | Simultaneous `40 N` (`+Y`) USB-A insertion, `30 N` (`-Y`) cable yank on `5.0 mm` pull-stop step, and `50 N` (`-Z`) rear button stop mash | **`10.94 MPa`** (`< 20.0 MPa`) | **`0.029 mm`** (`29 µm`) | **PASS** |
-| **`FEM_LC3`** | `upper_shell.py` *(full dome & 25 louvers)* | `72,961` elems | `100 N` (`~10 kgf` `-Z`) crush across central barrel dome & 25 parabolic louvers | **`18.18 MPa`** (`99.9th` pct `9.98 MPa`) | Dome sag **`0.276 mm`**; button chimney radial `XY` **`0.045 mm`** (vs `0.22 mm/side` clearance) | **PASS** |
-| **`FEM_LC4`** | `lower_tub.py` *(Radxa X4 & RJ45 standoffs)* | `24,538` elems | `30 N` (`-Y`) rear cable insertion shear + `60 N` (`-Z`) M2.5 screw clamp preload across 6 standoffs | **`3.37 MPa`** (`< 15.0 MPa`) | **`0.022 mm`** (`22 µm`) | **PASS** |
+| Load Case | Component | Loads | von Mises (p99) | Deflection | Mesh change (stress / defl.) |
+|---|---|---|---|---|---|
+| **`FEM_LC1`** | `usb_retainer_bracket.py` | `50 N` button-stop mash, `15 N` sideways on the guide pole, `15 N` USB-A pry | `11.2 MPa` (limit 25) | `0.30 mm` at the guide pole tip (limit 0.25) | 31 % / 2 % |
+| **`FEM_LC2`** | `lower_tub.py` front USB & Omron bay | `40 N` USB-A insertion, `30 N` cable yank, `50 N` button-stop mash | `3.7 MPa` (limit 20) | `0.28 mm` at the button stop post (limit 0.10) | 0 % / 4 % |
+| **`FEM_LC3`** | `upper_shell.py` | `100 N` (~10 kg) on the dome | `5.1 MPa` (limit 25) | `0.78 mm` dome sag (limit 0.50); chimneys `0.14 mm` (limit 0.08, button clearance 0.22) | 6 % / 7 % |
+| **`FEM_LC4`** | `lower_tub.py` Radxa & RJ45 standoffs | `30 N` rear plug push, `60 N` screw preload, on the 6 standoff tops | `3.4 MPa` (limit 15) | `0.31 mm` at a standoff top (limit 0.10) | 13 % / 4 % |
 
 ---
 
 ## 🛠️ Building, Testing & Documentation
 
 ```bash
-./run all        # ruff lint + 134 B-Rep/printability gate rows + STEP/SVG/plate export + round-trip validation
-./run fem        # run all 4 Gmsh + CalculiX 3D tetrahedral FEM structural checks
-./run selftest   # run 17 planted geometry mutations to prove every gate row can fail
+./run all        # ruff lint + 155 B-Rep/printability gate rows + STEP/SVG/plate export + round-trip validation
+./run fem        # 4 Gmsh + CalculiX C3D10 load cases, each on two meshes (~4 min)
+./run selftest   # run 40 planted geometry mutations to prove every gate row can fail
 ./run bom        # regenerate notes/BOM_COMPLETE.md from parametric subassemblies
 ```
 

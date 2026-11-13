@@ -4,6 +4,10 @@ channels:
 dependencies:
   - python=3.11
   - cadquery=2.8.0
+  # FEM (`./run fem`, lib/testing/fem_check.py): mesher and solver, run as external programs.
+  # Both GPL; dev-machine tools only, nothing built from them ships.
+  - gmsh=4.15.2
+  - calculix=2.23
   - pip
   - pip:
       # Not conda packages: these exist only on PyPI.
