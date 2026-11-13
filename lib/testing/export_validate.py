@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import cadquery as cq  # noqa: E402
 import plate  # noqa: E402
 from cadquery.occ_impl.shapes import check as bop_check  # noqa: E402
+from testing.export_harness import export_shape  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EXPORT_DIR = os.path.join(REPO, "export")
@@ -45,6 +46,22 @@ def _load(d, name):
     finally:
         sys.path.pop(0)
     return mod
+
+
+def placement_mismatch(mod, step_path):
+    """`None` if the STEP's bounding box matches `export_shape(mod)`'s to 0.05 mm, else why not."""
+    if not os.path.isfile(step_path):
+        return "missing .step"
+    want = export_shape(mod).BoundingBox()
+    got = cq.importers.importStep(step_path).val().BoundingBox()
+    pairs = zip(
+        ("xmin", "ymin", "zmin", "xmax", "ymax", "zmax"),
+        (got.xmin, got.ymin, got.zmin, got.xmax, got.ymax, got.zmax),
+        (want.xmin, want.ymin, want.zmin, want.xmax, want.ymax, want.zmax),
+        strict=True,
+    )
+    off = [f"{k} {g:.2f} vs {w:.2f}" for k, g, w in pairs if abs(g - w) > 0.05]
+    return ", ".join(off) if off else None
 
 
 def check_all():
@@ -133,7 +150,7 @@ def check_all():
             bad_roundtrip.append(f"{name}: missing .step")
             continue
         try:
-            native = mod.get_shape()
+            native = export_shape(mod)
             imported = cq.importers.importStep(step_path).val()
         except Exception as exc:
             bad_roundtrip.append(f"{name}: importStep failed ({type(exc).__name__}: {exc})")
@@ -171,7 +188,7 @@ def check_all():
             bool(fdm_exported) and not bad_roundtrip,
             "; ".join(bad_roundtrip)
             if bad_roundtrip
-            else f"{len(fdm_exported)} STEP file(s) re-imported and verified against get_shape()",
+            else f"{len(fdm_exported)} STEP file(s) re-imported, matching export_shape()",
         )
     )
     out.append(
@@ -193,6 +210,26 @@ def check_all():
                 f"{len(fdm_exported)} FDM part(s) fit inside "
                 f"{FDM_BED[0]:.0f}x{FDM_BED[1]:.0f}x{FDM_BED[2]:.0f} mm"
             ),
+        )
+    )
+
+    # --- PLACED (D4): components the console places are exported where they sit ---------
+    placed_bad, placed_n = [], 0
+    for d, name, mod in aux:
+        if not hasattr(mod, "placed"):
+            continue
+        placed_n += 1
+        step_path = os.path.join(EXPORT_DIR, name, f"{name}.step")
+        bad = placement_mismatch(mod, step_path)
+        if bad:
+            placed_bad.append(f"{name}: {bad}")
+    out.append(
+        (
+            "PLACED    every placed component's STEP sits where the console places it (< 0.05 mm)",
+            not placed_bad,
+            "; ".join(placed_bad)
+            if placed_bad
+            else f"{placed_n} placed component STEP(s) match placed() in position and size",
         )
     )
 

@@ -28,6 +28,15 @@ EXPORT_DIR = os.path.join(
 )
 
 
+def export_shape(mod):
+    """The shape `export/<name>/<name>.step` holds: placed in the console if the module places it.
+
+    export_validate.py re-imports each file against this same function (D4: it compared placed
+    exports with `get_shape()`, so a placed component could be written wrong and still pass).
+    """
+    return mod.placed() if hasattr(mod, "placed") else mod.get_shape()
+
+
 def _names_in(dir_path):
     if not os.path.exists(dir_path):
         return []
@@ -91,7 +100,7 @@ def main(argv=None):
             continue
 
         if process in ("fdm", "component", "reference"):
-            shape = mod.placed() if hasattr(mod, "placed") else mod.get_shape()
+            shape = export_shape(mod)
             out_path = os.path.join(out_dir, f"{name}.step")
             cq.exporters.export(shape, out_path)
             print(f"  -> Wrote {out_path}")

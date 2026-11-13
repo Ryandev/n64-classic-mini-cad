@@ -20,6 +20,21 @@ GATE = os.path.join(HERE, "gate.py")
 MUTATIONS = [
     # C8: every row that measures the solids has a planted defect it must catch
     (
+        "top_controls_check",
+        "assembly/datum.py",
+        "BUTTON_POLE_HOLE_D = 2.80 + 2.0 * BUTTON_POLE_GAP + 0.06",
+        "BUTTON_POLE_HOLE_D = 3.20",
+        "BTN_DATUM",
+    ),
+    # D4: the spindle torus (R2 > R1) that once made a dimpled front-pod dome
+    (
+        "top_controls_check",
+        "variant/upper_shell.py",
+        "    return base.cut(*cuts)\n",
+        "    return base.cut(*cuts).fuse(cq.Solid.makeTorus(6.0, 6.5, cq.Vector(0, 10, 24)))\n",
+        "upper_shell:manifold",
+    ),
+    (
         "console_check",
         "assembly/datum.py",
         "CORNER_SCREW_L = 14.0",

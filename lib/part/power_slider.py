@@ -70,21 +70,24 @@ def get_shape() -> cq.Shape:
     ]
     glyph_cuts = cq.Compound.makeCompound(glyphs_shifted).intersect(surface_skin)
 
-    # Coaxial Ø3.20 mm underside anti-tilt guide hole at (-32.32, -32.20, Z=25.40..29.85 mm)
-    # engaging the Ø2.80 mm vertical guide pole on part/usb_retainer_bracket.py (0.20 mm/side fit)
+    # Coaxial Ø4.0 mm guide-pole hole: a backstop only, the chimney is the XY datum (C9)
+    # round the Ø2.80 mm pole on part/usb_retainer_bracket.py, clearing the tolerance stack
+    r_hole = D.BUTTON_POLE_HOLE_D / 2.0
     guide_hole = cq.Solid.makeCylinder(
-        1.60,
+        r_hole,
         D.BUTTON_POLE_HOLE_Z1 - (D.BUTTON_UNDERSIDE_Z - 0.2),
         cq.Vector(D.POWER_SLIDER_X, -32.20, D.BUTTON_UNDERSIDE_Z - 0.2),
     ).fuse(
+        # 45 deg down to the pole's Ø2.80, then a flat roof: a full cone would leave the button's
+        # crown 0.4 mm thick over a Ø4.0 hole
         cq.Solid.makeCone(
-            1.60,
-            0.0,
-            1.60,
+            r_hole,
+            1.40,
+            r_hole - 1.40,
             cq.Vector(D.POWER_SLIDER_X, -32.20, D.BUTTON_POLE_HOLE_Z1),
         )
     )
-    # Flat underside 0.45 mm lower, pocketed over the lever's outer part: the pocket's edge
+    # Flat underside 0.33 mm lower, pocketed over the lever's outer part: the pocket's edge
     # presses the switch lever under the button centre (C3)
     pad = C.stadium_prism(
         D.POWER_SLIDER_X,

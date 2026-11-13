@@ -32,6 +32,7 @@ from assembly import n64_scan_profiles as S  # noqa: E402
 from component import omron_ss5gl, radxa_x4  # noqa: E402
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
 from OCP.BRepClass3d import BRepClass3d_SolidClassifier  # noqa: E402
+from OCP.BRepExtrema import BRepExtrema_DistShapeShape  # noqa: E402
 from OCP.gp import gp_Pnt  # noqa: E402
 from OCP.TopAbs import TopAbs_IN, TopAbs_OUT  # noqa: E402
 from part import (  # noqa: E402
@@ -220,6 +221,33 @@ def check_all():
             f"radial clearance={r_clear:.2f} mm/side, "
             f"chimney guided={_chimney_guided(D.RESET_BTN_X)}, "
             f"pressed clash={v_shell_press:.3f} mm^3, Omron lever overlap={v_sw_press:.2f} mm^3",
+        )
+    )
+
+    # 5a. BTN_DATUM (C9, rule 3): the shell chimney is each button's XY datum; the bracket's guide
+    # pole must never touch the button, at rest or pressed, even with the tolerance stack used up
+    pole_gaps = []
+    for name, button, cx in (
+        ("POWER", slider, D.POWER_SLIDER_X),
+        ("RESET", reset, D.RESET_BTN_X),
+    ):
+        pole = ret_both.intersect(
+            cq.Solid.makeCylinder(2.5, 6.0, cq.Vector(cx, -32.20, D.BUTTON_STOP_Z + 0.05))
+        )
+        for state, dz in (("rest", 0.0), ("pressed", D.RESET_STROKE_Z)):
+            moved = button.moved(cq.Location(cq.Vector(0.0, 0.0, -dz)))
+            ext = BRepExtrema_DistShapeShape(pole.wrapped, moved.wrapped)
+            ext.Perform()
+            pole_gaps.append((f"{name} {state}", ext.Value()))
+    rest = min((g for g in pole_gaps if "rest" in g[0]), key=lambda g: g[1])
+    pressed = min((g for g in pole_gaps if "pressed" in g[0]), key=lambda g: g[1])
+    rows.append(
+        (
+            "BTN_DATUM chimney locates each button; guide pole clears it by the tolerance stack",
+            rest[1] >= D.BUTTON_POLE_GAP - 0.02 and pressed[1] >= 0.2,
+            f"pole-to-button gap at rest {rest[1]:.3f} mm ({rest[0]}), needed "
+            f"{D.BUTTON_POLE_GAP:.2f} (chimney {D.RESET_CLEAR:.2f} + lip {D.LIP_CLEAR:.2f} + "
+            f"bracket placement {D.BRACKET_PLACE_TOL:.2f}); pressed {pressed[1]:.3f} mm (>= 0.20)",
         )
     )
 

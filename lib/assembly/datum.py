@@ -360,7 +360,14 @@ RESET_Z0 = DECK_H - ROOF_T - RESET_FLANGE_T - 0.2  # Z = 25.40 mm
 # Both buttons' flat underside sits 0.33 mm below RESET_Z0, with a pocket over the outer lever:
 # the pocket's edge presses the switch lever at OMRON_LEVER_RATIO (C3); the face prints flat.
 BUTTON_UNDERSIDE_Z = RESET_Z0 - 0.33
-BUTTON_POLE_HOLE_Z1 = 28.60  # guide-pole hole top: the pole's cone clears it at full stroke
+BUTTON_POLE_HOLE_Z1 = 28.90  # where the guide-pole hole starts to narrow: its flat roof clears the
+# pole's tip by 0.3 mm at full stroke (BTN_DATUM)
+# Rule 3, one datum per axis (C9): each button is located in XY by its shell chimney (0.22 mm a
+# side). The bracket's guide pole is a backstop only, so its hole clears the whole stack: the
+# button's play in the chimney + the shell's lip clearance + the glued bracket's placement.
+BRACKET_PLACE_TOL = 0.20  # the USB bracket is glued into the tub, located by eye and its walls
+BUTTON_POLE_GAP = RESET_CLEAR + LIP_CLEAR + BRACKET_PLACE_TOL  # 0.57 mm a side
+BUTTON_POLE_HOLE_D = 2.80 + 2.0 * BUTTON_POLE_GAP + 0.06  # Ø4.0 round the Ø2.80 pole
 BUTTON_STOP_Z = BUTTON_UNDERSIDE_Z - RESET_STROKE_Z  # top of the bracket shelf and tub post stops
 SLIDER_STROKE_Z = RESET_STROKE_Z  # POWER shares RESET's stops
 
