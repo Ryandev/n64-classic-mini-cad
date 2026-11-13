@@ -11,9 +11,10 @@ face prints depends on its angle to the bed (GBA `lib/slicing/PRINTING.md`, DECI
     underside  facing down but steep enough to print unsupported: a rougher down-skin
     support    facing down past 50 deg from vertical: printed on support, the worst finish
 
-Only the outer skin counts: a face is visible if a ray from just outside it, along its normal,
-leaves the part without hitting it again (an internal wall's ray hits the opposite wall). The
-skin is tessellated so a curved face (a dome) is judged triangle by triangle, not by one normal.
+Only what shows on the assembled console counts: a face is visible if a ray from just outside
+it, along its normal, leaves the whole closed case (`n64_mini`, printed parts only) without
+hitting anything. A button's stem in its chimney, or a wall inside the tub, hits the case and
+doesn't count. The skin is tessellated so a curved face (a dome) is judged triangle by triangle.
 """
 
 import argparse
@@ -24,6 +25,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import cadquery as cq  # noqa: E402
+from assembly import n64_mini  # noqa: E402
 from OCP.gp import gp_Dir, gp_Lin, gp_Pnt  # noqa: E402
 from OCP.IntCurvesFace import IntCurvesFace_ShapeIntersector  # noqa: E402
 from part import (  # noqa: E402
@@ -52,41 +54,45 @@ CLASSES = ("wall", "top", "bed", "terraced", "underside", "support")
 TESS_TOL = 0.1
 
 
-def _visible_faces(shape: cq.Shape) -> list[cq.Face]:
-    """Faces whose outward ray leaves the part: its outer skin."""
-    it = IntCurvesFace_ShapeIntersector()
-    it.Load(shape.wrapped, 1e-4)
-    out = []
-    for f in shape.Faces():
-        c = f.Center()
-        n = f.normalAt(c)
-        start = c + n * 0.05
-        it.Perform(gp_Lin(gp_Pnt(start.x, start.y, start.z), gp_Dir(n.x, n.y, n.z)), 0.0, 1e4)
-        if it.NbPnt() == 0:
-            out.append(f)
-    return out
-
-
-def _triangles(faces: list[cq.Face]) -> list[tuple[cq.Vector, float, float]]:
-    """(unit normal, area, height-reference z) of every skin triangle, normals facing out."""
+def _face_triangles(f: cq.Face) -> list[tuple[cq.Vector, float, cq.Vector]]:
+    """(outward unit normal, area, centroid) of each triangle of one face."""
+    verts, idx = f.tessellate(TESS_TOL)
+    fn = f.normalAt()  # at the face's own (u, v) centre, honouring its orientation
     tris = []
-    for f in faces:
-        verts, idx = f.tessellate(TESS_TOL)
-        fn = f.normalAt(f.Center())
-        for a, b, c in idx:
-            pa, pb, pc = verts[a], verts[b], verts[c]
-            cross = (pb - pa).cross(pc - pa)
-            area = cross.Length / 2.0
-            if area < 1e-6:
-                continue
-            n = cross.normalized()
-            if n.dot(fn) < 0:  # tessellation winding isn't guaranteed: point it outward
-                n = -n
-            tris.append((n, area, (pa + pb + pc) * (1.0 / 3.0)))
+    for a, b, c in idx:
+        pa, pb, pc = verts[a], verts[b], verts[c]
+        cross = (pb - pa).cross(pc - pa)
+        area = cross.Length / 2.0
+        if area < 1e-6:
+            continue
+        n = cross.normalized()
+        if n.dot(fn) < 0:  # tessellation winding isn't guaranteed: point it outward
+            n = -n
+        tris.append((n, area, (pa + pb + pc) * (1.0 / 3.0)))
     return tris
 
 
-def classify(shape: cq.Shape, up: tuple[float, float, float]) -> dict[str, float]:
+def skin(
+    shape: cq.Shape, it: IntCurvesFace_ShapeIntersector
+) -> list[tuple[cq.Vector, float, cq.Vector]]:
+    """Triangles of the visible skin: faces whose outward ray, from their largest triangle, leaves
+    the assembled case (`it`, loaded with it) without hitting anything."""
+    out = []
+    for f in shape.Faces():
+        tris = _face_triangles(f)
+        if not tris:
+            continue
+        n, _, c = max(tris, key=lambda t: t[1])
+        start = c + n * 0.05
+        it.Perform(gp_Lin(gp_Pnt(start.x, start.y, start.z), gp_Dir(n.x, n.y, n.z)), 0.0, 1e4)
+        if it.NbPnt() == 0:
+            out.extend(tris)
+    return out
+
+
+def classify(
+    shape: cq.Shape, tris: list[tuple[cq.Vector, float, cq.Vector]], up: tuple[float, float, float]
+) -> dict[str, float]:
     """Skin area (mm^2) in each class when the part prints with `up` pointing up."""
     u = cq.Vector(*up)
     bb = shape.BoundingBox()
@@ -100,7 +106,7 @@ def classify(shape: cq.Shape, up: tuple[float, float, float]) -> dict[str, float
     sin_wall = math.sin(math.radians(WALL_DEG))
     cos_support = -math.sin(math.radians(OVERHANG_DEG))
     out = dict.fromkeys(CLASSES, 0.0)
-    for n, area, centre in _triangles(_visible_faces(shape)):
+    for n, area, centre in tris:
         d = n.dot(u)
         if abs(d) <= sin_wall:
             out["wall"] += area
@@ -126,13 +132,16 @@ def main(argv: list[str] | None = None) -> int:
     if not chosen:
         print(f"no part matches {args.names}; have {[n for n, _ in PARTS]}")
         return 2
+    case = IntCurvesFace_ShapeIntersector()
+    case.Load(n64_mini.get_shape(include_electronics=False).wrapped, 1e-4)
     for name, mod in chosen:
         shape = mod.get_shape()
+        tris = skin(shape, case)
         current = tuple(mod.PRINT_NORMAL)
         print(f"\n== {name} (now prints up={current})", flush=True)
         print("   up          " + "  ".join(f"{c:>9}" for c in CLASSES) + "   (% of visible skin)")
         for up in UPS:
-            got = classify(shape, up)
+            got = classify(shape, tris, up)
             total = sum(got.values()) or 1.0
             mark = " <- now" if up == current else ""
             row = "  ".join(f"{100 * got[c] / total:8.1f}%" for c in CLASSES)
