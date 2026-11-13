@@ -86,6 +86,72 @@ def _corner_box() -> tuple[tuple[float, float, float], tuple[float, float, float
 _BAY = D.FRONT_BAY_X
 _LIP_Y = (-8.0, 8.0)  # a straight run of the right-hand side wall
 
+# Stepped hole gauge. GBA's PETG prints came out ~0.33 mm small on a Ø10 bore and ~0.4 mm small
+# under Ø2 (notes/PRINTING.md), so the magnet pockets and hinge sockets are tried at the drawn size
+# and two steps up. Hole i (i = 1..3, left to right) is marked by i bumps on top.
+GAUGE_STEP = 0.2
+GAUGE_PITCH = 7.0
+MAGNET_SIZES = tuple(D.MAGNET_BORE_D + i * GAUGE_STEP for i in range(3))
+HINGE_SIZES = tuple(D.HINGE_SOCKET_D + i * GAUGE_STEP for i in range(3))
+
+
+def _marks(x: float, n: int, z: float) -> list[cq.Solid]:
+    return [
+        cq.Solid.makeCylinder(0.5, 0.4, cq.Vector(x + (k - (n - 1) / 2) * 1.4, 0.0, z))
+        for k in range(n)
+    ]
+
+
+def _wall_gauge() -> cq.Shape:
+    """Holes bored sideways, as the tub prints its magnet pockets (axis Y) and hinge sockets (X).
+
+    A 3 mm wall standing on a foot; the top row is magnet pockets, the bottom row hinge sockets.
+    """
+    w, t, h = 3 * GAUGE_PITCH + 4.0, 3.0, 13.0
+    x0 = -w / 2
+    body = cq.Solid.makeBox(w, t, h, cq.Vector(x0, -t / 2, 0.0))
+    foot = cq.Solid.makeBox(w, 10.0, 1.2, cq.Vector(x0, -5.0, 0.0))
+    marks, holes = [], []
+    for i in range(3):
+        x = (i - 1) * GAUGE_PITCH
+        marks += _marks(x, i + 1, h)
+        holes.append(
+            cq.Solid.makeCylinder(
+                MAGNET_SIZES[i] / 2,
+                D.MAGNET_BORE_DEPTH,
+                cq.Vector(x, -t / 2, 9.0),
+                cq.Vector(0, 1, 0),
+            )
+        )
+        holes.append(
+            cq.Solid.makeCylinder(
+                HINGE_SIZES[i] / 2,
+                D.HINGE_SOCKET_DEPTH,
+                cq.Vector(x, -t / 2, 4.0),
+                cq.Vector(0, 1, 0),
+            )
+        )
+    return body.fuse(foot, *marks).cut(*holes)
+
+
+def _plate_gauge() -> cq.Shape:
+    """Magnet pockets bored downward, as the door prints its pocket (on its face, axis vertical)."""
+    w, d, t = 3 * GAUGE_PITCH + 4.0, 8.0, D.FRONT_COVER_T
+    body = cq.Solid.makeBox(w, d, t, cq.Vector(-w / 2, -d / 2, 0.0))
+    marks, holes = [], []
+    for i in range(3):
+        x = (i - 1) * GAUGE_PITCH
+        marks += [m.translate(cq.Vector(0, -2.8, 0)) for m in _marks(x, i + 1, t)]
+        holes.append(
+            cq.Solid.makeCylinder(
+                MAGNET_SIZES[i] / 2,
+                D.MAGNET_BORE_DEPTH,
+                cq.Vector(x, 0.8, t - D.MAGNET_BORE_DEPTH),
+            )
+        )
+    return body.fuse(*marks).cut(*holes)
+
+
 COUPONS = (
     Coupon(
         "1_button_chimney",
@@ -157,6 +223,19 @@ COUPONS = (
                 upper_shell.PRINT_NORMAL,
                 ((50.0, _LIP_Y[0], D.SPLIT_Z - D.LIP_H - 1.0), (70.0, _LIP_Y[1], TOP)),
             ),
+        ),
+    ),
+    Coupon(
+        "6_hole_gauge",
+        "magnets (Ø3.0) and a Ø1.8 pin in each hole; holes 1/2/3 (bumps on top) are "
+        + ", ".join(f"Ø{m:.1f}" for m in MAGNET_SIZES)
+        + " (magnets) and "
+        + ", ".join(f"Ø{h:.1f}" for h in HINGE_SIZES)
+        + " (hinge, lower row). Report the smallest magnet hole that takes a magnet by hand"
+        " and the smallest hinge hole the pin turns freely in",
+        (
+            Piece("wall_sideways", _wall_gauge, (0, 0, 1)),
+            Piece("plate_downward", _plate_gauge, (0, 0, 1)),
         ),
     ),
 )

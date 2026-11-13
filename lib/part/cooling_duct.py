@@ -25,6 +25,10 @@ from assembly import datum as D  # noqa: E402
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
 PRINT_NORMAL = (0, 0, -1)  # cover face on the bed
+# One 34 x 16 mm ceiling at z 11.2 (x -21..13, y -25..-9) is too wide to bridge, measured
+# 2026-11-13. OPEN (RELEASE_TODO C9): check support there can be reached to remove it, or
+# reshape it to bridge; until then it is declared so the row still fails on anything new.
+SUPPORT_MM2 = 510.0
 VISIBLE_FACES: tuple[str, ...] = ()
 
 W = D.DUCT_WALL

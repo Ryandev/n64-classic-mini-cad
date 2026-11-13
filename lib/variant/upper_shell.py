@@ -22,6 +22,10 @@ from part.shared import n64_contours as C  # noqa: E402
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
 PRINT_NORMAL = (0, 0, 1)
+# Printed split face down, the deck is a roof over the hollow shell: ~9,000 mm^2 of its INSIDE
+# needs support (hidden once assembled). PETG body, PLA interface, tree supports from the bed
+# (notes/PRINTING.md). Measured 2026-11-13; the overhang row fails if the part ever needs more.
+SUPPORT_MM2 = 9010.0
 VISIBLE_FACES = ("-X", "+X", "-Y", "+Y", "+Z")
 
 DEVIATIONS = {

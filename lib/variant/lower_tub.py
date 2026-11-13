@@ -38,7 +38,7 @@ DEVIATIONS = {
         "kind": "removed",
         "why": "9 through-floor exhaust slots (2x18 mm) behind the Bumpon feet gap (REQ-04)",
         "bbox": (-22.5, 21.5, -0.6, 14.5, 40.5, 2.2),
-        "volume_mm3": 372.6,
+        "volume_mm3": 518.4,  # 9 x 2 x 18 x 1.6 mm floor (flush since C9)
         "tolerance_mm3": 5.0,
     },
     "waist_slots_l": {
@@ -395,14 +395,14 @@ def get_shape() -> cq.Shape:
 # the M.2 SSD (X < -25.3), the standoffs and the duct's plenum ahead of the board.
 FLOOR_SLOT_W, FLOOR_SLOT_L, FLOOR_SLOT_PITCH = 2.0, 18.0, 4.0
 FLOOR_SLOT_XS = tuple(-22.0 + i * FLOOR_SLOT_PITCH for i in range(9))
-FLOOR_SLOT_YS = (22.0,)  # recessed underside only: Y < ~18 is the bed-contact pad
+FLOOR_SLOT_YS = (22.0,)  # slots run Y = 22..40, under the board (see above)
 WAIST_SLOT_Y0, WAIST_SLOT_PITCH, WAIST_SLOT_W = 2.839, 2.60, 1.25
 WAIST_SLOT_Z0, WAIST_SLOT_H = 4.25, 6.50
 WAIST_CUT_X_IN = 56.9  # through the 2 mm wall and the louver backing strip behind it
 
 
 def floor_vent_cutters() -> list[cq.Solid]:
-    """Through-floor slots (2 x 18 mm) in the recessed underside, clear of the bed-contact pad."""
+    """Through-floor slots (2 x 18 mm), fed by the gap the Bumpon feet leave under the tub."""
     return [
         cq.Solid.makeBox(FLOOR_SLOT_W, FLOOR_SLOT_L, D.FLOOR_T + 1.0, cq.Vector(x, y, -0.5))
         for x in FLOOR_SLOT_XS

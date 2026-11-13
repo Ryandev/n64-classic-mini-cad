@@ -7,8 +7,8 @@ measured off `Console N64` (`lib/step/n64_shell.py`):
     cylindrical pods, bowed recessed `R = 721.25 mm` front controller apron (`Y = -46.56 mm`),
     tapered flanks into `120.00 mm` waist (`X = +-60.00`), `R = 10.00 mm` rear corners, and
     bowed `R = 1200.75 mm` rear wall (`Y = +49.94 mm`)
-  - Stepped underside (`Z = 0.00 .. 0.90 mm`) with 4 bevelled circular N64 corner feet + central
-    bottom specification plaque pad (`>= 18%` flat `Z = 0` bed contact, zero overhang)
+  - Flat underside at `Z = 0` (the whole bottom is the bed face; the original's stepped feet and
+    label pad are hidden under the Bumpon feet, so they were dropped for printing, C9)
   - Crisp exterior parting-line shadow groove (`Z = 12.56 .. 12.94 mm`) + `J-01` locating lip
   - 14 vertical recessed N64 cooling louver grooves along both `-X` and `+X` waist side walls
     (`Y = 2.84 .. 37.89 mm`, `Z = 4.25 .. 10.75 mm`, matching `Face[1832..1915]`)
@@ -37,30 +37,11 @@ VISIBLE_FACES = ("-X", "+X", "-Y", "+Y", "-Z")
 
 def get_shape() -> cq.Shape:
     """Construct the faithful 50%-scale N64 Lower Tub solid."""
-    foot_step_h = 0.90
-
-    # 1. Main N64 outer tub body (Z = foot_step_h .. SPLIT_Z) + stepped inset under-chassis
-    upper_body = C.n64_plan_prism(z0=foot_step_h, height=D.SPLIT_Z - foot_step_h, inset=0.0)
-    under_skirt = C.n64_plan_prism(z0=0.45, height=0.65, inset=1.6)
-
-    # 4x circular N64 corner feet (45-deg bevelled cones on Z = 0.0) + central spec-plate pad
-    feet_and_pad = [
-        cq.Solid.makeCone(
-            10.6, 11.6, foot_step_h + 0.2, cq.Vector(-D.FRONT_POD_X, D.FRONT_POD_Y, 0.0)
-        ),
-        cq.Solid.makeCone(
-            10.6, 11.6, foot_step_h + 0.2, cq.Vector(D.FRONT_POD_X, D.FRONT_POD_Y, 0.0)
-        ),
-        cq.Solid.makeCone(
-            8.2, 9.2, foot_step_h + 0.2, cq.Vector(-D.REAR_CORNER_X, D.REAR_CORNER_Y, 0.0)
-        ),
-        cq.Solid.makeCone(
-            8.2, 9.2, foot_step_h + 0.2, cq.Vector(D.REAR_CORNER_X, D.REAR_CORNER_Y, 0.0)
-        ),
-        C.stadium_prism(0.0, 2.0, 42.0, 34.0, 0.0, foot_step_h + 0.2),
-    ]
-    full_plan_clip = C.n64_plan_prism(z0=-0.1, height=D.SPLIT_Z + D.LIP_H + 1.0, inset=0.0)
-    feet_clipped = cq.Compound.makeCompound(feet_and_pad).intersect(full_plan_clip)
+    # 1. Main outer tub body, flat-bottomed from Z = 0 (C9, owner 2026-11-13). The original's
+    #    stepped underside (raised corner feet and label pad, floor 0.45-0.9 mm up) left 9,500 mm^2
+    #    of floor printing in mid-air; the underside is hidden under the Bumpon feet and the owner
+    #    only replicates what is visible, so the whole bottom is now the bed face (BED_FLAT).
+    upper_body = C.n64_plan_prism(z0=0.0, height=D.SPLIT_Z, inset=0.0)
 
     # J-01 inner perimeter locating lip (inset = 1.15 .. 2.00 mm, Z = SPLIT_Z .. SPLIT_Z + LIP_H)
     lip = C.n64_plan_prism(
@@ -76,7 +57,7 @@ def get_shape() -> cq.Shape:
         inset=D.SHELL_WALL_T,
     )
 
-    tub_shell = upper_body.fuse(under_skirt, *feet_clipped.Solids(), lip).cut(cavity)
+    tub_shell = upper_body.fuse(lip).cut(cavity)
 
     # 2. Internal louver backing ribs + twin-bay keeper blocks + central LED boss + M3 bosses
     add_solids = [

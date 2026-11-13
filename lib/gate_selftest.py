@@ -26,6 +26,23 @@ MUTATIONS = [
         "HS_STOP_GAP = 2.0",
         "HS_STOP",
     ),
+    # C9: the floor floating 0.45 mm over a corner foot, the way the original underside was drawn
+    (
+        "radxa_mount_check",
+        "part/lower_tub.py",
+        "upper_body = C.n64_plan_prism(z0=0.0, height=D.SPLIT_Z, inset=0.0)",
+        "upper_body = C.n64_plan_prism(z0=0.45, height=D.SPLIT_Z - 0.45, inset=0.0).fuse("
+        "cq.Solid.makeCylinder(10.6, 0.5, cq.Vector(-D.FRONT_POD_X, D.FRONT_POD_Y, 0.0)))",
+        "lower_tub:overhang",
+    ),
+    # A part that needs more support than it declares
+    (
+        "top_controls_check",
+        "variant/upper_shell.py",
+        "SUPPORT_MM2 = 9010.0",
+        "SUPPORT_MM2 = 8000.0",
+        "upper_shell:overhang",
+    ),
     (
         "top_controls_check",
         "assembly/datum.py",

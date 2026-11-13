@@ -377,7 +377,13 @@ def check_all():
 
     # 3. Printability of the two printed parts.
     rows.extend(
-        printable.check_part("cooling_duct", duct, up=cooling_duct.PRINT_NORMAL, min_wall_mm=0.8)
+        printable.check_part(
+            "cooling_duct",
+            duct,
+            up=cooling_duct.PRINT_NORMAL,
+            min_wall_mm=0.8,
+            support_mm2=cooling_duct.SUPPORT_MM2,
+        )
     )
     rows.extend(
         printable.check_part(

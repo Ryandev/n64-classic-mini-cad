@@ -58,7 +58,9 @@ def run(only=None):
         mod = load_by_path(os.path.join(PART_DIR, f"{name}.py"), f"part_{name}")
         shape = mod.get_shape()
         up = getattr(mod, "PRINT_NORMAL", (0, 0, 1))
-        rows = printable.check_part(name, shape, up=up, min_bed_ratio=0.15)
+        rows = printable.check_part(
+            name, shape, up=up, min_bed_ratio=0.15, support_mm2=getattr(mod, "SUPPORT_MM2", 0.0)
+        )
         part_ok = all(ok for _, ok, _ in rows)
         print(f"[{'PASS' if part_ok else 'FAIL'}] {name}")
         for label, ok, msg in rows:
