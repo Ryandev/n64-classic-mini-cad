@@ -295,8 +295,6 @@ LED_OVAL_W = 6.36  # authentic 6.36 x 1.76 mm horizontal lenticular/almond N64 P
 LED_OVAL_H = 1.76
 LED_CLEAR = 0.10  # J-07: 0.10 mm/side perimeter clearance around lenticular lens in front wall
 LED_WINDOW_D = 3.5
-LED_BORE_D = 3.2
-LED_SHAFT_D = 3.0  # J-07: 0.10 mm/side radial clearance datum
 LED_FLANGE_W = 7.80  # rear retention collar width on Clear PETG light pipe
 LED_FLANGE_D = 3.80  # vertical height of retention collar & optical barrel (Z = 6.34..10.14 mm)
 LED_FLANGE_T = 1.50
@@ -304,9 +302,6 @@ LED_GUIDE_W = 5.20  # rear optical light-guide barrel width (seats into internal
 LED_GUIDE_D = 3.30  # rear optical barrel length (total light pipe depth = 7.00 mm)
 LED_3MM_D = 3.00  # legacy 3 mm LED diameter datum
 LED_3MM_BORE_D = 3.40  # legacy 3 mm cradle bore datum
-LED_BICOLOUR_D = 10.00  # Kingbright L-819EGW (Rapid 55-0380) 10mm Red/Green bi-colour 3-lead LED
-LED_BICOLOUR_BORE_D = 10.40  # 0.20 mm/side U-cradle bore in lower_tub for Kingbright L-819EGW
-LED_BICOLOUR_RIM_D = 11.00  # Ø11.0 x 2.0 mm base rim on Kingbright L-819EGW
 LED_LEAD_PITCH = 2.54  # 3x 0.5 mm leads on 2.54 mm pitch (Red, Common Cathode, Green)
 
 # ---------------------------------------------------------------------------
