@@ -74,17 +74,22 @@ true stress singularities whose maximum never converges. Supports follow the rea
 tub rests on its floor, held sideways only under the rubber feet; the shell rests on the tub's
 rim and is screwed at its 4 corners.
 
-> **Status (2026-11-13, C4): not a sign-off, and not in the gate.** Stress is well inside every
-> limit. Deflection exceeds the limits in all 4 cases: the earlier `C3D4` model was 5–15x too
-> stiff, and the limits were set against it. Whether to reinforce the parts or revise the limits
-> is an open decision; the FEM joins the gate once it is made.
+> **Status (2026-11-13 night, C4): not yet in the gate.** Each flex limit is now set by what the
+> part has to do (owner: don't reinforce): the guide pole must not reach the button (0.57 mm), the
+> button stop may give no more than the switch's guaranteed over-travel margin (0.158 mm), the
+> chimneys must keep the button's sliding clearance (0.22 mm), and the standoffs must keep the rear
+> jack's 0.5 mm from the wall. The dome sag is reported, not limited: the hood and fan under it
+> aren't modelled. With the flat tub bottom the floor sits on the bed or desk, and the stop and
+> standoff flex dropped from ~0.3 mm to 0.05 and 0.01 mm. Every case is inside its stress and flex
+> limits; LC1 and LC4 still miss the 15 % mesh-convergence test on stress (LC4's stress is 0.06
+> MPa, 0.4 % of its limit), so the FEM stays out of the gate until that is settled.
 
 | Load Case | Component | Loads | von Mises (p99) | Deflection | Mesh change (stress / defl.) |
 |---|---|---|---|---|---|
-| **`FEM_LC1`** | `usb_retainer_bracket.py` | `50 N` button-stop mash, `15 N` sideways on the guide pole, `15 N` USB-A pry | `11.2 MPa` (limit 25) | `0.30 mm` at the guide pole tip (limit 0.25) | 31 % / 2 % |
-| **`FEM_LC2`** | `lower_tub.py` front USB & Omron bay | `40 N` USB-A insertion, `30 N` cable yank, `50 N` button-stop mash | `3.7 MPa` (limit 20) | `0.28 mm` at the button stop post (limit 0.10) | 0 % / 4 % |
-| **`FEM_LC3`** | `upper_shell.py` | `100 N` (~10 kg) on the dome | `5.1 MPa` (limit 25) | `0.78 mm` dome sag (limit 0.50); chimneys `0.14 mm` (limit 0.08, button clearance 0.22) | 6 % / 7 % |
-| **`FEM_LC4`** | `lower_tub.py` Radxa & RJ45 standoffs | `30 N` rear plug push, `60 N` screw preload, on the 6 standoff tops | `3.4 MPa` (limit 15) | `0.31 mm` at a standoff top (limit 0.10) | 13 % / 4 % |
+| **`FEM_LC1`** | `usb_retainer_bracket.py` | `50 N` button-stop mash, `15 N` sideways on the guide pole, `15 N` USB-A pry | `11.2 MPa` (limit 25) | `0.30 mm` at the guide pole tip (limit 0.57, the pole-to-button gap) | **31 %** / 2 % |
+| **`FEM_LC2`** | `lower_tub.py` front USB & Omron bay | `40 N` USB-A insertion, `30 N` cable yank, `50 N` button-stop mash | `3.0 MPa` (limit 20) | `0.05 mm` max (limit 0.158, the switch's over-travel margin) | 11 % / 11 % |
+| **`FEM_LC3`** | `upper_shell.py` | `100 N` (~10 kg) on the dome | `5.2 MPa` (limit 25) | `0.78 mm` dome sag (reported only); chimneys `0.14 mm` (limit 0.22, the button clearance) | 6 % / 6 % |
+| **`FEM_LC4`** | `lower_tub.py` Radxa & RJ45 standoffs | `30 N` rear plug push, `60 N` screw preload, on the 6 standoff tops | `0.06 MPa` (limit 15) | `0.01 mm` (limit 0.50, the jack's gap to the wall) | **23 %** / 2 % |
 
 ---
 
