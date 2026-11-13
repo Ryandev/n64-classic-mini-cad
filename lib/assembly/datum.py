@@ -76,7 +76,17 @@ CARTRIDGE_FLAP_D = 10.00  # exact 50%-scale Shell[1]+Shell[2] combined depth (Y 
 CARTRIDGE_FLAP_Y = 16.439  # Y centreline of the dual cartridge dust flaps
 CARTRIDGE_FLAP_T = 1.35  # printable insert thickness (Z = 25.40 .. 26.75 mm)
 CARTRIDGE_FLAP_Z0 = CARTRIDGE_FLAP_Z - CARTRIDGE_FLAP_T  # 25.40 mm
-CARTRIDGE_FLAP_CLEAR = 0.15  # J-09: 0.15 mm/side XY locating clearance in upper_shell pocket
+# Paint (owner, 2026-11-13: every visible face is painted, no masking). Paint lands on both faces
+# of a visible gap and closes it, so each painted fit is drawn at its working clearance plus the
+# paint it gains: 2 x PAINT_T where both faces are painted, 1 x where one is clear acrylic or
+# lens. Gap edges get basecoat and clear but not the sanded filler primer: GBA's film figures
+# (GBA/CAD/notes/MANUFACTURING.md: base 0.05-0.08, clear 0.05-0.10) put that near 0.15 per face.
+# Provisional until a painted coupon is measured (notes/PRINTING.md). The buttons' sliding faces
+# are hidden inside the chimneys, so they aren't opened (RESET_CLEAR, SLIDER_CLEAR).
+PAINT_T = 0.15
+
+CARTRIDGE_FLAP_FIT = 0.15  # J-09: 0.15 mm/side XY locating clearance in upper_shell pocket
+CARTRIDGE_FLAP_CLEAR = CARTRIDGE_FLAP_FIT + 2.0 * PAINT_T  # as drawn: flaps and pocket painted
 CARTRIDGE_POCKET_Z0 = 25.35  # 0.05 mm bottom glue film gap below CARTRIDGE_FLAP_Z0
 
 # Enclosure wall & authentic N64 parting plane (J-01)
@@ -248,12 +258,15 @@ FRONT_BAY_W = 28.4  # X = +-10.8 .. +-39.2 mm -> keeps central 21.6 mm front apr
 # the 11.4 mm opening centred on the ports. The glued port bezels stand 2.47 mm proud of the hinge
 # axis; with the hinge this much lower they swing out past the case front before they drop, instead
 # of into the sill (C1: at no drop they hit it from 13 deg open). The ports and bay tops don't move.
-FRONT_BAY_DROP = 2.5  # 2.0 clears with a 0.05 mm gap at 90 deg; 2.5 leaves 0.55 mm
+# 2.0 clears with a 0.05 mm gap at 90 deg; 2.5 leaves 0.55 mm. Plus the door's paint allowance,
+# so the sill drops instead of the door and pivot rising: the swing and pins stay as they were.
+FRONT_BAY_DROP = 2.5 + 2.0 * PAINT_T
 FRONT_BAY_Z1 = USB_A_Z_CENTRE + 11.4 / 2.0  # 18.89 mm
 FRONT_BAY_Z0 = USB_A_Z_CENTRE - 11.4 / 2.0 - FRONT_BAY_DROP
 FRONT_BAY_H = FRONT_BAY_Z1 - FRONT_BAY_Z0
 FRONT_BAY_Y0 = -46.12  # flush with the curved N64 front wall across the twin controller bays
-FRONT_COVER_CLEAR = 0.20  # J-05 XZ locating clearance per side in each twin-port bay
+FRONT_COVER_FIT = 0.20  # J-05 XZ locating clearance per side in each twin-port bay, after paint
+FRONT_COVER_CLEAR = FRONT_COVER_FIT + 2.0 * PAINT_T  # as drawn: door and bay edges both painted
 FRONT_COVER_T = 2.0  # nominal bay seat depth (each twin hinge cover is 1.8 mm thick)
 
 # Bottom coaxial flip-hinge pins on each `front_port_cover` & sockets in `lower_tub` (J-05)
@@ -293,7 +306,8 @@ LED_PIPE_Y0 = FRONT_APRON_Y0  # -46.56 mm flush at centre of untouched N64 front
 LED_PIPE_Z = 8.24  # exact 50%-scale `Console_N64.step` (`Face[1823]`) Power LED Z centreline
 LED_OVAL_W = 6.36  # authentic 6.36 x 1.76 mm horizontal lenticular/almond N64 Power LED lens
 LED_OVAL_H = 1.76
-LED_CLEAR = 0.10  # J-07: 0.10 mm/side perimeter clearance around lenticular lens in front wall
+LED_FIT = 0.10  # J-07: 0.10 mm/side perimeter clearance around lenticular lens in front wall
+LED_CLEAR = LED_FIT + PAINT_T  # as drawn: the wall is painted, the clear lens isn't
 LED_WINDOW_D = 3.5
 LED_FLANGE_W = 7.80  # rear retention collar width on Clear PETG light pipe
 LED_FLANGE_D = 3.80  # vertical height of retention collar & optical barrel (Z = 6.34..10.14 mm)
@@ -310,7 +324,8 @@ LED_LEAD_PITCH = 2.54  # 3x 0.5 mm leads on 2.54 mm pitch (Red, Common Cathode, 
 BEZEL_W = 24.14  # exact 50%-scale `Face[1799]` front jewel top width (tapers to 15.04 mm at base)
 BEZEL_H = 15.50  # exact 50%-scale `Face[1799]` front jewel height (Z = 15.00 .. 30.50 mm)
 BEZEL_T = 2.00  # standard 2.0 mm cast clear acrylic sheet with Cricut vinyl decal on +Y back
-BEZEL_POCKET_CLEAR = 0.15  # J-06: 0.15 mm/side perimeter clearance in flush front nose pocket
+BEZEL_POCKET_FIT = 0.15  # J-06: 0.15 mm/side perimeter clearance in flush front nose pocket
+BEZEL_POCKET_CLEAR = BEZEL_POCKET_FIT + PAINT_T  # as drawn: pocket painted, acrylic jewel not
 BEZEL_Y0 = FRONT_APRON_Y0  # -46.56 mm flush with curved N64 front wall (zero protruding brow!)
 BEZEL_Z_CENTRE = 22.75  # Z = 15.00 .. 30.50 mm on the untouched central front wall
 

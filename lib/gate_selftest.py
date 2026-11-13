@@ -26,6 +26,14 @@ MUTATIONS = [
         "HS_STOP_GAP = 2.0",
         "HS_STOP",
     ),
+    # Paint: the door drawn at its bare working fit, with nothing allowed for the paint
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "FRONT_COVER_CLEAR = FRONT_COVER_FIT + 2.0 * PAINT_T",
+        "FRONT_COVER_CLEAR = FRONT_COVER_FIT",
+        "PAINT_FIT",
+    ),
     # The FEM's stop-flex limit reads this; the row must notice it drifting from the solids
     (
         "top_controls_check",

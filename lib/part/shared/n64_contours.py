@@ -584,9 +584,16 @@ def n64_shield_prism(
     width_x: float = D.BEZEL_W,
     height_z: float = D.BEZEL_H,
     z_centre: float = D.BEZEL_Z_CENTRE,
+    clearance: float = 0.0,
 ) -> cq.Shape:
-    """Extrude the iconic N64 curved-top front emblem jewel along `+Y` (`y0 .. y0 + depth_y`)."""
+    """Extrude the iconic N64 curved-top front emblem jewel along `+Y` (`y0 .. y0 + depth_y`).
+
+    `clearance` offsets the outline outward by that much everywhere (a pocket for the jewel).
+    Stretching width and height instead left the sloped sides ~0.8x the gap (PAINT_FIT, C9).
+    """
     wire = n64_shield_wire(y0=y0, width_x=width_x, height_z=height_z, z_centre=z_centre)
+    if clearance:
+        wire = wire.offset2D(clearance, "arc")[0]
     face = cq.Face.cast(BRepBuilderAPI_MakeFace(wire.wrapped, True).Face())
     return cq.Solid.extrudeLinear(face, cq.Vector(0.0, depth_y, 0.0))
 
@@ -604,10 +611,10 @@ def n64_led_lens_prism(
       - Gently arched top (`Z = 9.12 mm` at `X = 0`) and bottom (`Z = 7.36 mm` at `X = 0`) edges
       - Rounded `R = 0.35 mm` left and right tips at `X = +/-3.18 mm, Z = 8.24 mm`
     """
-    hw = 0.5 * D.LED_OVAL_W + clearance  # 3.18 mm (+ clearance)
-    hh = 0.5 * D.LED_OVAL_H + clearance  # 0.88 mm (+ clearance)
+    hw = 0.5 * D.LED_OVAL_W  # 3.18 mm
+    hh = 0.5 * D.LED_OVAL_H  # 0.88 mm
     x_tip = hw - 0.32
-    z_tip = 0.35 + 0.4 * clearance
+    z_tip = 0.35
 
     wp = (
         cq.Workplane("XZ", origin=(0.0, y0, 0.0))
@@ -618,5 +625,8 @@ def n64_led_lens_prism(
         .threePointArc((-hw, z_centre), (-x_tip, z_centre + z_tip))
         .close()
     )
-    face = cq.Face.cast(BRepBuilderAPI_MakeFace(wp.wire().val().wrapped, True).Face())
+    wire = wp.wire().val()
+    if clearance:  # a true offset: growing the arc points left the tips ~0.7x the gap (PAINT_FIT)
+        wire = wire.offset2D(clearance, "arc")[0]
+    face = cq.Face.cast(BRepBuilderAPI_MakeFace(wire.wrapped, True).Face())
     return cq.Solid.extrudeLinear(face, cq.Vector(0.0, depth_y, 0.0))

@@ -44,3 +44,30 @@ def min_gap(
     hits = [first_hit(shape, s, direction, max_len) for s in starts]
     found = [h for h in hits if h is not None]
     return min(found) if found else None
+
+
+def slice_gap(a: cq.Shape, b: cq.Shape, axis: str, at: float, half: float = 0.05) -> float:
+    """Smallest gap between `a` and `b` within a thin slab across `axis` at `at`.
+
+    For an in-plane fit (a door's edge in its bay, an insert in its pocket) where the parts also
+    touch somewhere else (a seat, a glue face): the slab keeps only the edge gap. Raises if the
+    slab misses either part, so a slab in the wrong place fails loud instead of reading as a gap.
+    """
+    from OCP.BRepExtrema import BRepExtrema_DistShapeShape
+
+    big = 400.0
+    lo = {"x": (at - half, -big, -big), "y": (-big, at - half, -big), "z": (-big, -big, at - half)}
+    size = {
+        "x": (2 * half, 2 * big, 2 * big),
+        "y": (2 * big, 2 * half, 2 * big),
+        "z": (2 * big, 2 * big, 2 * half),
+    }
+    slab = cq.Solid.makeBox(*size[axis], cq.Vector(*lo[axis]))
+    a_s, b_s = a.intersect(slab), b.intersect(slab)
+    if not a_s.Solids() or not b_s.Solids():
+        raise ValueError(
+            f"slab {axis}={at:.2f} misses a part ({len(a_s.Solids())}, {len(b_s.Solids())})"
+        )
+    ext = BRepExtrema_DistShapeShape(a_s.wrapped, b_s.wrapped)
+    ext.Perform()
+    return ext.Value()

@@ -146,8 +146,9 @@ def check_all():
     j05_ok = (
         len(front_panel_mech.covers()) == 2
         and plate_w >= pair_span
-        and 0.15 <= xz_clear_w <= 0.30
-        and 0.15 <= xz_clear_h <= 0.30
+        # the locating band applies once paint has closed the gap (2 painted faces, PAINT_FIT)
+        and 0.15 <= xz_clear_w - 2.0 * D.PAINT_T <= 0.30
+        and 0.15 <= xz_clear_h - 2.0 * D.PAINT_T <= 0.30
         and 0.20 <= hinge_rad_clear <= 0.40
         and D.FINGER_SLIT_W >= 6.0
         and D.FINGER_SLIT_H >= 0.8

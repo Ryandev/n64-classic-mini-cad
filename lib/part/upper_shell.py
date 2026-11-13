@@ -242,15 +242,12 @@ def get_shape() -> cq.Shape:
         )
 
     # Flush curved N64 front shield emblem pocket on central front apron (J-06, 0.15 mm/side)
-    pkt_w = D.BEZEL_W + 2.0 * D.BEZEL_POCKET_CLEAR
-    pkt_h = D.BEZEL_H + 2.0 * D.BEZEL_POCKET_CLEAR
     cuts.append(
         C.n64_shield_prism(
             y0=D.BEZEL_Y0 - 1.5,
             depth_y=D.BEZEL_T + 1.5,
-            width_x=pkt_w,
-            height_z=pkt_h,
             z_centre=D.BEZEL_Z_CENTRE,
+            clearance=D.BEZEL_POCKET_CLEAR,
         )
     )
 

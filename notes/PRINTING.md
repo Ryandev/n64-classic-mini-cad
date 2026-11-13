@@ -43,9 +43,23 @@ for the light pipe. PLA only as the support interface (below).
 - **Ironing** on flat top faces; **seam** at a rear corner, away from the faces that show.
 - **2K high-build filler primer**, 3–5 coats sanded back. 1K primer shrinks back and the layer
   lines reappear weeks later (GBA `MANUFACTURING.md`).
-- **Paint builds up ~0.4 mm** on visible faces, and on *both* faces of a sliding fit, so a fit
-  closes by up to 0.8 mm. The buttons have 0.22 mm a side in their chimneys: mask the chimney
-  insides and button sides, or open the fit up first (owner to decide which parts get painted).
+- **Paint closes gaps, so painted fits are drawn open** (owner, 2026-11-13: everything visible
+  painted, no masking). One datum, `PAINT_T` = 0.15 mm per face (basecoat + clear on unsanded gap
+  edges, from GBA's film figures; **provisional until a painted coupon is measured**). Each
+  painted fit is drawn at its working clearance plus the paint it gains, and the gate's
+  `PAINT_FIT` row measures every one on the solids:
+
+  | Fit | Faces painted | Drawn | After paint |
+  |---|---|---|---|
+  | port door in its bay | both | 0.50 | 0.20 |
+  | cartridge flaps in their pocket | both | 0.45 | 0.15 |
+  | clear jewel in its pocket | pocket only | 0.30 | 0.15 |
+  | clear LED lens in its window | window only | 0.25 | 0.10 |
+
+  The **buttons are not opened**: their sliding faces are hidden inside the chimneys, so spray the
+  shell with the buttons out and each button's top held by its stem. If they bind after paint,
+  raise `RESET_CLEAR`/`SLIDER_CLEAR` by `PAINT_T`. **Coupons are cut from the painted design**:
+  paint coupon 3 before judging the door fit (unpainted it is 0.3 mm looser on purpose).
 
 ## Supports
 

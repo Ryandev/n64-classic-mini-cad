@@ -39,13 +39,15 @@ from part import (  # noqa: E402
     bezel_laser_jig,
     cartridge_flaps,
     front_bezel,
+    front_port_cover,
+    led_light_pipe,
     power_slider,
     reset_button,
     usb_retainer_bracket,
 )
 from part.shared import n64_text as T  # noqa: E402
 from subassembly import front_panel_mech, top_controls_mech  # noqa: E402
-from testing import variant_manifest  # noqa: E402
+from testing import probe, variant_manifest  # noqa: E402
 from testing.load import load_by_path  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
@@ -390,7 +392,7 @@ def check_all():
         abs(flaps_bb.xlen - D.CARTRIDGE_FLAP_W) < 0.05
         and abs(flaps_bb.ylen - D.CARTRIDGE_FLAP_D) < 0.05
         and abs(flaps_bb.zmax - D.CARTRIDGE_FLAP_Z) < 0.05
-        and 0.10 <= D.CARTRIDGE_FLAP_CLEAR <= 0.25
+        and 0.10 <= D.CARTRIDGE_FLAP_FIT <= 0.25
         and 0.02 <= z_gap <= 0.15
         and _common_volume(shell, flaps) <= 1e-3
     )
@@ -440,7 +442,63 @@ def check_all():
         )
     )
 
+    rows.append(_paint_fit(shell, tub, flaps, bezel))
     return rows
+
+
+def _paint_fit(shell: cq.Shape, tub: cq.Shape, flaps: cq.Shape, bezel: cq.Shape) -> tuple:
+    """PAINT_FIT: every painted fit, measured on the solids, still has its working clearance
+    once paint closes it (owner 2026-11-13: everything visible painted, no masking).
+
+    Each gap is measured in a thin slab through the fit, so a seat or glue face the parts also
+    touch doesn't hide the edge gap. Paint lands on both faces (door, flaps) or one (the clear
+    jewel and lens); `D.PAINT_T` per face.
+    """
+    case = shell.fuse(tub)
+    w_door = D.FRONT_BAY_W - 2.0 * D.FRONT_COVER_CLEAR
+    door = front_port_cover.cover_at(D.FRONT_BAY_X)
+    db = door.BoundingBox()
+    door_body = door.intersect(  # without the hinge pins that run past its ends
+        cq.Solid.makeBox(
+            w_door,
+            db.ylen + 2.0,
+            db.zlen + 2.0,
+            cq.Vector(D.FRONT_BAY_X - w_door / 2.0, db.ymin - 1.0, db.zmin - 1.0),
+        )
+    )
+    pipe = led_light_pipe.get_shape()
+    fb, bb, pb = flaps.BoundingBox(), bezel.BoundingBox(), pipe.BoundingBox()
+    fits = (
+        (
+            "door in bay",
+            probe.slice_gap(door_body, case, "y", (db.ymin + db.ymax) / 2.0),
+            2,
+            D.FRONT_COVER_FIT,
+        ),
+        (
+            "flaps in pocket",
+            probe.slice_gap(flaps, shell, "z", (fb.zmin + fb.zmax) / 2.0),
+            2,
+            D.CARTRIDGE_FLAP_FIT,
+        ),
+        (
+            "jewel in pocket",
+            probe.slice_gap(bezel, case, "y", (bb.ymin + bb.ymax) / 2.0),
+            1,
+            D.BEZEL_POCKET_FIT,
+        ),
+        ("LED lens in wall", probe.slice_gap(pipe, case, "y", pb.ymin + 0.3), 1, D.LED_FIT),
+    )
+    msgs, ok = [], True
+    for name, gap, faces, fit in fits:
+        after = gap - faces * D.PAINT_T
+        ok = ok and after >= fit - 0.02
+        msgs.append(f"{name} {gap:.2f} -> {after:.2f} after paint (fit {fit:.2f})")
+    return (
+        "PAINT_FIT painted fits keep their working clearance after paint (PAINT_T per face)",
+        ok,
+        f"PAINT_T {D.PAINT_T:.2f}: " + "; ".join(msgs),
+    )
 
 
 if __name__ == "__main__":

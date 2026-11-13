@@ -115,7 +115,7 @@ DEVIATIONS = {
         "kind": "removed",
         "why": "Through-wall lenticular Power LED lens aperture & collar pocket in apron (J-07)",
         "bbox": (-4.3, -46.8, 6.0, 4.3, -42.4, 10.5),
-        "volume_mm3": 83.21,
+        "volume_mm3": 87.49,
         "tolerance_mm3": 3.0,
     },
     "rear_usbc_cutout": {
