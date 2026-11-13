@@ -80,6 +80,14 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
             },
             {
                 "part": (
+                    "Duct floor plate (`lib/part/duct_floor.py`): the plenum floor, printed flat "
+                    "and glued into the duct's frame with 2-part epoxy (the bead seals the plenum)"
+                ),
+                "material": "PETG or ASA (same as the duct)",
+                "qty": 1,
+            },
+            {
+                "part": (
                     "Intake hood (`lib/part/cooling_hood.py`): seals the 25 top louvers to the "
                     "fan; printed floor-side down"
                 ),

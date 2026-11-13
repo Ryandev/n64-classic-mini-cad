@@ -40,7 +40,7 @@ The row fails if a part ever needs more than it declares. As of 2026-11-13:
 | Part | Declared | Where | Why it's acceptable |
 |---|---|---|---|
 | `upper_shell` | 9,010 mm² | inside of the top deck | printed split-face down, the deck is a roof over the hollow shell; that face is hidden |
-| `cooling_duct` | 510 mm² | a 34 x 16 mm ceiling at z 11.2 | **open**: it must be confirmed that support there can be reached and removed, or the face reshaped to bridge |
+| `cooling_duct` | 0 | | the floor that needed support is now a separate plate, `duct_floor`, printed flat and glued in (owner, 2026-11-13) |
 | everything else | 0 | | prints support-free |
 
 When a part does need support, use the GBA set-up (`PRINTING.md`, DECISIONS 10-18 and 10-30):

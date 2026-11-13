@@ -71,6 +71,9 @@ When the Radxa X4 (`RS119-D4E0` / `RS119-D8E0`, ordered **without** the pre-sold
    - Install the M.2 2230 NVMe SSD on the Radxa X4, solder the USB-A, RJ45, Omron (`POWER`/`RESET`), and LED leads, and fasten the inverted Radxa X4 (`4x M2.5 x 6 BHCS` at `Z = 8.20 mm`) and rear-right RJ45 breakout (`2x M2.5 x 6 BHCS` at `Z = 5.60 mm`).
 5b. **Cooling (REQ-04):**
    - Clean the N100 die, spread a thin layer of non-conductive paste (no thermal pad), and set the `Same Sky HSB26-343408` on it, centred on the package.
+   - **Before this, glue the `duct_floor` plate into `cooling_duct`** (any time after printing): scuff
+     both faces, run 2-part epoxy round the duct's ledge, press the plate onto the ledge and let it
+     cure. The bead all round seals the plenum, so the fan's air goes through the heat sink.
    - Lower the printed `cooling_duct` over it (cover onto the pin tips, skirts either side) and stick the `0.5 mm` silicone pad on the cover above the die.
    - Seat the `Sunon MF30060V2` on the duct (label down, blowing into the plenum) and plug it into the X4's 2-pin fan header.
    - Set `cooling_hood` on the fan rim and the duct, and run `1 mm` foam tape along the hood's wall tops.

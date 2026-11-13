@@ -40,6 +40,7 @@ from assembly.datum import BUTTON_STOP_Z as STOP_Z  # noqa: E402
 from assembly.datum import CORNER_BOSS_XS as CORNER_XS  # noqa: E402
 from assembly.datum import CORNER_BOSS_YS as CORNER_YS  # noqa: E402
 from assembly.datum import FOOT_D  # noqa: E402
+from component import omron_ss5gl  # noqa: E402
 from part import usb_retainer_bracket  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
@@ -304,6 +305,25 @@ def _near_corner_screw(x: float, y: float, r: float = 2.6) -> bool:
     return any((x - bx) ** 2 + (y - by) ** 2 <= r * r for bx in CORNER_XS for by in CORNER_YS)
 
 
+# Flex limits by what each part has to do (owner, C4 2026-11-13: don't reinforce; the old fixed
+# limits were set against a C3D4 model 5-15x too stiff):
+#   - guide pole: must not reach the button, so the BTN_DATUM gap;
+#   - button stop: may let the switch go no further than its guaranteed over-travel. A nominal
+#     SS-5GL (OP 8.8) is (OP - tip at stop) past its click point at the stop and is rated for
+#     OT_min, so the stop may give (OT_min - that) at the tip, x the lever ratio at the button;
+#   - chimneys: must not close the button's sliding clearance;
+#   - standoffs: the rear jack must keep the 0.5 mm from the tub wall REAR_IO requires.
+POLE_FLEX_MAX = D.BUTTON_POLE_GAP
+STOP_FLEX_MAX = (
+    omron_ss5gl.OVERTRAVEL_MIN - (omron_ss5gl.OPERATING_POSITION - D.OMRON_TIP_AT_STOP)
+) * D.OMRON_LEVER_RATIO
+CHIMNEY_FLEX_MAX = D.RESET_CLEAR
+STANDOFF_FLEX_MAX = 0.50
+# The dome sag is reported, not limited: the hood and fan under the loaded area (foam-taped to
+# the shell) hold it up, and this model leaves them out, so its sag is an upper bound.
+DOME_SAG_REPORT_ONLY = math.inf
+
+
 def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
     """Run all 4 Gmsh + CalculiX 3D FEM load cases (C3D10, mesh-converged) as gate rows."""
     rows: list[tuple[str, bool, str]] = []
@@ -333,7 +353,7 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
             "FEM_LC1   usb_retainer_bracket 50N button mash + 15N pole tilt + 15N USB pry",
             r1,
             25.0,
-            0.25,
+            POLE_FLEX_MAX,
         )
     )
 
@@ -371,7 +391,7 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
             "FEM_LC2   lower_tub USB-A cradle (40N insert, 30N yank) & 50N Omron rear stop",
             r2,
             20.0,
-            0.10,
+            STOP_FLEX_MAX,
         )
     )
 
@@ -394,10 +414,20 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
         out_dir=out_dir,
     )
     label, ok, msg = _row(
-        "FEM_LC3   upper_shell 100N top-dome crush; button chimneys stay round", r3, 25.0, 0.50
+        "FEM_LC3   upper_shell 100N top-dome crush; button chimneys stay round",
+        r3,
+        25.0,
+        DOME_SAG_REPORT_ONLY,
     )
     uc3 = float(r3["max_chimney_xy_u_mm"])
-    rows.append((label, ok and uc3 <= 0.08, f"{msg}; chimney XY {uc3:.3f} mm (limit 0.080)"))
+    rows.append(
+        (
+            label,
+            ok and uc3 <= CHIMNEY_FLEX_MAX,
+            f"{msg} (dome sag reported only: hood and fan not modelled); chimney XY {uc3:.3f} mm "
+            f"(limit {CHIMNEY_FLEX_MAX:.3f}, the button's sliding clearance)",
+        )
+    )
 
     # 4. LC4: the tub's rear half on its floor (held vertically), the cut face held, 30 N rear plug
     #    push + 60 N screw preload on the 4 Radxa and 2 RJ45 standoffs
@@ -418,7 +448,7 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
             "FEM_LC4   lower_tub Radxa X4 & RJ45 standoffs (30N -Y plug push + 60N preload)",
             r4,
             15.0,
-            0.10,
+            STANDOFF_FLEX_MAX,
         )
     )
 

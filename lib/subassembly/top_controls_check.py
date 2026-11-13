@@ -289,12 +289,20 @@ def check_all():
         click = op_lo - h_stop
         overtravel_lo = h_stop - (op_lo - omron_ss5gl.OVERTRAVEL_MIN)
         centred = abs(x_touch - cx) <= 1.5
-        act_ok = act_ok and release >= 0.10 and click >= 0.10 and overtravel_lo >= 0 and centred
+        datum_ok = abs(h_stop - D.OMRON_TIP_AT_STOP) <= 0.02  # the FEM's stop-flex limit uses it
+        act_ok = (
+            act_ok
+            and release >= 0.10
+            and click >= 0.10
+            and overtravel_lo >= 0
+            and centred
+            and datum_ok
+        )
         act_msgs.append(
             f"{name}: tip {h_rest:.2f} -> {h_stop:.2f} mm, release margin {release:.2f}, "
             f"click margin {click:.2f} (OP {op_lo:.1f}), presses at x {x_touch - cx:+.2f} from "
             f"centre; earliest switch {op_hi - h_stop:.2f} mm past OP (OT >= "
-            f"{omron_ss5gl.OVERTRAVEL_MIN})"
+            f"{omron_ss5gl.OVERTRAVEL_MIN}); stop datum {D.OMRON_TIP_AT_STOP:.2f}"
         )
     pin_clear = (D.OMRON_HOLE_D - D.OMRON_PIN_D) / 2.0
     clf_pin = BRepClass3d_SolidClassifier(tub.wrapped)

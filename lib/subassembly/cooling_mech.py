@@ -19,6 +19,7 @@ def bodies() -> list[tuple[str, cq.Shape]]:
         ("hsb26_heatsink", hsb26_343408.placed()),
         ("fan_mf30060v2", sunon_mf30060v2.envelope()),
         ("cooling_duct", cooling_duct.get_shape()),
+        ("duct_floor", cooling_duct.floor_plate()),
         ("cooling_hood", cooling_hood.get_shape()),
         ("feet_sj5012", bumpon_sj5012.placed()),
     ]

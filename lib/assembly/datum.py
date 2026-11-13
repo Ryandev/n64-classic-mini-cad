@@ -391,6 +391,9 @@ OMRON_HOLE_PITCH = 9.50
 OMRON_LEVER_RATIO = 0.72  # contact at r = 0.72 from the hinge (X_local = +3.44 mm)
 OMRON_REST_TIP_H = 10.60  # drawn rest tip height (released: >= OP+MD 10.4); G13_TOP holds it
 OMRON_REST_DEFLECTION = 13.6 - OMRON_REST_TIP_H  # from FP max, for drawing the switch at rest
+# Lever tip height with the button on its stops, as OMRON_ACT measures it on the solids (that row
+# fails if this drifts from the measurement by more than 0.02). The FEM's stop-flex limit uses it.
+OMRON_TIP_AT_STOP = 7.82
 
 TACT_SWITCH_W = 19.8
 TACT_SWITCH_D = 6.4

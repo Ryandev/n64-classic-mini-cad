@@ -86,6 +86,7 @@ def named_bodies() -> list[tuple[str, tuple[float, float, float], cq.Shape]]:
         ("switch_screws", silver, cq.Compound.makeCompound(top_controls_mech.omron_screws())),
         ("fan_mf30060v2", matte_black, sunon_mf30060v2.placed()),
         ("cooling_duct", charcoal, cooling_duct.get_shape()),
+        ("duct_floor", charcoal, cooling_duct.floor_plate()),
         ("cooling_hood", charcoal, cooling_hood.get_shape()),
         ("feet_sj5012", matte_black, bumpon_sj5012.placed()),
     ]

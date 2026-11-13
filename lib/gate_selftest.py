@@ -26,6 +26,29 @@ MUTATIONS = [
         "HS_STOP_GAP = 2.0",
         "HS_STOP",
     ),
+    # The FEM's stop-flex limit reads this; the row must notice it drifting from the solids
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "OMRON_TIP_AT_STOP = 7.82",
+        "OMRON_TIP_AT_STOP = 7.60",
+        "OMRON_ACT",
+    ),
+    # The glued-in duct floor: drawn too big for its frame, and a ledge it never reaches
+    (
+        "cooling_check",
+        "part/cooling_duct.py",
+        "FLOOR_GAP = 0.15",
+        "FLOOR_GAP = -0.2",
+        "G13_COOL",
+    ),
+    (
+        "cooling_check",
+        "part/cooling_duct.py",
+        "z_ledge = (Z_PLATE1, Z_PLATE1 + LEDGE_T)",
+        "z_ledge = (Z_PLATE1 + 0.3, Z_PLATE1 + 0.3 + LEDGE_T)",
+        "FLOOR_SEAT",
+    ),
     # C9: the floor floating 0.45 mm over a corner foot, the way the original underside was drawn
     (
         "radxa_mount_check",

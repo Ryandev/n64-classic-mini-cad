@@ -18,7 +18,7 @@ from assembly import n64_mini  # noqa: E402
 from component import hsb26_343408, sunon_mf30060v2  # noqa: E402
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
 from OCP.BRepExtrema import BRepExtrema_DistShapeShape  # noqa: E402
-from part import cooling_duct, cooling_hood  # noqa: E402
+from part import cooling_duct, cooling_hood, duct_floor  # noqa: E402
 from part.shared import n64_contours as C  # noqa: E402
 from subassembly import cooling_mech  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
@@ -32,7 +32,14 @@ CONTACTS = {
     ("cooling_duct", "cooling_hood"),
     ("feet_sj5012", "lower_tub"),
 }
-SKIP_OTHERS = {"hsb26_heatsink", "fan_mf30060v2", "cooling_duct", "cooling_hood", "feet_sj5012"}
+SKIP_OTHERS = {
+    "hsb26_heatsink",
+    "fan_mf30060v2",
+    "cooling_duct",
+    "duct_floor",
+    "cooling_hood",
+    "feet_sj5012",
+}
 REQUIRED_TJ_6W = thermal.TJ_TARGET_C
 
 
@@ -290,6 +297,18 @@ def check_all():
     # 2. Contacts that do the work: cover clamps the pins, sink sits on the die, fan seats.
     hs = hsb26_343408.placed()
     duct = cooling_duct.get_shape()
+    # The glued-in floor: G13_COOL proves it fits its frame (no overlap); here it must also seat on
+    # the ledge (touching) with the frame clearance all round it.
+    floor = cooling_duct.floor_plate()
+    seat = _distance(floor, duct)
+    rows.append(
+        (
+            "FLOOR_SEAT duct floor plate seats on its ledge, clear of the frame walls",
+            seat <= 0.01,
+            f"plate to ledge {seat:.3f} mm (must touch); frame clearance "
+            f"{cooling_duct.FLOOR_GAP:.2f} mm a side for the glue",
+        )
+    )
     fan = sunon_mf30060v2.envelope()
     soc = cq.Solid.makeBox(
         D.SOC_X1 - D.SOC_X0,
@@ -375,14 +394,13 @@ def check_all():
         )
     )
 
-    # 3. Printability of the two printed parts.
+    # 3. Printability of the three printed parts.
+    rows.extend(
+        printable.check_part("cooling_duct", duct, up=cooling_duct.PRINT_NORMAL, min_wall_mm=0.8)
+    )
     rows.extend(
         printable.check_part(
-            "cooling_duct",
-            duct,
-            up=cooling_duct.PRINT_NORMAL,
-            min_wall_mm=0.8,
-            support_mm2=cooling_duct.SUPPORT_MM2,
+            "duct_floor", cooling_duct.floor_plate(), up=duct_floor.PRINT_NORMAL, min_wall_mm=0.8
         )
     )
     rows.extend(
