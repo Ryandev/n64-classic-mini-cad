@@ -20,6 +20,13 @@ GATE = os.path.join(HERE, "gate.py")
 MUTATIONS = [
     # C8: every row that measures the solids has a planted defect it must catch
     (
+        "cooling_check",
+        "part/cooling_duct.py",
+        "HS_STOP_GAP = 0.3",
+        "HS_STOP_GAP = 2.0",
+        "HS_STOP",
+    ),
+    (
         "top_controls_check",
         "assembly/datum.py",
         "BUTTON_POLE_HOLE_D = 2.80 + 2.0 * BUTTON_POLE_GAP + 0.06",

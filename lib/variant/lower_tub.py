@@ -249,15 +249,34 @@ def _omron_stop_posts() -> list[cq.Shape]:
                     D.BUTTON_STOP_Z - 17.50,
                     cq.Vector(cx - 2.50, -20.80, 17.50),
                 ),
-                cq.Solid.makeCylinder(
-                    D.OMRON_PIN_D / 2.0,
-                    6.40,
-                    cq.Vector(x_pin, -27.15, D.OMRON_HOLE_Z),
-                    cq.Vector(0.0, 1.0, 0.0),
-                ),
+                _omron_pin(x_pin),
             )
         )
     return out
+
+
+def _omron_pin(x_pin: float) -> cq.Shape:
+    """The Ø2.20 switch locating pin (hole 1), with a 45 deg V underside (C9).
+
+    The tub prints upright and the pin sticks out sideways, so a round pin's underside is a 6.4 mm
+    cantilever over nothing. The V keeps every downward face at 45 deg; its corners stay on the
+    Ø2.20 circle, so the pin still fits the switch's Ø2.35 hole and locates on its arc and sides.
+    """
+    r, y0, z0, length = D.OMRON_PIN_D / 2.0, -27.15, D.OMRON_HOLE_Z, 6.40
+    pin = cq.Solid.makeCylinder(r, length, cq.Vector(x_pin, y0, z0), cq.Vector(0.0, 1.0, 0.0))
+    m = r + 0.3
+    below_v = cq.Wire.makePolygon(
+        [
+            cq.Vector(x_pin, y0 - 0.1, z0 - r),
+            cq.Vector(x_pin + m, y0 - 0.1, z0 - r + m),
+            cq.Vector(x_pin + m, y0 - 0.1, z0 - m),
+            cq.Vector(x_pin - m, y0 - 0.1, z0 - m),
+            cq.Vector(x_pin - m, y0 - 0.1, z0 - r + m),
+        ],
+        close=True,
+    )
+    wedge = cq.Solid.extrudeLinear(cq.Face.makeFromWires(below_v), cq.Vector(0, length + 0.2, 0))
+    return pin.cut(wedge)
 
 
 def get_shape() -> cq.Shape:

@@ -13,6 +13,20 @@ All 15 printed parts are pre-oriented and packed onto a single `240.6 x 229.0 x 
 | **Infill** | `20%` gyroid | `25%` gyroid | `100%` |
 | **Print orientation** | `lower_tub`, `upper_shell`: `PRINT_NORMAL = (0, 0, 1)`; `usb_retainer_bracket`, `front_port_cover`: `PRINT_NORMAL = (0, 1, 0)` (support-free) | `PRINT_NORMAL = (0, 0, 1)` (support-free) | `PRINT_NORMAL = (0, -1, 0)` (support-free) |
 
+**Heat:** the cooling duct and intake hood are PETG or ASA (`BOM_COMPLETE.md`). The heat sink runs
+at about 60–70 °C, and PLA softens at about 55–60 °C, so keep PLA away from the duct, the hood and
+anything they touch. Both printers are enclosed, so ASA is printable; it is the safer choice for
+the duct, which clamps the heat sink and would creep in PETG near its ~70 °C limit.
+
+### Print-test coupons first
+
+Before the first full print, run `./run coupons`. It cuts five small coupons from the real parts
+into `export/coupons/`, printed the way the full parts are. They cover the button in its
+chimney, the switch tower (V-pin and screw), a port door on its hinge, the heat-set inserts and
+the shell's split lip. Each coupon prints the fit it tests; check that fit on the bench. Coupons
+are crops of the designed parts, never separate test geometry, so a coupon can't pass while the
+part fails.
+
 ---
 
 ## 2. Heat-set insert installation (`12x` Ruthex brass inserts total)
@@ -76,4 +90,4 @@ When the Radxa X4 (`RS119-D4E0` / `RS119-D8E0`, ordered **without** the pre-sold
 7. **Upper Shell Trim (`cartridge_flaps` & `front_bezel`):**
    - Glue `cartridge_flaps` into the top slot pocket and `front_bezel` (2.0 mm clear acrylic + rear Cricut N64 decal aligned with `bezel_laser_jig_0.svg`) into the front nose pocket of `upper_shell`.
 8. **Close Enclosure:**
-   - Lower `upper_shell` straight down (`-Z`) onto `lower_tub` so the `360°` guide chimneys telescope over `power_slider` and `reset_button`, and fasten from underneath with `4x M3 x 12 DIN 912` SHCS.
+   - Lower `upper_shell` straight down (`-Z`) onto `lower_tub` so the `360°` guide chimneys telescope over `power_slider` and `reset_button`, and fasten from underneath with `4x M3 x 14 DIN 912` SHCS.

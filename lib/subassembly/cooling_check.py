@@ -312,6 +312,27 @@ def check_all():
         )
     )
 
+    # 2a. HS_STOP (C9): pushed 0.5 mm any way sideways, the sink runs into the duct (skirts in X,
+    # the corner stops in Y), so it can't slide off the die
+    free = []
+    for label, (dx, dy) in (
+        ("+X", (0.5, 0)),
+        ("-X", (-0.5, 0)),
+        ("+Y", (0, 0.5)),
+        ("-Y", (0, -0.5)),
+    ):
+        if hs.translate(cq.Vector(dx, dy, 0.0)).intersect(duct).Volume() <= 1e-3:
+            free.append(label)
+    rows.append(
+        (
+            "HS_STOP   heat sink can't slide off the die: duct stops it within 0.5 mm every way",
+            not free,
+            "skirts stop it in X, corner stops in Y (0.3 mm clear)"
+            if not free
+            else f"slides more than 0.5 mm towards {', '.join(free)}",
+        )
+    )
+
     # 2b. Clamp: the cradle above the die compresses the pad on the cover by 20-70 %.
     from OCP.gp import gp_Dir, gp_Lin, gp_Pnt
 

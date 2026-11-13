@@ -51,6 +51,9 @@ case "$target" in
     radxa-ref)
         $PY python3 lib/step/build_radxa_x4.py "$@"
         ;;
+    coupons)
+        $PY python3 lib/coupons.py "$@"
+        ;;
     all)
         ./run lint
         ./run gate
@@ -73,6 +76,7 @@ targets:
   export-validate  verify exported files exist, match 3D solids, and fit bed
   bom              generate notes/BOM_COMPLETE.md from parametric subassemblies
   fem              Gmsh + CalculiX 3D tetrahedral FEM structural verification
+  coupons [NAME..] print-test coupons cut from the real parts into export/coupons/
   radxa-ref [ZIP]  rebuild lib/step/radxa_x4.step from Radxa's download (SHA-256 checked)
   all              lint + gate + export + export-validate
 EOF

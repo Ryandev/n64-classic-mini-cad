@@ -74,6 +74,30 @@ def _box(x0: float, x1: float, y0: float, y1: float, z0: float, z1: float) -> cq
     return cq.Solid.makeBox(x1 - x0, y1 - y0, z1 - z0, cq.Vector(x0, y0, z0))
 
 
+HS_STOP_GAP = 0.3  # each stop clears the heat sink's face by this much
+HS_STOP_T, HS_STOP_W = 1.0, 1.5  # stop depth (Y) and width (X) at each corner
+HS_STOP_Z0 = 12.0  # down to the sink's 2 mm base plate (Z 11.35..13.35)
+
+
+def heatsink_stops() -> list[cq.Solid]:
+    """Four corner stops that keep the heat sink on the die front-to-back (C9).
+
+    The cover clamps it down and the skirts hold it sideways, but front-to-back only friction did
+    (it could slide 5.7 mm forward, more than 6 back). The front pair hangs from the cover; the
+    rear pair hooks in from the skirts past the sink's rear face, where the cover ends. At the
+    corners only, so the air still leaves through the full pin field.
+    """
+    y_front, y_rear = D.HS_Y0 - HS_STOP_GAP, Y_REAR + HS_STOP_GAP
+    stops = []
+    for x_in, x_out, inward in ((X_IN_L, X_OUT_L, 1.0), (X_IN_R, X_OUT_R, -1.0)):
+        x_post = sorted((x_in, x_in + inward * HS_STOP_W))
+        x_skirt = sorted((x_out, x_in))
+        stops.append(_box(*x_post, y_front - HS_STOP_T, y_front, HS_STOP_Z0, Z_COVER0 + 0.1))
+        stops.append(_box(*x_post, y_rear, y_rear + HS_STOP_T, HS_STOP_Z0, Z_COVER1))
+        stops.append(_box(*x_skirt, Y_REAR - 0.1, y_rear + HS_STOP_T, HS_STOP_Z0, Z_COVER1))
+    return stops
+
+
 def get_shape() -> cq.Shape:
     """The duct in console coordinates."""
     parts = [
@@ -159,6 +183,6 @@ def get_shape() -> cq.Shape:
     # The pocket is fused after the post notches, which would otherwise nick its side walls.
     return (
         duct.cut(bore, bore_front, opening, soc_relief, *heads, *posts, *parts)
-        .fuse(patch, *pocket)
+        .fuse(patch, *pocket, *heatsink_stops())
         .clean()
     )

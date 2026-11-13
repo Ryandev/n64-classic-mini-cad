@@ -227,16 +227,18 @@ def check_all():
     # 5a. BTN_DATUM (C9, rule 3): the shell chimney is each button's XY datum; the bracket's guide
     # pole must never touch the button, at rest or pressed, even with the tolerance stack used up
     pole_gaps = []
-    for name, button, cx in (
-        ("POWER", slider, D.POWER_SLIDER_X),
-        ("RESET", reset, D.RESET_BTN_X),
-    ):
-        pole = ret_both.intersect(
-            cq.Solid.makeCylinder(2.5, 6.0, cq.Vector(cx, -32.20, D.BUTTON_STOP_Z + 0.05))
+    poles = ret_both.intersect(  # both guide poles, cropped once (each button's nearest is its own)
+        cq.Compound.makeCompound(
+            [
+                cq.Solid.makeCylinder(2.5, 6.0, cq.Vector(x, -32.20, D.BUTTON_STOP_Z + 0.05))
+                for x in (D.POWER_SLIDER_X, D.RESET_BTN_X)
+            ]
         )
+    )
+    for name, button in (("POWER", slider), ("RESET", reset)):
         for state, dz in (("rest", 0.0), ("pressed", D.RESET_STROKE_Z)):
             moved = button.moved(cq.Location(cq.Vector(0.0, 0.0, -dz)))
-            ext = BRepExtrema_DistShapeShape(pole.wrapped, moved.wrapped)
+            ext = BRepExtrema_DistShapeShape(poles.wrapped, moved.wrapped)
             ext.Perform()
             pole_gaps.append((f"{name} {state}", ext.Value()))
     rest = min((g for g in pole_gaps if "rest" in g[0]), key=lambda g: g[1])
