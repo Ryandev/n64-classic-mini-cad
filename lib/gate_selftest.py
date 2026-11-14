@@ -114,6 +114,14 @@ MUTATIONS = [
         "BED_CATCH_MM = 2.0",
         "PRINT_OUTCOME 1_button_chimney_power_button_on_side",
     ),
+    # ...and the slicing plane sized as it first was: the outer ends of a long part go unsliced.
+    (
+        "print_outcome_check",
+        "printable.py",
+        "    side = 2.0 * max(bb.xlen, bb.ylen) + 20.0",
+        "    side = bb.ylen + 10.0",
+        "PRINT_RULE a pin 60 mm along",
+    ),
     # A part that needs more support than it declares
     (
         "top_controls_check",

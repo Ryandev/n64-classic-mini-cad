@@ -19,6 +19,7 @@ measured off `Console N64` (`lib/step/n64_shell.py`):
     lower USB-A access windows, and lower keeper magnet pockets (`J-05`)
 """
 
+import math
 import os
 import sys
 
@@ -26,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
+import printable  # noqa: E402
 from assembly import datum as D  # noqa: E402
 from shared import n64_contours as C  # noqa: E402
 
@@ -198,17 +200,30 @@ def get_shape() -> cq.Shape:
             )
         )
 
-    # 4x stepped M3 clearance + socket-head counterbores
+    # 4x stepped M3 clearance + socket-head counterbores. The counterbore opens on the bed, so
+    # its roof is closed by the two-layer bridge: one layer leaves a slot the hole's width across
+    # the counterbore (two bridges along the slot), the next a square (two short bridges across
+    # it), then the round hole. A plain roof is a ring round the hole held only at its rim, which
+    # the overhang row fails (coupon plate 1 lesson, 2026-11-14).
+    layer = printable.LAYER_MM
+    z_roof = math.ceil((D.M3_CBORE_H + 0.2) / layer - 1e-9) * layer  # on a layer line: 3.8
+    clear = D.M3_CLEAR_D
     stepped_bolt_cutter = cq.Solid.makeCylinder(
-        D.M3_CLEAR_D / 2.0,
-        D.SPLIT_Z + D.LIP_H + 1.0,
-        cq.Vector(0.0, 0.0, D.M3_CBORE_H - 0.2),
+        D.M3_CBORE_D / 2.0,
+        z_roof + 0.2,
+        cq.Vector(0.0, 0.0, -0.2),
     ).fuse(
+        cq.Solid.makeBox(
+            D.M3_CBORE_D, clear, layer, cq.Vector(-D.M3_CBORE_D / 2.0, -clear / 2.0, z_roof)
+        ),
+        cq.Solid.makeBox(
+            clear, clear, layer, cq.Vector(-clear / 2.0, -clear / 2.0, z_roof + layer)
+        ),
         cq.Solid.makeCylinder(
-            D.M3_CBORE_D / 2.0,
-            D.M3_CBORE_H + 0.4,
-            cq.Vector(0.0, 0.0, -0.2),
-        )
+            clear / 2.0,
+            D.SPLIT_Z + D.LIP_H + 1.0,
+            cq.Vector(0.0, 0.0, z_roof + 2.0 * layer),
+        ),
     )
     for bx in D.CORNER_BOSS_XS:
         for by in D.CORNER_BOSS_YS:

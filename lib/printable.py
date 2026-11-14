@@ -128,10 +128,19 @@ def _ring(wire: cq.Wire, face: cq.Face) -> list[tuple[float, float]]:
 
 def _section(shape: cq.Shape, z: float, bb) -> BaseGeometry:
     """The part's cross-section at height `z`, as a shapely region (holes and islands kept)."""
+    # Square and well past the part: a plane sized (xlen, ylen) came out with its sides swapped
+    # and clipped the 130 mm tub and shell at +-55 mm, and the exact-area check below agreed,
+    # because it measured the same clipped faces. The edge guard below catches that kind of miss.
+    side = 2.0 * max(bb.xlen, bb.ylen) + 20.0
     plane = cq.Face.makePlane(
-        bb.xlen + 10.0, bb.ylen + 10.0, cq.Vector(bb.center.x, bb.center.y, z), cq.Vector(0, 0, 1)
+        side, side, cq.Vector(bb.center.x, bb.center.y, z), cq.Vector(0, 0, 1)
     )
     faces = shape.intersect(plane).Faces()
+    pb = plane.BoundingBox()
+    for f in faces:
+        fb = f.BoundingBox()
+        if min(fb.xmin - pb.xmin, pb.xmax - fb.xmax, fb.ymin - pb.ymin, pb.ymax - fb.ymax) < 1.0:
+            raise ValueError(f"section at z={z:.2f} reaches the edge of the slicing plane")
     regions = []
     for face in faces:
         poly = Polygon(_ring(face.outerWire(), face), [_ring(w, face) for w in face.innerWires()])

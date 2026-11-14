@@ -49,20 +49,40 @@ def _wall_with_pin(length: float) -> cq.Shape:
     return wall.fuse(pin)
 
 
+def _long_bar_with_pin() -> cq.Shape:
+    """A 130 x 20 mm bar (wider in X than Y, like the tub and shell) with a pin 60 mm out."""
+    bar = cq.Solid.makeBox(130.0, 20.0, 10.0, cq.Vector(-65.0, -10.0, 0.0))
+    pin = cq.Solid.makeCylinder(1.4, 4.0, cq.Vector(60.0, 10.0, 5.0), cq.Vector(0, 1, 0))
+    return bar.fuse(pin)
+
+
 # Shapes whose answer is known from how FDM works (lower rung than the print: the author's own
 # picks), one per kind of overhang, so each branch of the rule can fail on its own.
 RULES = (
     ("a 6 mm window in a wall bridges (held at both ends)", _wall_with_opening(6.0), True),
     ("a 12 mm window needs support (bridge over 10 mm)", _wall_with_opening(12.0), False),
     ("a sideways pin needs support (held at one end)", _wall_with_pin(4.0), False),
+    (
+        "a pin 60 mm along a 130 mm part is seen (the whole width is sliced)",
+        _long_bar_with_pin(),
+        False,
+    ),
 )
+
+
+def _verdict(shape: cq.Shape) -> tuple[bool | None, str]:
+    """The overhang row's verdict with no support declared; None if it refused the shape."""
+    try:
+        return printable.check_overhang(shape, up=(0, 0, 1), support_mm2=0.0)
+    except ValueError as e:  # a section the check refuses to trust fails the row, loudly
+        return None, f"check raised: {e}"
 
 
 def check_all():
     rows = []
     for label, shape, printable_ok in RULES:
-        ok, msg = printable.check_overhang(shape, up=(0, 0, 1), support_mm2=0.0)
-        rows.append((f"PRINT_RULE {label}", ok == printable_ok, msg))
+        ok, msg = _verdict(shape)
+        rows.append((f"PRINT_RULE {label}", ok is not None and ok == printable_ok, msg))
     built = {}
     for c in coupons.COUPONS:
         if any(k.startswith(c.name + "_") for k in PLATE1):
@@ -73,11 +93,15 @@ def check_all():
             rows.append((f"PRINT_OUTCOME {name}", False, "piece no longer built by coupons.py"))
             continue
         # The bedded shape sits on z=0 with its print-up along +Z.
-        ok, msg = printable.check_overhang(built[name], up=(0, 0, 1), support_mm2=0.0)
-        said = "printable" if ok else "needs support"
+        ok, msg = _verdict(built[name])
+        said = {True: "printable", False: "needs support", None: "no verdict"}[ok]
         real = "printed clean" if printed_ok else "FAILED on the bed"
         rows.append(
-            (f"PRINT_OUTCOME {name}", ok == printed_ok, f"check: {said}; real: {real}; {msg}")
+            (
+                f"PRINT_OUTCOME {name}",
+                ok is not None and ok == printed_ok,
+                f"check: {said}; real: {real}; {msg}",
+            )
         )
     return rows
 

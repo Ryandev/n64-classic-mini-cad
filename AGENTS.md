@@ -145,5 +145,11 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   "ledge" allowance was written citing the button's flange stepping out from its shaft; the
   button prints flange-first and has no such step. It was removed before commit. Look at the
   geometry before quoting it as evidence.
+- **A check that compares against its own input can't see what both left out.** The slicing
+  plane was built (xlen, ylen) and came out with its sides swapped, so every section of the
+  130 mm tub and shell stopped at +-55 mm, and the exact-area check agreed because it measured
+  the same clipped faces. It surfaced as four "counterbores breaking out of the wall" that a
+  FreeCAD section showed were enclosed. Sections now raise if they reach the plane's edge, and
+  a 130 mm bar with a pin at its end (`PRINT_RULE`) red-confirms it.
 - **A traced section is checked against OpenCASCADE's exact area.** The first version rebuilt
   loops from loose edges, filled the shell's holes and reported 32,000 mm^2 of support for 8,200.
