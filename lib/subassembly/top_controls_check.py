@@ -388,20 +388,25 @@ def check_all():
     # 6b. J-09: Separately-printed Light Cool Grey cartridge_flaps insert seated in pocket
     flaps_bb = flaps.BoundingBox()
     z_gap = D.CARTRIDGE_FLAP_Z0 - D.CARTRIDGE_POCKET_Z0
+    # The XY fit measured on the solids (a slab through the flaps), less the paint both faces
+    # gain: comparing CARTRIDGE_FLAP_FIT to a band graded the datum, not the parts (Gemini #1).
+    flap_gap = probe.slice_gap(flaps, shell, "z", (flaps_bb.zmin + flaps_bb.zmax) / 2.0)
+    flap_fit = flap_gap - 2.0 * D.PAINT_T
     j09_ok = (
         abs(flaps_bb.xlen - D.CARTRIDGE_FLAP_W) < 0.05
         and abs(flaps_bb.ylen - D.CARTRIDGE_FLAP_D) < 0.05
         and abs(flaps_bb.zmax - D.CARTRIDGE_FLAP_Z) < 0.05
-        and 0.10 <= D.CARTRIDGE_FLAP_FIT <= 0.25
+        and 0.10 <= flap_fit <= 0.25
         and 0.02 <= z_gap <= 0.15
         and _common_volume(shell, flaps) <= 1e-3
     )
     rows.append(
         (
-            "J09_FLAPS cartridge_flaps insert seats in upper_shell pocket with 0.15mm/side gap",
+            "J09_FLAPS cartridge_flaps seat in upper_shell pocket, 0.15 mm/side after paint",
             j09_ok,
             f"flaps {flaps_bb.xlen:.2f}x{flaps_bb.ylen:.2f}x{flaps_bb.zlen:.2f} mm at "
-            f"Z={flaps_bb.zmax:.2f} mm, XY clear={D.CARTRIDGE_FLAP_CLEAR:.2f} mm/side",
+            f"Z={flaps_bb.zmax:.2f} mm, XY gap {flap_gap:.2f} mm/side measured, "
+            f"{flap_fit:.2f} after paint (fit 0.10..0.25)",
         )
     )
 
@@ -467,7 +472,11 @@ def _paint_fit(shell: cq.Shape, tub: cq.Shape, flaps: cq.Shape, bezel: cq.Shape)
         )
     )
     pipe = led_light_pipe.get_shape()
+    insert = front_panel_mech.port_inserts()[0]  # P1, in the left door's pocket
+    ib = insert.BoundingBox()
+    y_boss = D.FRONT_BAY_Y0 - D.PORT_INSERT_GAP_Y + D.PORT_INSERT_BOSS_H / 2.0  # boss mid-depth
     fb, bb, pb = flaps.BoundingBox(), bezel.BoundingBox(), pipe.BoundingBox()
+    assert ib.ymin < y_boss < ib.ymax, "the slab must cut the insert's boss"
     fits = (
         (
             "door in bay",
@@ -488,12 +497,14 @@ def _paint_fit(shell: cq.Shape, tub: cq.Shape, flaps: cq.Shape, bezel: cq.Shape)
             D.BEZEL_POCKET_FIT,
         ),
         ("LED lens in wall", probe.slice_gap(pipe, case, "y", pb.ymin + 0.3), 1, D.LED_FIT),
+        ("port insert in door", probe.slice_gap(insert, door, "y", y_boss), 2, D.PORT_POCKET_FIT),
     )
     msgs, ok = [], True
     for name, gap, faces, fit in fits:
         after = gap - faces * D.PAINT_T
-        ok = ok and after >= fit - 0.02
-        msgs.append(f"{name} {gap:.2f} -> {after:.2f} after paint (fit {fit:.2f})")
+        # within 0.05 of the fit both ways: too tight jams, too loose rattles (Gemini #10)
+        ok = ok and abs(after - fit) <= 0.05
+        msgs.append(f"{name} {gap:.2f} -> {after:.2f} after paint (fit {fit:.2f} +-0.05)")
     return (
         "PAINT_FIT painted fits keep their working clearance after paint (PAINT_T per face)",
         ok,

@@ -195,8 +195,8 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
             {
                 "item": (
                     "Kingbright L-93WEGW (`Rapid 55-0155`) 3 mm Red/Green bi-colour 3-lead "
-                    "common-cathode through-hole LED (Pin 1 Red `625 nm` = Power/Standby, "
-                    "Pin 2 Common Cathode = `GND`, Pin 3 Green `565 nm` = ON)"
+                    "common-cathode through-hole LED (Pin 1 Red `625 nm` = in the menu, "
+                    "Pin 2 Common Cathode = `GND`, Pin 3 Green `565 nm` = in a game)"
                 ),
                 "spec": "Kingbright L-93WEGW (Rapid 55-0155) 3 mm bi-colour LED",
                 "qty": 1,
@@ -400,7 +400,8 @@ def generate_markdown() -> str:
             "Wire **Pin 2 (Common Cathode)** to `GND` (header pin 9), **Pin 1 (Red Anode)** via "
             "`330 Ω` to `GP4` (pin 7), and **Pin 3 (Green Anode)** via `330 Ω` to `GP7` (pin 29) "
             "on the Radxa X4's RP2040 (`firmware/rp2040_reset/code.py`). The RP2040 only runs "
-            "while the PC is on, so the light is green when on and dark in standby (C7)."
+            "while the PC is on: red in Batocera's menu, green while a game runs, dark in standby "
+            "(C7; the launch wrapper tells it which over USB serial)."
         ),
         (
             "- **Hard Power-Off Resilience (Pulling the Plug Without Safe Shutdown):** Batocera's "

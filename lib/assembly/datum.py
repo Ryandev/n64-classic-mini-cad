@@ -292,9 +292,12 @@ MAGNET_ZS = (9.9, 15.3)
 MAGNET_PILLAR_W = 2.06  # central keeper bridge between the 2 USB-A windows of each twin bay
 
 # Separately-printed shallow N64 controller port inserts glued onto twin covers (J-08)
-PORT_POCKET_D = 8.2  # shallow locating pocket on -Y face of `front_port_cover`
+PORT_INSERT_BOSS_D = 7.8  # locating boss on the insert's back
+PORT_POCKET_FIT = 0.20  # radial locating fit per side, after paint (J-08)
+# Both faces painted (the pocket faces the spray; Gemini review #10, 2026-11-14): drawn open by
+# 2 x PAINT_T a side, so 8.8 mm (was 8.2, which closed to -0.10 a side once painted).
+PORT_POCKET_D = PORT_INSERT_BOSS_D + 2.0 * (PORT_POCKET_FIT + 2.0 * PAINT_T)
 PORT_POCKET_DEPTH = 0.45
-PORT_INSERT_BOSS_D = 7.8  # 0.20 mm/side radial locating fit inside `PORT_POCKET_D`
 PORT_INSERT_BOSS_H = 0.40  # 0.05 mm glue gap inside `PORT_POCKET_DEPTH`
 PORT_INSERT_OD = 10.88  # exact 50%-scale `Console_N64.step` circular port bezel diameter
 PORT_INSERT_BEZEL_H = 1.52  # shallow 1.52 mm front projection (y_front = -47.69 mm matching orig50)

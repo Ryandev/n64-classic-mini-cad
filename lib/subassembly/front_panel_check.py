@@ -209,7 +209,7 @@ def check_all():
     total_depth = D.PORT_INSERT_BOSS_H + D.PORT_INSERT_BEZEL_H
     j08_ok = (
         len(inserts) == 4
-        and 0.15 <= port_rad_clear <= 0.30
+        and 0.15 <= port_rad_clear - 2.0 * D.PAINT_T <= 0.30  # the fit once both are painted
         and abs(ins_bb.xlen - D.PORT_INSERT_OD) < 0.05
         and abs(ins_bb.ylen - total_depth) < 0.05
         and 1.5 <= ins_bb.ylen <= 2.5
@@ -217,7 +217,7 @@ def check_all():
     )
     rows.append(
         (
-            "J08_PORT  4x shallow n64_port_insert (Ø10.88x2.0mm) seat in pockets (0.20mm/side)",
+            "J08_PORT  4x n64_port_insert (Ø10.88x2.0mm) seat in pockets (0.20mm/side painted)",
             j08_ok,
             f"radial clearance={port_rad_clear:.2f} mm/side, "
             f"insert OD={ins_bb.xlen:.2f} mm, shallow depth={ins_bb.ylen:.2f} mm",

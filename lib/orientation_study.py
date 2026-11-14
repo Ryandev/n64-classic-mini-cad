@@ -15,6 +15,8 @@ Only what shows on the assembled console counts: a face is visible if a ray from
 it, along its normal, leaves the whole closed case (`n64_mini`, printed parts only) without
 hitting anything. A button's stem in its chimney, or a wall inside the tub, hits the case and
 doesn't count. The skin is tessellated so a curved face (a dome) is judged triangle by triangle.
+Known limit (Gemini review #6): one ray per face, so the walls of a narrow slot or louver, whose
+ray hits the opposite wall, count as hidden though they can be seen at an angle.
 """
 
 import argparse
@@ -114,7 +116,7 @@ def classify(
             out["top"] += area
         elif d > 0:
             out["terraced"] += area
-        elif centre.dot(u) - floor < 0.2:
+        elif d <= -TOP_COS and centre.dot(u) - floor < 0.2:  # flat on the plate, not a chamfer
             out["bed"] += area
         elif d < cos_support:
             out["support"] += area

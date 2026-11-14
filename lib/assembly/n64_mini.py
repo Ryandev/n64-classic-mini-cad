@@ -6,7 +6,7 @@ every bought/modified internal component in the right-handed console coordinate 
   - `variant/upper_shell.py` (Charcoal Grey sculpted N64 top deck + dome exhaust louvers)
   - `part/front_bezel.py` (Matte Black N64 curved-top front shield emblem)
   - `part/power_slider.py` & `part/reset_button.py` (Light Cool Grey stadium controls)
-  - `part/front_port_cover.py` (Charcoal Grey single 4-port magnetic bottom-hinged plate)
+  - `part/front_port_cover.py` (Charcoal Grey twin-port magnetic bottom-hinged doors, x2)
   - `4x part/n64_port_insert.py` (Light Cool Grey `Ø10.2 mm` N64 controller port bezels)
   - `part/led_light_pipe.py` (Translucent Red front power indicator light-pipe)
   - `variant/radxa_x4.py` (`placed()`, 23-solid de-ported Radxa X4 v1.11 SBC)
@@ -14,7 +14,7 @@ every bought/modified internal component in the right-handed console coordinate 
     (30 mm fan), `part/cooling_duct.py` + `part/cooling_hood.py` (printed), and
     `component/bumpon_sj5012.py` (4 rubber feet)
   - `component/radxa_x4.py` (`m2_keepout()`, `usb_a_cluster()`, `rj45_jack()`)
-  - `subassembly/top_controls_mech.py` (`2x` `6x6x5 mm` tactile switches)
+  - `subassembly/top_controls_mech.py` (`2x` Omron SS-5GL hinge-lever switches)
 """
 
 import os

@@ -126,6 +126,7 @@ def solve_calculix(
     loads: list[tuple[Callable[[float, float, float], bool], tuple[float, float, float]]],
     out_dir: str | None = None,
     roller_pred: Callable[[float, float, float], bool] | None = None,
+    watch_pred: Callable[[float, float, float], bool] | None = None,
 ) -> dict[str, object]:
     """Mesh `shape` with Gmsh (C3D10), solve linear statics with CalculiX, return metrics.
 
@@ -133,6 +134,8 @@ def solve_calculix(
     resting on a surface). `max_vm_mpa` is the `STRESS_PERCENTILE` von Mises stress away from
     the loaded and held nodes (within `2 x clmax` of them a point load or a clamp makes a spike
     that grows as the mesh is refined); `peak_vm_mpa` is the raw peak, for information.
+    `watch_uz_mm` is the largest downward movement of the `watch_pred` nodes (a stop face whose
+    give matters on its own, not just the part's largest movement anywhere).
     """
     gmsh_bin = _find_binary("gmsh")
     ccx_bin = _find_binary("ccx")
@@ -207,7 +210,7 @@ def solve_calculix(
             for idx, el in enumerate(elems, 1)
         }
         away = {idx for idx, c in centroid.items() if not near_bc(c)}
-        max_u, max_chimney_xy_u, peak_vm = 0.0, 0.0, 0.0
+        max_u, max_chimney_xy_u, peak_vm, watch_uz = 0.0, 0.0, 0.0, 0.0
         max_u_at = (0.0, 0.0, 0.0)
         away_vm: list[float] = []
         with open(os.path.join(work_dir, "job.dat"), encoding="utf-8") as f:
@@ -228,6 +231,8 @@ def solve_calculix(
                     nx, ny, nz = nodes[int(p[0])]
                     if math.sqrt(ux * ux + uy * uy + uz * uz) > max_u:
                         max_u, max_u_at = math.sqrt(ux * ux + uy * uy + uz * uz), (nx, ny, nz)
+                    if watch_pred is not None and watch_pred(nx, ny, nz):
+                        watch_uz = max(watch_uz, -uz)
                     if abs(abs(nx) - 32.32) <= 7.0 and -39.0 <= ny <= -19.0 and 23.5 <= nz <= 30.0:
                         max_chimney_xy_u = max(max_chimney_xy_u, math.sqrt(ux * ux + uy * uy))
                 elif sec == "s" and len(p) == 8 and p[0].isdigit():
@@ -253,6 +258,7 @@ def solve_calculix(
             "max_u_at": max_u_at,
             "load_nodes": len(load_nodes),
             "max_chimney_xy_u_mm": max_chimney_xy_u,
+            "watch_uz_mm": watch_uz,
             "max_vm_mpa": max_vm,
             "peak_vm_mpa": peak_vm,
             "frd_path": os.path.join(work_dir, "job.frd") if out_dir else None,
@@ -329,15 +335,21 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
     rows: list[tuple[str, bool, str]] = []
 
     # 1. LC1: usb_retainer_bracket (glued along its base) under a 50 N mash on the button stop,
-    #    15 N sideways on the guide pole and a 15 N USB-A pry under the top bridge
+    #    15 N sideways on the guide pole and a 15 N USB-A pry under the top bridge. The stop
+    #    shelf's own give is graded against the switch margin (Gemini review #5): the part's
+    #    largest movement is the pole tip, which says nothing about how far the button goes.
+    def on_stop_shelf(x: float, y: float, z: float) -> bool:
+        return abs(z - STOP_Z) <= 0.15 and -35.0 <= x <= -29.6
+
     r1 = solve_converged(
         "LC1_BUTTON_MASH_50N",
         usb_retainer_bracket.get_shape(),
         clmin=0.45,
         clmax=1.10,
         fix_pred=lambda x, y, z: z <= 11.75 or (y <= -36.50 and z <= 13.00),
+        watch_pred=on_stop_shelf,
         loads=[
-            (lambda x, y, z: abs(z - STOP_Z) <= 0.15 and -35.0 <= x <= -29.6, (0.0, 0.0, -50.0)),
+            (on_stop_shelf, (0.0, 0.0, -50.0)),
             (lambda x, y, z: z >= 25.00, (0.0, -15.0, 0.0)),
             (
                 lambda x, y, z: (
@@ -348,12 +360,19 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
         ],
         out_dir=out_dir,
     )
+    label1, ok1, msg1 = _row(
+        "FEM_LC1   usb_retainer_bracket 50N button mash + 15N pole tilt + 15N USB pry",
+        r1,
+        25.0,
+        POLE_FLEX_MAX,
+    )
+    stop1 = float(r1["watch_uz_mm"])
     rows.append(
-        _row(
-            "FEM_LC1   usb_retainer_bracket 50N button mash + 15N pole tilt + 15N USB pry",
-            r1,
-            25.0,
-            POLE_FLEX_MAX,
+        (
+            label1,
+            ok1 and stop1 <= STOP_FLEX_MAX,
+            f"{msg1}; stop shelf gives {stop1:.3f} mm (limit {STOP_FLEX_MAX:.3f}, the switch's "
+            "over-travel margin)",
         )
     )
 

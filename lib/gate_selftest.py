@@ -53,6 +53,13 @@ MUTATIONS = [
     (
         "cooling_check",
         "part/cooling_duct.py",
+        "FLOOR_GAP = 0.15",
+        "FLOOR_GAP = 0.02",
+        "FLOOR_SEAT",
+    ),
+    (
+        "cooling_check",
+        "part/cooling_duct.py",
         "z_ledge = (Z_PLATE1, Z_PLATE1 + LEDGE_T)",
         "z_ledge = (Z_PLATE1 + 0.3, Z_PLATE1 + 0.3 + LEDGE_T)",
         "FLOOR_SEAT",
@@ -211,7 +218,7 @@ MUTATIONS = [
     (
         "top_controls_check",
         "assembly/datum.py",
-        "CARTRIDGE_FLAP_CLEAR = 0.15",
+        "CARTRIDGE_FLAP_CLEAR = CARTRIDGE_FLAP_FIT + 2.0 * PAINT_T",
         "CARTRIDGE_FLAP_CLEAR = 0.01",
         "J09_FLAPS",
     ),
@@ -246,7 +253,7 @@ MUTATIONS = [
     (
         "front_panel_check",
         "assembly/datum.py",
-        "FRONT_COVER_CLEAR = 0.20",
+        "FRONT_COVER_CLEAR = FRONT_COVER_FIT + 2.0 * PAINT_T",
         "FRONT_COVER_CLEAR = 0.01",
         "J05_COVER",
     ),
@@ -260,8 +267,10 @@ MUTATIONS = [
     (
         "front_panel_check",
         "assembly/datum.py",
-        "PORT_INSERT_BOSS_D = 7.8",
-        "PORT_INSERT_BOSS_D = 8.18",
+        # the pocket is drawn from the boss plus the fit, so grow the boss alone and nothing is
+        # wrong: plant the defect in the pocket (no room left for paint or glue)
+        "PORT_POCKET_D = PORT_INSERT_BOSS_D + 2.0 * (PORT_POCKET_FIT + 2.0 * PAINT_T)",
+        "PORT_POCKET_D = PORT_INSERT_BOSS_D + 0.04",
         "J08_PORT",
     ),
     (
@@ -398,8 +407,28 @@ def _make_farm(root: str) -> str:
     return farm
 
 
+def stale_snippets() -> list[str]:
+    """Mutations whose search text no longer exists in their file (checked by `./run lint`).
+
+    A renamed constant once left two planted defects searching for text that was gone, and only
+    the full self-test, which nobody ran, would have said so (Gemini review, 2026-11-14).
+    """
+    stale = []
+    for _check, target_rel, old_s, _new, expected_row in MUTATIONS:
+        src = open(os.path.join(HERE, target_rel), encoding="utf-8").read()
+        if old_s not in src:
+            stale.append(f"{expected_row}: {old_s!r} not in {target_rel}")
+    return stale
+
+
 def main(argv: list[str]) -> int:
     """Run every mutation, or with `--only ROW [ROW...]` those expected to fail rows ROW*."""
+    if "--check-snippets" in argv:
+        stale = stale_snippets()
+        for s in stale:
+            print(f"  STALE {s}")
+        print(f"selftest snippets: {len(MUTATIONS) - len(stale)}/{len(MUTATIONS)} found")
+        return 1 if stale else 0
     only = argv[argv.index("--only") + 1 :] if "--only" in argv else []
     chosen = [m for m in MUTATIONS if not only or any(m[4].startswith(r) for r in only)]
     if not chosen:

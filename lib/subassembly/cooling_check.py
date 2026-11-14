@@ -21,6 +21,7 @@ from OCP.BRepExtrema import BRepExtrema_DistShapeShape  # noqa: E402
 from part import cooling_duct, cooling_hood, duct_floor  # noqa: E402
 from part.shared import n64_contours as C  # noqa: E402
 from subassembly import cooling_mech  # noqa: E402
+from testing import probe  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
 CLEAR_MM3 = 0.01
@@ -297,16 +298,27 @@ def check_all():
     # 2. Contacts that do the work: cover clamps the pins, sink sits on the die, fan seats.
     hs = hsb26_343408.placed()
     duct = cooling_duct.get_shape()
-    # The glued-in floor: G13_COOL proves it fits its frame (no overlap); here it must also seat on
-    # the ledge (touching) with the frame clearance all round it.
+    # The glued-in floor, measured both ways on the solids (Gemini review #4: the whole-solid
+    # distance let wall contact pass as "seated" and the frame gap was only the constant):
+    #   - the frame gap, in a slab through the plate's mid-thickness (walls, not the ledge);
+    #   - the seat, the plate's top skin against the duct just above it: the ledge touches, the
+    #     walls are FLOOR_GAP away sideways, so a missing ledge reads as the wall gap.
     floor = cooling_duct.floor_plate()
-    seat = _distance(floor, duct)
+    z1 = cooling_duct.Z_PLATE1
+    frame_gap = probe.slice_gap(floor, duct, "z", (cooling_duct.Z_PLATE0 + z1) / 2.0)
+    big = 400.0
+    top_skin = floor.intersect(
+        cq.Solid.makeBox(big, big, 0.1, cq.Vector(-big / 2, -big / 2, z1 - 0.1))
+    )
+    above = duct.intersect(cq.Solid.makeBox(big, big, 0.1, cq.Vector(-big / 2, -big / 2, z1)))
+    seat = _distance(top_skin, above)
     rows.append(
         (
             "FLOOR_SEAT duct floor plate seats on its ledge, clear of the frame walls",
-            seat <= 0.01,
-            f"plate to ledge {seat:.3f} mm (must touch); frame clearance "
-            f"{cooling_duct.FLOOR_GAP:.2f} mm a side for the glue",
+            # GBA's measured PETG locating band, not the constant (which a typo would move too)
+            seat <= 0.01 and 0.10 <= frame_gap <= 0.20,
+            f"plate to ledge {seat:.3f} mm (must touch); frame gap {frame_gap:.3f} mm a side "
+            f"measured (locating band 0.10..0.20, for the glue)",
         )
     )
     fan = sunon_mf30060v2.envelope()

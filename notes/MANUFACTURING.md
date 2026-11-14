@@ -19,7 +19,7 @@ measured on the owner's GBA prints, and the print-test coupons (`./run coupons`)
 
 ---
 
-## 2. Heat-set insert installation (`12x` Ruthex brass inserts total)
+## 2. Heat-set insert installation (`10x` Ruthex brass inserts total: 4 + 2 + 4)
 
 Set at `205–215 °C` (PLA) or `235–245 °C` (PETG) using a vertical soldering-iron press with conical heat-set tips:
 
@@ -42,15 +42,22 @@ Set at `205–215 °C` (PLA) or `235–245 °C` (PETG) using a vertical solderin
 
 When the Radxa X4 (`RS119-D4E0` / `RS119-D8E0`, ordered **without** the pre-soldered 40-pin header) is mounted upside-down in `lower_tub`, the 40-pin GPIO through-hole pads sit along the **front (`-Y`) edge of the PCB (`Y ≈ -22 mm`)**, immediately behind the `POWER`/`RESET` microswitches and LED cradle. **Pin 1 (`3V3`)** is marked by the **square solder pad** (Pins 2–40 are round pads).
 
-| Component | Terminal / Lead | Series Resistor | Radxa X4 Solder Pad | Signal & Function (`firmware/rp2040_reset/code.py`) |
+The wiring below matches the firmware's own table, `firmware/rp2040_reset/README.md` in the theme
+repo, which is the source of truth: `frontend/tests/test_firmware_pins.py` holds it and `code.py` to
+Radxa's X4 GPIO table. (An older version of this section had RESET on GP3, POWER on GP2 and green
+on GP5; none of those reach the header. Fixed 2026-11-14 after the Gemini review.)
+
+| Component | Terminal / Lead | Series Resistor | Radxa X4 | Signal & Function |
 |---|---|---|---|---|
-| **`RESET` Switch** (`Omron SS-5GL`, right `X = +32.32 mm`) | **`NO`** (Middle terminal) | — | **40-pin Header Pin 5** | **`GP3`** (`INPUT` + internal `Pull.UP`; active-LOW press sends USB HID `KEY_F13` -> `n64mini-reset`) |
-| **`RESET` Switch** (`Omron SS-5GL`, right `X = +32.32 mm`) | **`COM`** (Bottom hinge terminal) | — | **40-pin Header Pin 6** | **`GND`** *(leave top `NC` terminal unconnected)* |
-| **`POWER` Switch** (`Omron SS-5GL`, left `X = -32.32 mm`) | **`NO`** (Middle terminal) | — | **Onboard `PWR` button signal pad** *(or + Header Pin 3 `GP2`)* | **`PWR_BTN_N`** (wakes Intel N100 from `S5` standby or triggers clean ACPI shutdown) |
-| **`POWER` Switch** (`Omron SS-5GL`, left `X = -32.32 mm`) | **`COM`** (Bottom hinge terminal) | — | **40-pin Header Pin 14** *(or `PWR` button `GND` pad)* | **`GND`** *(leave top `NC` terminal unconnected)* |
-| **Front Status LED** (`Kingbright L-93WEGW`, `X = 0`) | **Pin 1 — Red Anode** (`625 nm`, flat side) | **`330 Ω` 0.25W** | **40-pin Header Pin 7** | **`GP4`** (`HIGH` in `S5` standby when USB-C power is connected -> **Red**) |
-| **Front Status LED** (`Kingbright L-93WEGW`, `X = 0`) | **Pin 2 — Common Cathode** (centre longest lead) | — | **40-pin Header Pin 9** | **`GND`** |
-| **Front Status LED** (`Kingbright L-93WEGW`, `X = 0`) | **Pin 3 — Green Anode** (`565 nm`) | **`330 Ω` 0.25W** | **40-pin Header Pin 29** | **`GP5`** (`HIGH` when Intel N100 USB host is active in `S0` -> **Green**) |
+| **`RESET` switch** (`Omron SS-5GL`, `X = +32.32 mm`) | `NO` | — | **Header pin 5** | **`GP29`** (input, pull-up; a press sends USB HID `KEY_F13` -> `n64mini-reset`) |
+| **`RESET` switch** | `COM` | — | **Header pin 6** | `GND` (leave `NC` unconnected) |
+| **`POWER` switch** (`Omron SS-5GL`, `X = -32.32 mm`) | `NO` and `COM` | — | **Across the X4's own power button `K1`** | `PMC_PWRBTN_N`: wakes the N100 or asks Batocera to shut down (not a header pin: the RP2040 is off in standby) |
+| **Front LED** (`Kingbright L-93WEGW`) | Pin 1, red anode | `330 Ω` | **Header pin 7** | **`GP4`**: **red in Batocera's menu** (and while USB comes up) |
+| **Front LED** | Pin 2, common cathode | — | **Header pin 9** | `GND` |
+| **Front LED** | Pin 3, green anode | `330 Ω` | **Header pin 29** | **`GP7`**: **green while a game runs** (the launch wrapper tells the RP2040 over USB serial) |
+
+The RP2040 runs only while the PC is on (its power and `RUN` pin follow the N100), so there is no
+standby light.
 
 ---
 
@@ -60,7 +67,7 @@ When the Radxa X4 (`RS119-D4E0` / `RS119-D8E0`, ordered **without** the pre-sold
    - Press-fit `4x` `n64_port_insert` rings (`P1..P4`) and `8x` `Ø3.0 x 1.0 mm` N52 magnets into the front apron and `2x` `front_port_cover` doors; snap the cover hinge trunnions into the side walls.
    - Drop `4x TE Connectivity 292303-7` right-angle USB-A receptacles straight down (`-Z`) onto the stepped `Z = 10.80 / 9.55 mm` cradle floors so their PCB kink legs engage the `Y = -32.35 .. -30.00 mm` retention slots.
 2. **Glue `2x usb_retainer_bracket` Bridges:**
-   - Apply a drop of CA / epoxy to the outer, centre (`X = ±25.00 mm`), and inner USB divider walls of `lower_tub` and press the Left and Right `usb_retainer_bracket` pieces down until their `Z = 16.85 mm` bridges seat over the `4x` USB-A metal shells (`0.15 mm` top clearance) and their `Z = 23.45 mm` stop blocks (`Face854` extended to `Y = -27.80 mm`) and `Ø2.80 mm` guide poles stand vertical at `(±32.32, -32.20)`.
+   - Apply a drop of CA / epoxy to the outer, centre (`X = ±25.00 mm`), and inner USB divider walls of `lower_tub` and press the Left and Right `usb_retainer_bracket` pieces down until their `Z = 16.85 mm` bridges seat over the `4x` USB-A metal shells (`0.15 mm` top clearance) and their `Z = BUTTON_STOP_Z` stop blocks (`22.97 mm`) (`Face854` extended to `Y = -27.80 mm`) and `Ø2.80 mm` guide poles stand vertical at `(±32.32, -32.20)`.
 3. **Omron SS-5GL Microswitches (`POWER` & `RESET`):**
    - Slide each `Omron SS-5GL` onto its integral `Ø2.20 mm` locating pin (Hole 1) with the hinge lever extending forward (`-Y`) over the `usb_retainer_bracket` stop block.
    - **Before the Radxa X4 goes in**, drive a `3 x 10` pan-head thread-forming screw for plastics from behind each tower, through its `Ø3.4 mm` clearance hole, into the switch's `Ø2.35 mm` Hole 2 until the switch is snug against the tower. Don't over-tighten: the screw rolls its own thread in the switch case. The USB-A socket in front of the switch leaves no room for a screw from the front (C2).
@@ -79,7 +86,7 @@ When the Radxa X4 (`RS119-D4E0` / `RS119-D8E0`, ordered **without** the pre-sold
    - Set `cooling_hood` on the fan rim and the duct, and run `1 mm` foam tape along the hood's wall tops.
    - Stick a `3M Bumpon SJ5012` over each corner screw counterbore on the underside.
 6. **Seat `POWER` & `RESET` Buttons on Guide Poles:**
-   - Place `power_slider` (`X = -32.32 mm`) and `reset_button` (`X = +32.32 mm`) straight down onto the `Ø2.80 mm` vertical guide poles on `usb_retainer_bracket`. The `Ø3.20 mm` blind underside holes (`1.70 mm` engaged at rest) hold both buttons upright and oriented before the top shell is installed.
+   - Place `power_slider` (`X = -32.32 mm`) and `reset_button` (`X = +32.32 mm`) straight down onto the `Ø2.80 mm` vertical guide poles on `usb_retainer_bracket`. The `Ø4.0 mm` blind underside holes (`BUTTON_POLE_HOLE_D`; the chimney locates the button, the pole only backstops, row `BTN_DATUM`) hold both buttons upright and oriented before the top shell is installed.
 7. **Upper Shell Trim (`cartridge_flaps` & `front_bezel`):**
    - Glue `cartridge_flaps` into the top slot pocket and `front_bezel` (2.0 mm clear acrylic + rear Cricut N64 decal aligned with `bezel_laser_jig_0.svg`) into the front nose pocket of `upper_shell`.
 8. **Close Enclosure:**

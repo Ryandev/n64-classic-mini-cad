@@ -18,6 +18,8 @@ case "$target" in
         $PY ruff format --check .
         echo "=== lint_structure.py ==="
         $PY python3 lib/testing/lint_structure.py "$@"
+        echo "=== selftest snippets still exist ==="
+        $PY python3 lib/gate_selftest.py --check-snippets
         ;;
     format)
         $PY ruff format .
