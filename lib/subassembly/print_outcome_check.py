@@ -19,6 +19,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import cadquery as cq  # noqa: E402
 import coupons  # noqa: E402
 import printable  # noqa: E402
 
@@ -34,8 +35,34 @@ PLATE1 = {
 }
 
 
+def _wall_with_opening(width: float) -> cq.Shape:
+    """A 2.2 mm wall, 14 mm tall, with a `width` x 5 mm window through it 4 mm up."""
+    wall = cq.Solid.makeBox(width + 10.0, 2.2, 14.0)
+    window = cq.Solid.makeBox(width, 2.2, 5.0, cq.Vector(5.0, 0.0, 4.0))
+    return wall.cut(window)
+
+
+def _wall_with_pin(length: float) -> cq.Shape:
+    """A wall with a Ø2.8 pin sticking `length` out of its side, 5 mm up."""
+    wall = cq.Solid.makeBox(10.0, 3.0, 10.0)
+    pin = cq.Solid.makeCylinder(1.4, length, cq.Vector(5.0, 3.0, 5.0), cq.Vector(0, 1, 0))
+    return wall.fuse(pin)
+
+
+# Shapes whose answer is known from how FDM works (lower rung than the print: the author's own
+# picks), one per kind of overhang, so each branch of the rule can fail on its own.
+RULES = (
+    ("a 6 mm window in a wall bridges (held at both ends)", _wall_with_opening(6.0), True),
+    ("a 12 mm window needs support (bridge over 10 mm)", _wall_with_opening(12.0), False),
+    ("a sideways pin needs support (held at one end)", _wall_with_pin(4.0), False),
+)
+
+
 def check_all():
     rows = []
+    for label, shape, printable_ok in RULES:
+        ok, msg = printable.check_overhang(shape, up=(0, 0, 1), support_mm2=0.0)
+        rows.append((f"PRINT_RULE {label}", ok == printable_ok, msg))
     built = {}
     for c in coupons.COUPONS:
         if any(k.startswith(c.name + "_") for k in PLATE1):

@@ -82,14 +82,37 @@ MUTATIONS = [
         "LINE_W_MM = 20.0",
         "PRINT_OUTCOME 2_switch_tower_tub_tower",
     ),
-    # ...and call a hole ceiling held on three sides a cantilever, and the button that printed
-    # clean reads as failed.
+    # ...and refuse every bridge: a window in a wall needs support...
     (
         "print_outcome_check",
         "printable.py",
-        "BRIDGE_REACH = 0.75",
-        "BRIDGE_REACH = 0.3",
+        "    if any(_bridges(region, held, max_bridge, a) for a in BRIDGE_ANGLES):",
+        "    if False:",
+        "PRINT_RULE a 6 mm window",
+    ),
+    # ...and let a line end in air: a pin held at one end bridges.
+    (
+        "print_outcome_check",
+        "printable.py",
+        "            if any(h.distance(e) > ANCHOR_REACH_MM for e in ends):",
+        "            if all(h.distance(e) > ANCHOR_REACH_MM for e in ends):",
+        "PRINT_RULE a sideways pin",
+    ),
+    # ...and the bed limit both ways: none, and the lever pocket that printed clean fails;
+    # 2 mm, and the button cap that failed 1.3 mm up passes.
+    (
+        "print_outcome_check",
+        "printable.py",
+        "BED_CATCH_MM = 1.0",
+        "BED_CATCH_MM = 0.0",
         "PRINT_OUTCOME 1_button_chimney_power_button",
+    ),
+    (
+        "print_outcome_check",
+        "printable.py",
+        "BED_CATCH_MM = 1.0",
+        "BED_CATCH_MM = 2.0",
+        "PRINT_OUTCOME 1_button_chimney_power_button_on_side",
     ),
     # A part that needs more support than it declares
     (

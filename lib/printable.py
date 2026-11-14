@@ -26,7 +26,8 @@ from OCP.BRepTools import BRepTools_WireExplorer  # noqa: E402
 from OCP.GeomAbs import GeomAbs_Torus  # noqa: E402
 from OCP.gp import gp_Pnt, gp_Vec  # noqa: E402
 from OCP.TopAbs import TopAbs_IN, TopAbs_ON, TopAbs_REVERSED  # noqa: E402
-from shapely.geometry import Polygon  # noqa: E402
+from shapely.affinity import rotate  # noqa: E402
+from shapely.geometry import LineString, Polygon  # noqa: E402
 from shapely.geometry.base import BaseGeometry  # noqa: E402
 from shapely.ops import unary_union  # noqa: E402
 from shapely.validation import make_valid  # noqa: E402
@@ -46,9 +47,12 @@ SECTION_AREA_TOL = 0.01
 ANCHOR_REACH_MM = 0.05  # an unheld region touching the layer below within this is held there
 MIN_LOOSE_MM2 = 0.001  # numerical dust from the section boolean, skipped before measuring
 LINE_W_MM = 0.42  # extrusion width on the 0.4 mm nozzle (notes/PRINTING.md)
-# Held from opposite sides, a region's furthest point is ~0.5 x its width from a hold; held from
-# one side, ~1.0 x. Between the two, so neither case sits on the line.
-BRIDGE_REACH = 0.75
+# An overhang this close to the bed can only sag onto it. Coupon plate 1 (2026-11-14): the
+# upright button's lever pocket roof, printed 0.8 mm up, came out clean; the cap end of the button
+# printed on its side, 1.3 mm up, failed.
+BED_CATCH_MM = 1.0
+BRIDGE_ANGLES = tuple(range(0, 180, 15))  # directions a bridge is tried in, degrees
+BRIDGE_PITCH_MM = 0.2  # spacing of the lines laid across a region when trying a bridge
 
 
 def check_manifold(shape: cq.Shape):
@@ -103,17 +107,6 @@ def orient_to_bed(shape: cq.Shape, up: tuple[float, float, float]) -> cq.Shape:
     return rot.moved(cq.Location(cq.Vector(-bb.xmin, -bb.ymin, -bb.zmin)))
 
 
-def _span_across(area: float, perimeter: float) -> float:
-    """How wide a bridge is: the short side of the rectangle with this area and perimeter.
-
-    Exact for a rectangle; a ring comes out near its radial width, not its diameter, and a round
-    region near 0.8 x its diameter.
-    """
-    half = perimeter / 2.0
-    disc = max(half * half - 4.0 * area, 0.0)
-    return (half - math.sqrt(disc)) / 2.0
-
-
 def _ring(wire: cq.Wire, face: cq.Face) -> list[tuple[float, float]]:
     """The wire's points in order round the face, curved edges followed every SECTION_STEP_MM."""
     pts: list[tuple[float, float]] = []
@@ -150,23 +143,46 @@ def _section(shape: cq.Shape, z: float, bb) -> BaseGeometry:
     return out
 
 
-def _prints_unsupported(region: Polygon, held: BaseGeometry, max_bridge: float) -> bool:
-    """Can `region`, which this layer prints past what the layer below holds up, print anyway?
+def _bridges(region: Polygon, hold: BaseGeometry, max_bridge: float, angle: float) -> bool:
+    """Do lines laid across `region` at `angle` all start and end on `hold`, within a bridge?"""
+    c = region.centroid
+    r = rotate(region, -angle, origin=c)
+    h = rotate(hold, -angle, origin=c)
+    x0, y0, x1, y1 = r.bounds
+    y = y0 + BRIDGE_PITCH_MM / 2.0
+    while y < y1:
+        cut = LineString([(x0 - 1.0, y), (x1 + 1.0, y)]).intersection(r)
+        for seg in getattr(cut, "geoms", [cut]):
+            if seg.is_empty or seg.geom_type != "LineString" or seg.length < LINE_W_MM / 2.0:
+                continue
+            if seg.length > max_bridge:
+                return False
+            ends = seg.boundary.geoms
+            if any(h.distance(e) > ANCHOR_REACH_MM for e in ends):
+                return False
+        y += BRIDGE_PITCH_MM
+    return True
 
-    Yes if it reaches out from its hold less than half an extrusion line: the line still sits
-    mostly on the layer below. Yes if it is a bridge, held from opposite sides so no point of it
-    is further than about half its width from a hold (hole ceilings held on three sides or all
-    round included). No if it is a cantilever (a peg, a pin, the edge of a skin), held from one
-    side so its far edge is its whole width out, or held nowhere (it starts in mid-air).
+
+def _hold_kind(region: Polygon, held: BaseGeometry, max_bridge: float):
+    """How `region`, printed past what the layer below holds up, is held: "line" or "bridge" if
+    it prints, None if it needs support.
+
+    "line": no point of it is more than half an extrusion line from a hold, so the line still
+    sits mostly on the layer below. "bridge": in some direction every line laid across it starts
+    and ends on a hold, no longer than `max_bridge` (a window in a wall, a pocket ceiling held on
+    three sides, a hole closed over, the two-layer bridge over a counterbore). Otherwise it is a
+    cantilever (a peg, a pin, a skin stepping out layer after layer, a ring round a hole) or held
+    nowhere: it needs support.
     """
-    touch = region.exterior.intersection(held.buffer(ANCHOR_REACH_MM))
+    touch = region.boundary.intersection(held.buffer(ANCHOR_REACH_MM))
     if touch.is_empty or touch.length < ANCHOR_REACH_MM:
-        return False
-    reach = shapely.hausdorff_distance(region, touch, densify=0.1)
-    if reach <= LINE_W_MM / 2.0:
-        return True
-    width = _span_across(region.area, region.length)
-    return width <= max_bridge and reach <= BRIDGE_REACH * width
+        return None
+    if shapely.hausdorff_distance(region, touch, densify=0.1) <= LINE_W_MM / 2.0:
+        return "line"
+    if any(_bridges(region, held, max_bridge, a) for a in BRIDGE_ANGLES):
+        return "bridge"
+    return None
 
 
 def check_overhang(
@@ -180,9 +196,11 @@ def check_overhang(
     """Slice the part as the printer does and find what each layer prints onto air.
 
     Each layer may step out past the one below by `layer * tan(limit)`; anything further out is
-    unsupported. An unsupported region held by the layer below in two or more places, and no
-    wider than `max_bridge`, is a bridge and prints. One held in one place is a cantilever (a
-    peg, a pin, the edge of a skin) and one held nowhere starts in mid-air: both need support.
+    unsupported. It still prints if it is within half a line of a hold, or bridges (`_bridges`:
+    one direction in which every line across it is held at both ends, within `max_bridge`), or
+    lies in the first BED_CATCH_MM, where it can only sag onto the bed. Anything else (a peg, a
+    pin, a skin stepping out layer after layer, a ring round a hole, a start in mid-air) needs
+    support.
 
     This replaced a face-by-face test (2026-11-14) that took one normal per face, so a cylinder's
     underside read as level, and called any narrow face a bridge without asking what held it up.
@@ -208,7 +226,7 @@ def check_overhang(
             for r in getattr(loose, "geoms", [loose]):
                 if r.is_empty or r.area < MIN_LOOSE_MM2:
                     continue
-                if _prints_unsupported(r, held, max_bridge):
+                if z <= BED_CATCH_MM or _hold_kind(r, held, max_bridge):
                     continue
                 needs += r.area
                 if r.area > worst:

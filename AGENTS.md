@@ -134,12 +134,16 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   underside read as level, so the bracket peg and the switch V-pin showed nothing overhanging)
   and called any face under 10 mm a bridge without asking what held it (the shell skin, cut out
   of its walls, was 100+ narrow faces). It now slices each part in 0.2 mm layers and fails what
-  a layer prints onto air unless it is a bridge held from opposite sides
-  (`printable.check_overhang`). `subassembly/print_outcome_check.py` holds it to the real print:
+  a layer prints onto air unless it bridges in some direction, is within half a line of a hold,
+  or sits in the first 1.0 mm (`printable.check_overhang`). `subassembly/print_outcome_check.py` holds it to the real print:
   each piece's check verdict must match what the printer did.
 - **When a part needs support, it is PETG with a PLA interface from the external spool, never
   "no supports".** The owner had said so repeatedly (notes/PRINTING.md, from GBA). Slice nothing
   with supports off unless the overhang row passes it, coupons included: a crop loses the walls
   that held the part up.
+- **Every limit in the row names the print that set it, and that print was checked.** A 1.35 mm
+  "ledge" allowance was written citing the button's flange stepping out from its shaft; the
+  button prints flange-first and has no such step. It was removed before commit. Look at the
+  geometry before quoting it as evidence.
 - **A traced section is checked against OpenCASCADE's exact area.** The first version rebuilt
   loops from loose edges, filled the shell's holes and reported 32,000 mm^2 of support for 8,200.
