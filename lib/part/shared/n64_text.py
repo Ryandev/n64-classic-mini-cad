@@ -11,6 +11,7 @@ Pure native CadQuery (`polyline` -> `Face.makeFromWires` -> `extrudeLinear`), ze
 """
 
 import importlib.util
+import os
 from pathlib import Path
 
 import cadquery as cq
@@ -1074,7 +1075,9 @@ _LOCAL_GLYPHS = Path(__file__).resolve().parents[3] / "local" / "nintendo_glyphs
 
 
 def _local_glyphs() -> tuple[GlyphLoops, ...] | None:
-    if not _LOCAL_GLYPHS.is_file():
+    # N64_PUBLIC=1 forces the public CLASSIC lettering even on the owner's machine: anything
+    # rendered for the published repo (README pictures) must never carry the private letters.
+    if os.environ.get("N64_PUBLIC") == "1" or not _LOCAL_GLYPHS.is_file():
         return None
     spec = importlib.util.spec_from_file_location("local_nintendo_glyphs", _LOCAL_GLYPHS)
     if spec is None or spec.loader is None:

@@ -117,3 +117,12 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
 - **Measuring finds what constants hide.** On the solids: the light pipe's tightest gap is
   0.06 mm (the datum claimed 0.10), the RJ45 jack is 1.7 mm from the wall (constants said 3.0),
   and the M3x12 corner screws engaged only 2.8 mm of their insert (now M3x14, J01_SCREW).
+
+## Lessons (published pictures, 2026-11-14)
+
+- On the owner's machine `cad/local/` holds the owner's own plaque lettering, and every local build
+  engraves it. A README re-render from a local export came out with the private lettering on
+  the plaque; it was caught by looking before committing. Anything rendered for the published
+  repo is built with **`N64_PUBLIC=1`**, which forces the public CLASSIC lettering
+  (`part/shared/n64_text._local_glyphs`). CI never has `cad/local/`, so released files are
+  public by construction. Look at every picture before committing it.
