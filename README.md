@@ -80,13 +80,15 @@ rim and is screwed at its 4 corners.
 > chimneys must keep the button's sliding clearance (0.22 mm), and the standoffs must keep the rear
 > jack's 0.5 mm from the wall. The dome sag is reported, not limited: the hood and fan under it
 > aren't modelled. With the flat tub bottom the floor sits on the bed or desk, and the stop and
-> standoff flex dropped from ~0.3 mm to 0.05 and 0.01 mm. Every case is inside its stress and flex
-> limits; LC1 and LC4 still miss the 15 % mesh-convergence test on stress (LC4's stress is 0.06
-> MPa, 0.4 % of its limit), so the FEM stays out of the gate until that is settled.
+> standoff flex dropped from ~0.3 mm to 0.05 and 0.01 mm. Since the 2026-11-14 review, LC1 also
+> grades the bracket's stop shelf on its own: it gives 0.18 mm under the 50 N mash, past the
+> switch's 0.158 mm margin (an open decision, RELEASE_TODO E). LC1's stress sits in a sharp inside
+> corner (the middle leg's root under the bridge), which is why it never converges; LC4's is
+> 0.06 MPa. The FEM stays out of the gate until those are settled.
 
 | Load Case | Component | Loads | von Mises (p99) | Deflection | Mesh change (stress / defl.) |
 |---|---|---|---|---|---|
-| **`FEM_LC1`** | `usb_retainer_bracket.py` | `50 N` button-stop mash, `15 N` sideways on the guide pole, `15 N` USB-A pry | `11.2 MPa` (limit 25) | `0.30 mm` at the guide pole tip (limit 0.57, the pole-to-button gap) | **31 %** / 2 % |
+| **`FEM_LC1`** | `usb_retainer_bracket.py` | `50 N` button-stop mash, `15 N` sideways on the guide pole, `15 N` USB-A pry | `11.2 MPa` (limit 25), at the middle leg's root under the bridge | `0.30 mm` at the guide pole tip (limit 0.57); **stop shelf gives `0.18 mm` (limit 0.158, the switch's over-travel margin)** | **31 %** / 2 % |
 | **`FEM_LC2`** | `lower_tub.py` front USB & Omron bay | `40 N` USB-A insertion, `30 N` cable yank, `50 N` button-stop mash | `3.0 MPa` (limit 20) | `0.05 mm` max (limit 0.158, the switch's over-travel margin) | 11 % / 11 % |
 | **`FEM_LC3`** | `upper_shell.py` | `100 N` (~10 kg) on the dome | `5.2 MPa` (limit 25) | `0.78 mm` dome sag (reported only); chimneys `0.14 mm` (limit 0.22, the button clearance) | 6 % / 6 % |
 | **`FEM_LC4`** | `lower_tub.py` Radxa & RJ45 standoffs | `30 N` rear plug push, `60 N` screw preload, on the 6 standoff tops | `0.06 MPa` (limit 15) | `0.01 mm` (limit 0.50, the jack's gap to the wall) | **23 %** / 2 % |

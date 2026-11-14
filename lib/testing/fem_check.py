@@ -212,7 +212,7 @@ def solve_calculix(
         away = {idx for idx, c in centroid.items() if not near_bc(c)}
         max_u, max_chimney_xy_u, peak_vm, watch_uz = 0.0, 0.0, 0.0, 0.0
         max_u_at = (0.0, 0.0, 0.0)
-        away_vm: list[float] = []
+        away_vm: list[tuple[float, int]] = []
         with open(os.path.join(work_dir, "job.dat"), encoding="utf-8") as f:
             sec: str | None = None
             for line in f:
@@ -244,12 +244,12 @@ def solve_calculix(
                     )
                     peak_vm = max(peak_vm, vm)
                     if int(p[0]) in away:
-                        away_vm.append(vm)
+                        away_vm.append((vm, int(p[0])))
 
         if not away_vm:
             raise RuntimeError(f"{name}: no element is clear of the loads and supports")
         away_vm.sort()
-        max_vm = away_vm[min(len(away_vm) - 1, int(STRESS_PERCENTILE * len(away_vm)))]
+        max_vm, at_elem = away_vm[min(len(away_vm) - 1, int(STRESS_PERCENTILE * len(away_vm)))]
         return {
             "name": name,
             "nodes": len(nodes),
@@ -260,6 +260,7 @@ def solve_calculix(
             "max_chimney_xy_u_mm": max_chimney_xy_u,
             "watch_uz_mm": watch_uz,
             "max_vm_mpa": max_vm,
+            "max_vm_at": centroid[at_elem],  # where the percentile stress sits (a sharp corner?)
             "peak_vm_mpa": peak_vm,
             "frd_path": os.path.join(work_dir, "job.frd") if out_dir else None,
         }
@@ -283,7 +284,7 @@ def _row(label: str, r: dict, vm_limit: float, u_limit: float) -> tuple[str, boo
         label,
         ok,
         f"{r['elems']} C3D10: von Mises {vm:.2f} MPa (p{100 * STRESS_PERCENTILE:.0f}, away from "
-        f"loads/supports; limit "
+        f"loads/supports, at ({', '.join(f'{c:.1f}' for c in r['max_vm_at'])}); limit "
         f"{vm_limit:.1f}; raw peak {float(r['peak_vm_mpa']):.1f}), disp {u:.3f} mm (limit "
         f"{u_limit:.3f}) at ({', '.join(f'{c:.1f}' for c in r['max_u_at'])}), "
         f"{r['load_nodes']} loaded nodes; mesh x{REFINE} changes them "
