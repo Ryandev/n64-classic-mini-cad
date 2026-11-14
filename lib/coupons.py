@@ -160,6 +160,10 @@ COUPONS = (
         (
             Piece("shell_chimney", upper_shell.get_shape, upper_shell.PRINT_NORMAL, _button_box()),
             Piece("power_button", power_slider.get_shape, power_slider.PRINT_NORMAL),
+            # On its straight side (the orientation study's 100 %-wall pick stands it on its round
+            # end, with no flat bed contact): 74 % wall, 26 % rough underside, vs 66 % terraced
+            # printed top-up. Print both and compare before choosing.
+            Piece("power_button_on_side", power_slider.get_shape, (1, 0, 0)),
             Piece(
                 "bracket",
                 lambda: usb_retainer_bracket.bracket_at(_BAY),
