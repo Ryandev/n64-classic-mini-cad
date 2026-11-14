@@ -20,6 +20,9 @@ from part.shared import n64_contours as C  # noqa: E402
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
 PRINT_NORMAL = (0, 0, -1)  # floor plate on the bed
+# 853 mm^2 by layers (2026-11-14): the stepped wall tops that follow the shell's roof and the
+# closed top, all inside the console. PETG body, PLA interface (notes/PRINTING.md).
+SUPPORT_MM2 = 900.0
 VISIBLE_FACES: tuple[str, ...] = ()
 
 MARGIN = 1.0  # louver field to inner wall face

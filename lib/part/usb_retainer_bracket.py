@@ -1,8 +1,8 @@
 """Separately-printed USB-A Top Retainer & Button Travel-Stop Bracket (`usb_retainer_bracket.py`).
 
-Printed flat on its rear `+Y` face (`PRINT_NORMAL = (0, 1, 0)`, zero supports, 100% vertical walls,
-`2` identical instances per console — Right `P3+P4 / Reset` is a `180 deg` Z-rotation of Left
-`P1+P2 / Power`) and glued onto the `Z = 11.55 mm` shelves of `lower_tub`'s 3 vertical USB-A
+Printed flat on its rear `+Y` face (`PRINT_NORMAL = (0, 1, 0)`, PLA-interface support under the
+guide pole, `2` identical instances per console — Right `P3+P4 / Reset` is a `180 deg` Z-rotation
+of Left `P1+P2 / Power`) and glued onto the `Z = 11.55 mm` shelves of `lower_tub`'s 3 vertical USB-A
 cradle walls after the 4 `TE Connectivity 292303-7` USB-A receptacles are dropped in from `+Z`:
   - Solves physical assembly: the 4 USB-A receptacles (`Z = 17.45 mm` front EMI flange at
     `Y = -41.70 mm` and `Z = 6.08 mm` downward retention legs at `Y = -32.22 .. -30.00 mm`) drop
@@ -30,6 +30,11 @@ from assembly import datum as D  # noqa: E402
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
 PRINT_NORMAL = (0, 1, 0)
+# Printed on its rear face, the Ø2.8 guide pole lies sideways, held only at its root: its first
+# layers need support (3.5 mm^2 measured by layers, 2026-11-14; coupon plate 1 lost it printed
+# without). PETG body, PLA interface (notes/PRINTING.md). The pole clears the button by 0.57 mm a
+# side (BTN_DATUM), so the ~0.10 mm a supported face comes out proud doesn't matter.
+SUPPORT_MM2 = 4.0
 VISIBLE_FACES = ()
 
 BRACKET_Y0 = -36.60

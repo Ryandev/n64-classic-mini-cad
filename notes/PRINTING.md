@@ -68,7 +68,7 @@ passes it.** The row (`lib/printable.py`) slices the part in 0.2 mm layers and f
 prints past the layer below (beyond the 50° step). That still prints if it is within half a line
 (0.21 mm) of a hold, or bridges (one direction in which every line across it is held at both ends,
 no longer than 10 mm: windows, pocket ceilings, holes closed over, the two-layer counterbore
-bridge), or lies in the first 1.0 mm, where it can only sag onto the bed. Anything else (a peg, a
+bridge), or lies in the first 1.0 mm and is no wider than a bridge, where it can only sag onto the bed. Anything else (a peg, a
 pin, a skin stepping out layer after layer, a ring round a hole, a start in mid-air) needs support.
 A part may declare `SUPPORT_MM2` (projected area) with the reason; the row fails if it needs more.
 
@@ -77,13 +77,19 @@ the bracket peg, the switch V-pin, the button printed on its side and the cut-ou
 failed, and the row says so for exactly those four. The 1.0 mm bed limit sits between the
 upright button's lever pocket (0.8 mm up, clean) and the side-printed button's cap (1.3 mm, failed).
 
-As of 2026-11-14 these fail the row and need a design change or declared support (open):
-`usb_retainer_bracket` (guide pole, 3 mm²), `lower_tub` (corner counterbores, V-pins, rear
-openings: 99), `cooling_duct` (212), `cooling_hood` (579).
+Declared as of 2026-11-14, all measured by layers and all inside the console or inside an opening:
 
-| Part | Declared | Where | Why it's acceptable |
+| Part | Declared (measured) | Where | Why it's acceptable |
 |---|---|---|---|
-| `upper_shell` | 9,010 mm² | inside of the top deck | printed split-face down, the deck is a roof over the hollow shell; that face is hidden |
+| `upper_shell` | 9,010 mm² (8,490) | inside of the top deck | printed split-face down, the deck is a roof over the hollow shell; that face is hidden |
+| `cooling_hood` | 900 (853) | stepped wall tops, closed top | inside the console |
+| `cooling_duct` | 480 (456) | fan seat ring round the bore, plate-frame ledge | inside; reached through the fan bore and the floor opening. The floor itself is the separate `duct_floor` (owner, 2026-11-13) |
+| `lower_tub` | 55 (49) | rear port-opening tops, LED hole top, the two switch V-pins | inside openings; the V-pin's support is under its V tip, clear of the switch's round hole |
+| `usb_retainer_bracket` | 4 (3.5) | the sideways guide pole | clears the button by 0.57 mm a side, so 0.10 mm proud doesn't matter |
+| everything else | 0 | | prints support-free by the row |
+
+The lower-tub corner counterbores open on the bed and close with the two-layer bridge (a slot
+the hole's width, then a square), so they need none.
 
 When a part does need support, use the GBA set-up (`PRINTING.md`, DECISIONS 10-18 and 10-30):
 

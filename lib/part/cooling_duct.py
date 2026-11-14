@@ -29,7 +29,10 @@ MANUFACTURE = "fdm"
 PRINT_NORMAL = (0, 0, -1)  # cover face on the bed
 # The plenum floor under the fan is a separate plate (`part/duct_floor.py`), glued in after
 # printing (owner, 2026-11-13): printed upside down, the floor was a 34 x 16 mm roof over the fan
-# bore and needed support inside the duct. Without it the duct prints support-free.
+# bore. Still needing support (456 mm^2 by layers, 2026-11-14): the fan seat, a ring round the
+# open fan bore held only at its outer walls, and the plate frame's 1 mm ledge. Both are reached
+# through the fan bore and the floor opening. PETG body, PLA interface (notes/PRINTING.md).
+SUPPORT_MM2 = 480.0
 VISIBLE_FACES: tuple[str, ...] = ()
 
 W = D.DUCT_WALL

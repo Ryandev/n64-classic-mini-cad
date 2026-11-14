@@ -173,6 +173,18 @@ def _bridges(region: Polygon, hold: BaseGeometry, max_bridge: float, angle: floa
     return True
 
 
+def _caught_by_bed(region: Polygon, held: BaseGeometry, z: float, max_bridge: float) -> bool:
+    """A small overhang in the first BED_CATCH_MM can only sag onto the bed. Small means no point
+    of it is further than half a bridge from what holds it: the evidence is a 4.7 mm pocket, and
+    a whole floor printed 0.45 mm up (C9), held only at its rim, sags into a mess."""
+    if z > BED_CATCH_MM:
+        return False
+    touch = region.boundary.intersection(held.buffer(ANCHOR_REACH_MM))
+    if touch.is_empty or touch.length < ANCHOR_REACH_MM:
+        return False
+    return shapely.hausdorff_distance(region, touch, densify=0.1) <= max_bridge / 2.0
+
+
 def _hold_kind(region: Polygon, held: BaseGeometry, max_bridge: float):
     """How `region`, printed past what the layer below holds up, is held: "line" or "bridge" if
     it prints, None if it needs support.
@@ -230,12 +242,15 @@ def check_overhang(
         z = min((i + 0.5) * layer_mm, bb.zlen - 1e-3)
         here = _section(s, z, bb)
         if below is not None and not here.is_empty:
-            held = below.buffer(step)
-            loose = here.difference(held)
+            held_all = below.buffer(step)
+            loose = here.difference(held_all)
             for r in getattr(loose, "geoms", [loose]):
                 if r.is_empty or r.area < MIN_LOOSE_MM2:
                     continue
-                if z <= BED_CATCH_MM or _hold_kind(r, held, max_bridge):
+                # Only what is next to the region can hold it: clipping keeps each test local
+                # (the whole layer made the cooling parts too slow for the gate).
+                held = held_all.intersection(r.envelope.buffer(1.0))
+                if _caught_by_bed(r, held, z, max_bridge) or _hold_kind(r, held, max_bridge):
                     continue
                 needs += r.area
                 if r.area > worst:

@@ -31,6 +31,12 @@ from standoffs import standoff  # noqa: E402
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
 PRINT_NORMAL = (0, 0, 1)
+# 49 mm^2 measured by layers (2026-11-14), all reachable for removal: the tops of the rear port
+# openings (the 12.3 mm RJ45 roof and the rounded USB-C / HDMI / audio counterbores), the top of
+# the front LED hole, and the two switch V-pins, held only at the tower (coupon plate 1 lost one
+# printed without). PETG body, PLA interface (notes/PRINTING.md). The V-pin's support is under
+# its V tip, clear of the switch's round hole.
+SUPPORT_MM2 = 55.0
 VISIBLE_FACES = ("-X", "+X", "-Y", "+Y", "-Z")
 
 DEVIATIONS = {

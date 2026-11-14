@@ -74,6 +74,7 @@ def check_all():
                 min_wall_mm=0.8,
                 min_bed_ratio=0.15,
                 max_aspect=3.0,
+                support_mm2=getattr(mod, "SUPPORT_MM2", 0.0),
             )
         )
 
