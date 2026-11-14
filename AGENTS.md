@@ -126,3 +126,20 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   repo is built with **`N64_PUBLIC=1`**, which forces the public CLASSIC lettering
   (`part/shared/n64_text._local_glyphs`). CI never has `cad/local/`, so released files are
   public by construction. Look at every picture before committing it.
+
+## Lessons (coupon plate 1, 2026-11-14)
+
+- **Four of seven coupons failed on the printer; the overhang row had passed them all, and they
+  were sliced with no supports on its word.** The row took one normal per face (a cylinder's
+  underside read as level, so the bracket peg and the switch V-pin showed nothing overhanging)
+  and called any face under 10 mm a bridge without asking what held it (the shell skin, cut out
+  of its walls, was 100+ narrow faces). It now slices each part in 0.2 mm layers and fails what
+  a layer prints onto air unless it is a bridge held from opposite sides
+  (`printable.check_overhang`). `subassembly/print_outcome_check.py` holds it to the real print:
+  each piece's check verdict must match what the printer did.
+- **When a part needs support, it is PETG with a PLA interface from the external spool, never
+  "no supports".** The owner had said so repeatedly (notes/PRINTING.md, from GBA). Slice nothing
+  with supports off unless the overhang row passes it, coupons included: a crop loses the walls
+  that held the part up.
+- **A traced section is checked against OpenCASCADE's exact area.** The first version rebuilt
+  loops from loose edges, filled the shell's holes and reported 32,000 mm^2 of support for 8,200.

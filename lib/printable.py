@@ -5,8 +5,8 @@ Six questions, all hard pass/fail:
     manifold      BRepAlgoAPI_Check (NOT isValid() -- see lint_structure.py)
     single_body   len(Solids()) == 1, so no orphan floaters from a cut
     bed           fits 256 x 256 x 256 mm (Bambu X2D / P1S build volume)
-    overhang      downward faces past 50 deg from vertical: each must be a bridge the printer
-                  spans without support (<= BRIDGE_MAX_MM across); a wider one fails, and WHERE
+    overhang      sliced in 0.2 mm layers: what each layer prints onto air must be a bridge held on
+                  two sides (<= BRIDGE_MAX_MM across); a cantilever or a mid-air start fails
     wall          local wall thickness by ray test from face centroids
     footprint     first-layer contact on the bed + aspect ratio (G3)
 """
@@ -17,13 +17,19 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cadquery as cq  # noqa: E402
+import shapely  # noqa: E402
 from cadquery.occ_impl.shapes import check as bop_check  # noqa: E402
-from OCP.BRepAdaptor import BRepAdaptor_Surface  # noqa: E402
+from OCP.BRepAdaptor import BRepAdaptor_Curve, BRepAdaptor_Surface  # noqa: E402
 from OCP.BRepClass3d import BRepClass3d_SolidClassifier  # noqa: E402
 from OCP.BRepGProp import BRepGProp_Face  # noqa: E402
+from OCP.BRepTools import BRepTools_WireExplorer  # noqa: E402
 from OCP.GeomAbs import GeomAbs_Torus  # noqa: E402
 from OCP.gp import gp_Pnt, gp_Vec  # noqa: E402
-from OCP.TopAbs import TopAbs_IN, TopAbs_ON  # noqa: E402
+from OCP.TopAbs import TopAbs_IN, TopAbs_ON, TopAbs_REVERSED  # noqa: E402
+from shapely.geometry import Polygon  # noqa: E402
+from shapely.geometry.base import BaseGeometry  # noqa: E402
+from shapely.ops import unary_union  # noqa: E402
+from shapely.validation import make_valid  # noqa: E402
 
 BED_MM = (256.0, 256.0, 256.0)
 OVERHANG_DEG = 50.0  # past this from vertical, the slicer adds support
@@ -32,6 +38,17 @@ MIN_WALL_MM = 0.8  # two perimeters on a 0.4 mm nozzle
 # floor (93 mm across) passed for months while this row was advisory only (C9, 2026-11-13); the
 # widest the flush tub keeps is the Ø6.5 counterbore ceilings.
 BRIDGE_MAX_MM = 10.0
+LAYER_MM = 0.20  # the layer height every part is sliced at (notes/PRINTING.md)
+SECTION_STEP_MM = 0.1  # how finely a section's curved edges are followed
+# A traced section must match OpenCASCADE's exact area: a dropped or doubled loop raises (a first
+# version that rebuilt loops from loose edges filled the shell's holes: 8,685 mm^2 for 2,177).
+SECTION_AREA_TOL = 0.01
+ANCHOR_REACH_MM = 0.05  # an unheld region touching the layer below within this is held there
+MIN_LOOSE_MM2 = 0.001  # numerical dust from the section boolean, skipped before measuring
+LINE_W_MM = 0.42  # extrusion width on the 0.4 mm nozzle (notes/PRINTING.md)
+# Held from opposite sides, a region's furthest point is ~0.5 x its width from a hold; held from
+# one side, ~1.0 x. Between the two, so neither case sits on the line.
+BRIDGE_REACH = 0.75
 
 
 def check_manifold(shape: cq.Shape):
@@ -63,16 +80,93 @@ def check_bed(shape: cq.Shape, bed=BED_MM):
     return ok, f"{bb.xlen:.1f} x {bb.ylen:.1f} x {bb.zlen:.1f} mm (limit {bed[0]:.0f}^3)"
 
 
-def _span_across(face: cq.Face) -> float:
-    """How wide a bridge `face` is: the short side of the rectangle with its area and perimeter.
+def orient_to_bed(shape: cq.Shape, up: tuple[float, float, float]) -> cq.Shape:
+    """Rotate `shape` so `up` points along `+Z` and shift `(xmin, ymin, zmin)` to `(0, 0, 0)`."""
+    ux, uy, uz = (round(float(v), 4) for v in up)
+    origin = cq.Vector(0.0, 0.0, 0.0)
+    if (ux, uy, uz) == (0.0, 0.0, 1.0):
+        rot = shape
+    elif (ux, uy, uz) == (0.0, 0.0, -1.0):
+        rot = shape.rotate(origin, cq.Vector(1.0, 0.0, 0.0), 180.0)
+    elif (ux, uy, uz) == (0.0, -1.0, 0.0):
+        rot = shape.rotate(origin, cq.Vector(1.0, 0.0, 0.0), -90.0)
+    elif (ux, uy, uz) == (0.0, 1.0, 0.0):
+        rot = shape.rotate(origin, cq.Vector(1.0, 0.0, 0.0), 90.0)
+    elif (ux, uy, uz) == (1.0, 0.0, 0.0):
+        rot = shape.rotate(origin, cq.Vector(0.0, 1.0, 0.0), -90.0)
+    elif (ux, uy, uz) == (-1.0, 0.0, 0.0):
+        rot = shape.rotate(origin, cq.Vector(0.0, 1.0, 0.0), 90.0)
+    else:
+        raise ValueError(f"unsupported non-axis PRINT_NORMAL: {up!r}")
 
-    Exact for a rectangle; a ring comes out near its radial width, not its diameter (the bounding
-    box called a thin ring as wide as its diameter), and a round face near 0.8 x its diameter.
+    bb = rot.BoundingBox()
+    return rot.moved(cq.Location(cq.Vector(-bb.xmin, -bb.ymin, -bb.zmin)))
+
+
+def _span_across(area: float, perimeter: float) -> float:
+    """How wide a bridge is: the short side of the rectangle with this area and perimeter.
+
+    Exact for a rectangle; a ring comes out near its radial width, not its diameter, and a round
+    region near 0.8 x its diameter.
     """
-    perimeter = sum(e.Length() for e in face.Edges())
     half = perimeter / 2.0
-    disc = max(half * half - 4.0 * face.Area(), 0.0)
+    disc = max(half * half - 4.0 * area, 0.0)
     return (half - math.sqrt(disc)) / 2.0
+
+
+def _ring(wire: cq.Wire, face: cq.Face) -> list[tuple[float, float]]:
+    """The wire's points in order round the face, curved edges followed every SECTION_STEP_MM."""
+    pts: list[tuple[float, float]] = []
+    explorer = BRepTools_WireExplorer(wire.wrapped, face.wrapped)
+    while explorer.More():
+        edge = explorer.Current()
+        curve = BRepAdaptor_Curve(edge)
+        t0, t1 = curve.FirstParameter(), curve.LastParameter()
+        n = max(2, math.ceil(cq.Edge(edge).Length() / SECTION_STEP_MM) + 1)
+        ts = [t0 + (t1 - t0) * i / (n - 1) for i in range(n)]
+        if edge.Orientation() == TopAbs_REVERSED:
+            ts.reverse()
+        for t in ts[:-1]:  # the next edge starts where this one ends
+            p = curve.Value(t)
+            pts.append((p.X(), p.Y()))
+        explorer.Next()
+    return pts
+
+
+def _section(shape: cq.Shape, z: float, bb) -> BaseGeometry:
+    """The part's cross-section at height `z`, as a shapely region (holes and islands kept)."""
+    plane = cq.Face.makePlane(
+        bb.xlen + 10.0, bb.ylen + 10.0, cq.Vector(bb.center.x, bb.center.y, z), cq.Vector(0, 0, 1)
+    )
+    faces = shape.intersect(plane).Faces()
+    regions = []
+    for face in faces:
+        poly = Polygon(_ring(face.outerWire(), face), [_ring(w, face) for w in face.innerWires()])
+        regions.append(poly if poly.is_valid else make_valid(poly))
+    out = unary_union(regions)
+    exact = sum(f.Area() for f in faces)
+    if abs(out.area - exact) > SECTION_AREA_TOL * max(exact, 1.0):
+        raise ValueError(f"section at z={z:.2f}: {out.area:.1f} mm^2 traced vs {exact:.1f} exact")
+    return out
+
+
+def _prints_unsupported(region: Polygon, held: BaseGeometry, max_bridge: float) -> bool:
+    """Can `region`, which this layer prints past what the layer below holds up, print anyway?
+
+    Yes if it reaches out from its hold less than half an extrusion line: the line still sits
+    mostly on the layer below. Yes if it is a bridge, held from opposite sides so no point of it
+    is further than about half its width from a hold (hole ceilings held on three sides or all
+    round included). No if it is a cantilever (a peg, a pin, the edge of a skin), held from one
+    side so its far edge is its whole width out, or held nowhere (it starts in mid-air).
+    """
+    touch = region.exterior.intersection(held.buffer(ANCHOR_REACH_MM))
+    if touch.is_empty or touch.length < ANCHOR_REACH_MM:
+        return False
+    reach = shapely.hausdorff_distance(region, touch, densify=0.1)
+    if reach <= LINE_W_MM / 2.0:
+        return True
+    width = _span_across(region.area, region.length)
+    return width <= max_bridge and reach <= BRIDGE_REACH * width
 
 
 def check_overhang(
@@ -81,48 +175,53 @@ def check_overhang(
     limit_deg=OVERHANG_DEG,
     max_bridge=BRIDGE_MAX_MM,
     support_mm2: float = 0.0,
+    layer_mm: float = LAYER_MM,
 ):
-    """Faces pointing down past `limit_deg` from vertical and wider than a bridge need support.
+    """Slice the part as the printer does and find what each layer prints onto air.
 
-    A part may declare `SUPPORT_MM2` (area, with why it is acceptable: hidden faces only, PETG
-    body with a PLA interface, notes/PRINTING.md). The row fails when the part needs more support
-    than it declares, so new overhangs fail instead of being printed as an advisory.
+    Each layer may step out past the one below by `layer * tan(limit)`; anything further out is
+    unsupported. An unsupported region held by the layer below in two or more places, and no
+    wider than `max_bridge`, is a bridge and prints. One held in one place is a cantilever (a
+    peg, a pin, the edge of a skin) and one held nowhere starts in mid-air: both need support.
+
+    This replaced a face-by-face test (2026-11-14) that took one normal per face, so a cylinder's
+    underside read as level, and called any narrow face a bridge without asking what held it up.
+    It passed four coupons that failed on the printer (`print_outcome_check.py`).
+
+    A part may declare `SUPPORT_MM2` (projected area, with why it is acceptable: hidden faces only,
+    PETG body with a PLA interface, notes/PRINTING.md). The row fails when the part needs more
+    support than it declares.
     """
-    ux, uy, uz = up
-    ul = math.sqrt(ux * ux + uy * uy + uz * uz)
-    ux, uy, uz = ux / ul, uy / ul, uz / ul
-    cos_lim = -math.sin(math.radians(limit_deg))
-
-    bb = shape.BoundingBox()
-    corners = [
-        (x, y, z)
-        for x in (bb.xmin, bb.xmax)
-        for y in (bb.ymin, bb.ymax)
-        for z in (bb.zmin, bb.zmax)
-    ]
-    z_floor = min(x * ux + y * uy + z * uz for x, y, z in corners)
+    s = orient_to_bed(shape, up)
+    bb = s.BoundingBox()
+    step = layer_mm * math.tan(math.radians(limit_deg))
+    below = None
     needs = 0.0
-    widest = 0.0
-    widest_at = None
-    for f in shape.Faces():
-        n = f.normalAt()
-        c = f.Center()
-        dot = n.x * ux + n.y * uy + n.z * uz
-        h = c.x * ux + c.y * uy + c.z * uz
-        if h - z_floor < 0.2 or dot >= cos_lim:
-            continue  # on the build plate, or steep enough to print unsupported
-        span = _span_across(f)
-        if span > max_bridge:
-            needs += f.Area()
-        if span > widest:
-            widest, widest_at = span, (c.x, c.y, c.z)
-    if widest_at is None:
-        return True, f"nothing past {limit_deg:.0f} deg from vertical (up={up})"
-    where = f"({widest_at[0]:.1f},{widest_at[1]:.1f},{widest_at[2]:.1f})"
+    worst, worst_at = 0.0, None
+    n_layers = max(1, math.ceil(bb.zlen / layer_mm))
+    for i in range(n_layers):
+        z = min((i + 0.5) * layer_mm, bb.zlen - 1e-3)
+        here = _section(s, z, bb)
+        if below is not None and not here.is_empty:
+            held = below.buffer(step)
+            loose = here.difference(held)
+            for r in getattr(loose, "geoms", [loose]):
+                if r.is_empty or r.area < MIN_LOOSE_MM2:
+                    continue
+                if _prints_unsupported(r, held, max_bridge):
+                    continue
+                needs += r.area
+                if r.area > worst:
+                    c = r.representative_point()
+                    worst, worst_at = r.area, (c.x, c.y, z)
+        below = here
+    if worst_at is None:
+        return True, f"every layer is held from below or bridged (up={up})"
+    where = f"({worst_at[0]:.1f},{worst_at[1]:.1f},z={worst_at[2]:.1f} as printed)"
     return (
         needs <= support_mm2,
-        f"needs support under {needs:.0f} mm^2 (declared {support_mm2:.0f}); widest "
-        f"{widest:.1f} mm across at {where} (bridge limit {max_bridge:.0f} mm, up={up})",
+        f"needs support under {needs:.0f} mm^2 (declared {support_mm2:.0f}); largest unheld "
+        f"region {worst:.1f} mm^2 at {where} (up={up})",
     )
 
 

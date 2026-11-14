@@ -8,6 +8,8 @@ dependencies:
   # Both GPL; dev-machine tools only, nothing built from them ships.
   - gmsh=4.15.2
   - calculix=2.23
+  # Layer-by-layer overhang check (lib/printable.py). BSD-3.
+  - shapely=2.1.2
   - pip
   - pip:
       # Not conda packages: these exist only on PyPI.

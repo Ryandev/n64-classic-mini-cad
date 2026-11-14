@@ -73,6 +73,24 @@ MUTATIONS = [
         "cq.Solid.makeCylinder(10.6, 0.5, cq.Vector(-D.FRONT_POD_X, D.FRONT_POD_Y, 0.0)))",
         "lower_tub:overhang",
     ),
+    # The overhang check against the real print (coupon plate 1, 2026-11-14): let a cantilever
+    # reach a whole bracket-peg out and the V-pin that failed on the bed reads as printable...
+    (
+        "print_outcome_check",
+        "printable.py",
+        "LINE_W_MM = 0.42",
+        "LINE_W_MM = 20.0",
+        "PRINT_OUTCOME 2_switch_tower_tub_tower",
+    ),
+    # ...and call a hole ceiling held on three sides a cantilever, and the button that printed
+    # clean reads as failed.
+    (
+        "print_outcome_check",
+        "printable.py",
+        "BRIDGE_REACH = 0.75",
+        "BRIDGE_REACH = 0.3",
+        "PRINT_OUTCOME 1_button_chimney_power_button",
+    ),
     # A part that needs more support than it declares
     (
         "top_controls_check",

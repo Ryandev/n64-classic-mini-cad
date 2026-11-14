@@ -63,15 +63,22 @@ for the light pipe. PLA only as the support interface (below).
 
 ## Supports
 
-**The design aims to need none.** The gate's `overhang` row (`lib/printable.py`) fails any
-downward face wider than a 10 mm bridge, unless the part declares `SUPPORT_MM2` with the reason.
-The row fails if a part ever needs more than it declares. As of 2026-11-13:
+**The design aims to need none, and nothing is sliced with supports off unless the overhang row
+passes it.** The row (`lib/printable.py`) slices the part in 0.2 mm layers and fails anything a
+layer prints onto air, unless it is a bridge held from opposite sides (no wider than 10 mm) or
+reaches less than half a line (0.21 mm) past the layer below. A peg, pin or skin edge held from one
+side is a cantilever and fails. A part may declare `SUPPORT_MM2` (projected area) with the reason;
+the row fails if it needs more. `print_outcome_check.py` holds the row to a real print: coupon
+plate 1 (2026-11-14, no supports) lost the bracket peg, the switch V-pin, the button printed on
+its side and the cut-out shell skin, and the row now says so for exactly those four.
+
+As of 2026-11-14 these fail the row and need a design change or declared support (open):
+`usb_retainer_bracket` (peg, 3 mm²), `lower_tub` (V-pin and more, 69), `front_port_cover` (9),
+`n64_port_insert` (39), `cooling_duct` (212), `cooling_hood` (579).
 
 | Part | Declared | Where | Why it's acceptable |
 |---|---|---|---|
-| `upper_shell` | 9,010 mm² | inside of the top deck | printed split-face down, the deck is a roof over the hollow shell; that face is hidden |
-| `cooling_duct` | 0 | | the floor that needed support is now a separate plate, `duct_floor`, printed flat and glued in (owner, 2026-11-13) |
-| everything else | 0 | | prints support-free |
+| `upper_shell` | 9,010 mm² (needs 8,226 measured by layers) | inside of the top deck | printed split-face down, the deck is a roof over the hollow shell; that face is hidden |
 
 When a part does need support, use the GBA set-up (`PRINTING.md`, DECISIONS 10-18 and 10-30):
 

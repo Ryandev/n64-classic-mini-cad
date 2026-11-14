@@ -25,6 +25,7 @@ from part import (  # noqa: E402
     reset_button,
     usb_retainer_bracket,
 )
+from printable import orient_to_bed  # noqa: E402,F401 - re-exported for coupons and the gate
 from variant import lower_tub, upper_shell  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,29 +46,6 @@ PLATE_BOM = (
     ("usb_retainer_bracket", usb_retainer_bracket, 2),
     ("n64_port_insert", n64_port_insert, 4),
 )
-
-
-def orient_to_bed(shape: cq.Shape, up: tuple[float, float, float]) -> cq.Shape:
-    """Rotate `shape` so `up` points along `+Z` and shift `(xmin, ymin, zmin)` to `(0, 0, 0)`."""
-    ux, uy, uz = (round(float(v), 4) for v in up)
-    origin = cq.Vector(0.0, 0.0, 0.0)
-    if (ux, uy, uz) == (0.0, 0.0, 1.0):
-        rot = shape
-    elif (ux, uy, uz) == (0.0, 0.0, -1.0):
-        rot = shape.rotate(origin, cq.Vector(1.0, 0.0, 0.0), 180.0)
-    elif (ux, uy, uz) == (0.0, -1.0, 0.0):
-        rot = shape.rotate(origin, cq.Vector(1.0, 0.0, 0.0), -90.0)
-    elif (ux, uy, uz) == (0.0, 1.0, 0.0):
-        rot = shape.rotate(origin, cq.Vector(1.0, 0.0, 0.0), 90.0)
-    elif (ux, uy, uz) == (1.0, 0.0, 0.0):
-        rot = shape.rotate(origin, cq.Vector(0.0, 1.0, 0.0), -90.0)
-    elif (ux, uy, uz) == (-1.0, 0.0, 0.0):
-        rot = shape.rotate(origin, cq.Vector(0.0, 1.0, 0.0), 90.0)
-    else:
-        raise ValueError(f"unsupported non-axis PRINT_NORMAL: {up!r}")
-
-    bb = rot.BoundingBox()
-    return rot.moved(cq.Location(cq.Vector(-bb.xmin, -bb.ymin, -bb.zmin)))
 
 
 def build_plate() -> tuple[cq.Compound, list[dict[str, object]]]:
