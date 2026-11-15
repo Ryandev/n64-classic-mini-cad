@@ -36,8 +36,9 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
     Holds the FDM rules (`printable.py`: layer overhang, walls, footprint), print-test coupons
     (`coupons.py`), orientation study, and the record of real prints (`print_outcome_check.py`,
     `fixtures/`). Process profiles and their per-profile gates go here.
-  - `lib/slicing/`: turning parts into print files (`plate.py`; the slicer wrappers and resin
-    slicing come here when built).
+  - `lib/slicing/`: turning parts into print files. `bambu.py` (`./run slice`) slices one
+    profile's parts with its compensation and refuses a file that doesn't carry it
+    (`slice_check.py`); `plate.py` packs the full plate. Resin slicing goes here when it comes.
   - `lib/gate.py` & `lib/gate_selftest.py`: parallel cached gate runner and mutation self-tester.
   - `lib/min_wall.py`, `lib/standoffs.py`, `lib/cad_lint.py`, `lib/bom.py`: shared geometry checks and helpers.
 

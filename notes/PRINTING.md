@@ -74,6 +74,13 @@ fails any made part with no profile, or whose profile has no measurement behind 
 | `fdm_petg_x2d` | print 0.22 mm small | up to 0.05 mm big (one face came out 0.15 small) | coupon plate 1 button and shell chimney, owner 2026-11-15 |
 | `resin_mars` | not yet measured | not yet measured | print one resin button first |
 
+**Slice with `./run slice NAME PROFILE [--support hidden|visible] STL...`** (`lib/slicing/bambu.py`).
+It puts the profile's allowances into Bambu's `xy_hole_compensation` / `xy_contour_compensation`
+(+0.22 / −0.05 for `fdm_petg_x2d`), uses the X2D settings proven on the owner's prints, tree
+supports for hidden faces and normal supports under a continuous PLA interface for visible ones,
+and refuses its own output unless the file's settings say all of that (`slicing/slice_check.py`
+holds the refusal to coupon plate 3, sliced before any of this with both compensations at 0).
+
 Don't bake these into the CAD (a hole drawn big "so it prints right"): it ties the part to one
 process. The CAD changes that did are being moved back to nominal (switch-tower holes, Ø3.0
 drawn for a ~Ø2.67 close fit).

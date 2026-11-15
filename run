@@ -53,6 +53,9 @@ case "$target" in
     radxa-ref)
         $PY python3 lib/step/build_radxa_x4.py "$@"
         ;;
+    slice)
+        $PY python3 lib/slicing/bambu.py "$@"
+        ;;
     coupons)
         $PY python3 lib/process/coupons.py "$@"
         ;;
@@ -81,6 +84,8 @@ targets:
   export-validate  verify exported files exist, match 3D solids, and fit bed
   bom              generate notes/BOM_COMPLETE.md from parametric subassemblies
   fem              Gmsh + CalculiX 3D tetrahedral FEM structural verification
+  slice NAME PROFILE [--support hidden|visible] STL..
+                   slice one plate with its profile's compensation; refuses a bad file
   coupons [NAME..] print-test coupons cut from the real parts into export/coupons/
   orient [PART..]  how each visible part's skin prints (wall/terraced/support...) per orientation
   radxa-ref [ZIP]  rebuild lib/step/radxa_x4.step from Radxa's download (SHA-256 checked)

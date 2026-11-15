@@ -138,6 +138,22 @@ MUTATIONS = [
         'PROCESS = "resin"\nMANUFACTURE = "resin"\nPROFILE = "resin_mars"',
         "PROFILE part/power_slider",
     ),
+    # Slicing stage: a profile's hole allowance left out of the slice...
+    (
+        "slice_check",
+        "slicing/bambu.py",
+        '"xy_hole_compensation": f"{profile.hole_shrink:.2f}",',
+        '"xy_hole_compensation": "0",',
+        "SLICE_REFUSES coupon plate 3",
+    ),
+    # ...and a sliced file whose settings are never compared.
+    (
+        "slice_check",
+        "slicing/bambu.py",
+        '            problems.append(f"{key} = {got!r}, want {want!r}")',
+        "            pass",
+        "SLICE_REFUSES coupon plate 3",
+    ),
     # A part that needs more support than it declares
     (
         "top_controls_check",
