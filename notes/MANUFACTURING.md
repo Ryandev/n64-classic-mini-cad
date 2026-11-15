@@ -69,9 +69,8 @@ standby light.
 2. **Glue `2x usb_retainer_bracket` Bridges:**
    - Apply a drop of CA / epoxy to the outer, centre (`X = ±25.00 mm`), and inner USB divider walls of `lower_tub` and press the Left and Right `usb_retainer_bracket` pieces down until their `Z = 16.85 mm` bridges seat over the `4x` USB-A metal shells (`0.15 mm` top clearance) and their `Z = BUTTON_STOP_Z` stop blocks (`22.97 mm`) (`Face854` extended to `Y = -27.80 mm`) and `Ø2.80 mm` guide poles stand vertical at `(±32.32, -32.20)`.
 3. **Omron SS-5GL Microswitches (`POWER` & `RESET`):**
-   - Slide each `Omron SS-5GL` onto its integral `Ø2.20 mm` locating pin (Hole 1) with the hinge lever extending forward (`-Y`) over the `usb_retainer_bracket` stop block.
-   - **Before the Radxa X4 goes in**, drive a `3 x 10` pan-head thread-forming screw for plastics from behind each tower, through its `Ø3.4 mm` clearance hole, into the switch's `Ø2.35 mm` Hole 2 until the switch is snug against the tower. Don't over-tighten: the screw rolls its own thread in the switch case. The USB-A socket in front of the switch leaves no room for a screw from the front (C2).
-   - **Bench-test first:** drive one screw into a spare `SS-5GL`, snug it, and check the case doesn't crack and the switch still clicks cleanly. If it fails, see C2 in the release todo for the screw-as-pin fallback.
+   - Drop each `Omron SS-5GL` straight down against its tower, legs into the tower's slots, with the hinge lever extending forward (`-Y`) over the `usb_retainer_bracket` stop block (`OMRON_INSTALL`).
+   - **Before the Radxa X4 goes in**, drive two `M2.5 x 10` pan-head screws from behind each tower, through its close-fit holes, into both of the switch's `Ø2.35 mm` holes until the switch is snug and flat against the tower. The screw bites slightly into the switch's hole (owner bench test, 2026-11-15); don't over-tighten. The USB-A socket in front of the switch leaves no room for a screw from the front (C2).
 4. **Front Power LED & Light Pipe:**
    - Slide `led_light_pipe` (Clear PETG) into the `X = 0` front aperture and seat the `Kingbright L-93WEGW` 3-lead bi-colour LED (`330 Ω` resistors on Red & Green anodes) into the rear cradle.
 5. **Inverted Radxa X4 + M.2 2230 SSD + RJ45 Breakout:**

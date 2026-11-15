@@ -389,17 +389,19 @@ OMRON_Y = (
     -24.15
 )  # seated under the 14.5 mm button plungers (Y=-27.35..-20.95, clears USB-A housing)
 OMRON_HOLE_Z = 14.60  # mounting-hole Z datum (body Z=11.70..21.90, lever rest Z=25.30)
-OMRON_PIN_D = 2.20  # Ø2.20 mm printed locator pins in Ø2.35 mm switch holes (0.075 mm/side)
 OMRON_HOLE_D = 2.35
-# Hole 2 holds the switch with a ~3 mm thread-forming screw for plastics, driven from behind the
-# tower (before the Radxa board goes in) through a clearance hole and rolling its own thread in
-# the switch's Ø2.35 hole (≈ the 0.8 x d pilot such screws want). It clamps the switch to the
-# tower: no play, and nothing on the switch's front, where the USB-A socket leaves no room (C2).
-# Bench-test it on a spare switch: the case's wall below the thread is ~1.4 mm.
-OMRON_SCREW_D = 3.0
+# Each switch drops into its tower from above and is held by an M2.5 screw in each of its two
+# holes, driven from behind the tower (before the Radxa board goes in): the USB-A socket leaves no
+# room in front (C2). An M2.5 bites slightly into the switch's Ø2.35 hole (owner's bench test,
+# 2026-11-15). The tower hole is a close fit, so the switch is located without play and the head
+# pulls it back against the tower. A printed locator pin replaced by the second screw: on a
+# horizontal pin the switch had no way in, its legs being down in the tower's slots (coupon
+# plate 2; OMRON_INSTALL).
+OMRON_SCREW_D = 2.5
 OMRON_SCREW_L = 10.0  # under the head: tower 4.0 + gap 0.15 + 5.85 into the switch
-OMRON_SCREW_CLEAR_D = 3.4  # through the tower
-OMRON_SCREW_HEAD_D, OMRON_SCREW_HEAD_H = 6.0, 2.4  # pan-head envelope
+# Drawn Ø3.0: holes under ~Ø3 print ~0.33 mm small (notes/PRINTING.md), so ~Ø2.67, a close fit
+OMRON_SCREW_CLEAR_D = 3.0
+OMRON_SCREW_HEAD_D, OMRON_SCREW_HEAD_H = 5.0, 2.0  # M2.5 pan-head envelope
 OMRON_TOWER_Y1 = -16.80  # tower rear face: the screw head seats here
 OMRON_HOLE_PITCH = 9.50
 # Each button presses its switch lever under the button's centre, 0.72 of the way from the lever's

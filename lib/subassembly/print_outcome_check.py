@@ -1,10 +1,12 @@
 """The printability check must agree with what the printer actually did.
 
 Ground truth (MFIC rung 1, a real system): coupon plate 1, printed 2026-11-14 on the X2D in black
-PETG at 0.20 mm with NO supports, judged by the owner. Each piece is rebuilt exactly as it was
-printed (crop + `PRINT_NORMAL`, `coupons.build`) and given to `printable.check_overhang` with no
-support declared, as it was sliced. A piece that failed on the bed must fail the check, and one
-that printed clean must pass it. A row fails when the two disagree.
+PETG at 0.20 mm with NO supports, judged by the owner. Each piece is loaded from the very STL that
+was sliced (`testing/fixtures/coupon_plate1/`, bedded as printed), so later design changes (the
+switch pin removed on 2026-11-15) can't rewrite what the printer was given. It goes to
+`printable.check_overhang` with no support declared, as it was sliced. A piece that failed on the
+bed must fail the check, and one that printed clean must pass it. A row fails when the two
+disagree.
 
 What failed, and where (owner's FreeCAD selection):
   - tub_tower: the switch V-pin, a horizontal pin whose underside starts ~13.5 mm up
@@ -20,8 +22,30 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
-import coupons  # noqa: E402
 import printable  # noqa: E402
+from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeSolid, BRepBuilderAPI_Sewing  # noqa: E402
+from OCP.StlAPI import StlAPI_Reader  # noqa: E402
+from OCP.TopoDS import TopoDS, TopoDS_Shape  # noqa: E402
+
+FIXTURES = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "testing",
+    "fixtures",
+    "coupon_plate1",
+)
+
+
+def _printed(name: str) -> cq.Shape:
+    """The piece as the slicer was given it: its plate-1 STL, sewn into a solid."""
+    path = os.path.join(FIXTURES, name + ".stl")
+    mesh = TopoDS_Shape()
+    if not StlAPI_Reader().Read(mesh, path):
+        raise FileNotFoundError(path)
+    sew = BRepBuilderAPI_Sewing(1e-4)
+    sew.Add(mesh)
+    sew.Perform()
+    return cq.Shape.cast(BRepBuilderAPI_MakeSolid(TopoDS.Shell(sew.SewedShape())).Solid())
+
 
 # piece name -> printed clean on plate 1 (owner, 2026-11-14)
 PLATE1 = {
@@ -83,17 +107,12 @@ def check_all():
     for label, shape, printable_ok in RULES:
         ok, msg = _verdict(shape)
         rows.append((f"PRINT_RULE {label}", ok is not None and ok == printable_ok, msg))
-    built = {}
-    for c in coupons.COUPONS:
-        if any(k.startswith(c.name + "_") for k in PLATE1):
-            for name, shape, _msg in coupons.build(c):
-                built[name] = shape
     for name, printed_ok in PLATE1.items():
-        if name not in built:
-            rows.append((f"PRINT_OUTCOME {name}", False, "piece no longer built by coupons.py"))
+        if not os.path.isfile(os.path.join(FIXTURES, name + ".stl")):
+            rows.append((f"PRINT_OUTCOME {name}", False, f"no plate-1 STL for {name}"))
             continue
         # The bedded shape sits on z=0 with its print-up along +Z.
-        ok, msg = _verdict(built[name])
+        ok, msg = _verdict(_printed(name))
         said = {True: "printable", False: "needs support", None: "no verdict"}[ok]
         real = "printed clean" if printed_ok else "FAILED on the bed"
         rows.append(

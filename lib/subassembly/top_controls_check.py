@@ -306,36 +306,74 @@ def check_all():
             f"centre; earliest switch {op_hi - h_stop:.2f} mm past OP (OT >= "
             f"{omron_ss5gl.OVERTRAVEL_MIN}); stop datum {D.OMRON_TIP_AT_STOP:.2f}"
         )
-    pin_clear = (D.OMRON_HOLE_D - D.OMRON_PIN_D) / 2.0
-    clf_pin = BRepClass3d_SolidClassifier(tub.wrapped)
-    pins_ok = True
-    for x_pin in (-24.23, 24.23):
-        clf_pin.Perform(gp_Pnt(x_pin, -24.00, D.OMRON_HOLE_Z), 1e-4)
-        pins_ok = pins_ok and clf_pin.State() == TopAbs_IN
     rows.append(
         (
             "OMRON_ACT every SS-5GL (OP 8.0..9.6) clicks before the stop & releases at rest",
-            act_ok and pins_ok and 0.05 <= pin_clear <= 0.15,
-            "; ".join(act_msgs) + f"; pin clear {pin_clear:.3f} mm/side",
+            act_ok,
+            "; ".join(act_msgs),
         )
     )
 
-    # 5c. OMRON_SCREW (C2): each switch's hole-2 screw, driven from behind the tower, threads into
-    # the switch and stops short of its front face; nothing on the switch's front side, where the
-    # USB-A socket is; a straight driver path behind the head through the lower tub.
+    # 5b2. OMRON_INSTALL (coupon plate 2, 2026-11-15): a switch on a horizontal pin had no way
+    # in. It could only slide along the pin, and its legs, down in the tower's slots, hit the slot
+    # wall after 1 mm. Each switch must now drop in from above: lifted 0.5 mm at a time up to its
+    # own height clear of everything, it touches nothing in the tub.
+    install_bad = []
+    for name, sw in (("POWER", sw_left), ("RESET", sw_right)):
+        lift = omron_ss5gl.BODY_HEIGHT + omron_ss5gl.TERMINAL_DROP
+        steps = int(lift / 0.5)
+        hits = [
+            (k * 0.5, v)
+            for k in range(1, steps + 1)
+            if (v := _common_volume(tub, sw.moved(cq.Location(cq.Vector(0, 0, k * 0.5))))) > 1e-3
+        ]
+        if hits:
+            install_bad.append(
+                f"{name}: hits the tub {hits[0][1]:.2f} mm^3 at {hits[0][0]:.1f} mm up"
+            )
+    rows.append(
+        (
+            "OMRON_INSTALL each switch drops into its tower from above, touching nothing",
+            not install_bad,
+            "; ".join(install_bad)
+            or f"lifted to {omron_ss5gl.BODY_HEIGHT + omron_ss5gl.TERMINAL_DROP:.1f} mm in 0.5 mm "
+            "steps: clear of the tub all the way",
+        )
+    )
+
+    # 5c. OMRON_SCREW (C2; both holes since coupon plate 2, 2026-11-15): each switch is held by a
+    # screw in each of its two holes, driven from behind the tower (the USB-A socket leaves no room
+    # in front). The screw bites into the switch's hole and stops short of its front face; in the
+    # tower it is a close fit, so the switch is located without play and pulled back against it.
     screws = top_controls_mech.omron_screws()
     usb = radxa_x4.usb_a_cluster()
     bracket = front_panel_mech.usb_retainer_compound()
     screw_bad = []
-    for (name, sw), screw in zip((("POWER", sw_left), ("RESET", sw_right)), screws, strict=True):
-        sb, wb = screw.BoundingBox(), sw.BoundingBox()
+    if len(screws) != 4:
+        screw_bad.append(f"{len(screws)} switch screws, want 4 (both holes of both switches)")
+    fits = []
+    for screw in screws:
+        sb = screw.BoundingBox()
+        x = (sb.xmin + sb.xmax) / 2.0
+        name, sw = ("POWER", sw_left) if x < 0 else ("RESET", sw_right)
+        wb = sw.BoundingBox()
         engaged = (D.OMRON_Y + omron_ss5gl.BODY_WIDTH / 2.0) - sb.ymin
         tip_margin = sb.ymin - wb.ymin
         clashes = {
             k: _common_volume(v, screw)
             for k, v in (("tub", tub), ("switch", sw), ("usb", usb), ("bracket", bracket))
         }
-        x = (sb.xmin + sb.xmax) / 2.0
+        # the tower hole's fit: gap from the shank, inside the tower, to the tub round it
+        shank = cq.Solid.makeCylinder(
+            D.OMRON_SCREW_D / 2.0,
+            D.OMRON_TOWER_Y1 - (-20.80) - 0.2,
+            cq.Vector(x, -20.70, D.OMRON_HOLE_Z),
+            cq.Vector(0.0, 1.0, 0.0),
+        )
+        ext = BRepExtrema_DistShapeShape(shank.wrapped, tub.wrapped)
+        ext.Perform()
+        fit = ext.Value()
+        fits.append(fit)
         driver = cq.Solid.makeCylinder(
             D.OMRON_SCREW_HEAD_D / 2.0,
             40.0,
@@ -348,21 +386,23 @@ def check_all():
             or tip_margin < 0.3
             or engaged < 4.0
             or path > 1e-3
+            or not 0.05 <= fit <= 0.30
         ):
             screw_bad.append(
-                f"{name}: tip {tip_margin:.2f} mm inside the switch front, "
-                f"{engaged:.2f} mm engaged, "
+                f"{name} x {x:+.2f}: tip {tip_margin:.2f} mm inside the switch front, "
+                f"{engaged:.2f} mm engaged, tower fit {fit:.3f} mm/side, "
                 f"clash { ({k: round(v, 3) for k, v in clashes.items() if v > 1e-3}) }, "
                 f"driver path {path:.3f} mm^3"
             )
     rows.append(
         (
-            "OMRON_SCREW switch screws from behind: thread in the switch, clear of USB, tool path",
+            "OMRON_SCREW 2 screws per switch from behind: close fit in tower, bite in switch",
             not screw_bad,
-            f"{D.OMRON_SCREW_D:.0f} x {D.OMRON_SCREW_L:.0f} mm screws: tip "
+            f"4 x M{D.OMRON_SCREW_D:g} x {D.OMRON_SCREW_L:.0f} mm: tip "
             f"{screws[0].BoundingBox().ymin - sw_left.BoundingBox().ymin:.2f} mm short of the "
-            "switch front (min 0.3), >= 4 mm in the switch, 0 mm^3 with tub/switch/USB/bracket, "
-            "40 mm driver path clear"
+            f"switch front (min 0.3), >= 4 mm in the switch, tower fit "
+            f"{min(fits):.3f}..{max(fits):.3f} mm/side (0.05..0.30), 0 mm^3 with "
+            "tub/switch/USB/bracket, 40 mm driver path clear"
             if not screw_bad
             else "; ".join(screw_bad),
         )

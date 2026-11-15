@@ -290,13 +290,13 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
             },
             {
                 "item": (
-                    "3 x 10 mm pan-head thread-forming screw for plastics (PT type, e.g. EJOT "
-                    "DELTA PT 30 x 10 or equivalent; 1 per `Omron SS-5GL`, driven from behind the "
-                    "switch tower into the switch's `Ø2.35 mm` Hole 2, before the Radxa board; "
-                    "bench-test on a spare switch first)"
+                    "M2.5 x 10 mm pan-head screw (2 per `Omron SS-5GL`, driven from behind the "
+                    "switch tower through its close-fit holes into both of the switch's "
+                    "`Ø2.35 mm` holes, where it bites; before the Radxa board. Owner bench test "
+                    "2026-11-15)"
                 ),
-                "spec": "3 x 10 thread-forming screw for plastics, pan head",
-                "qty": 2,
+                "spec": "M2.5 x 10 pan-head screw",
+                "qty": 4,
             },
             {
                 "item": (
@@ -388,8 +388,8 @@ def generate_markdown() -> str:
             "Both top-deck buttons use the exact same smooth cylindrical-crowned stadium profile "
             "(transverse slider nub removed from `POWER`) and actuate `2x Omron SS-5GL` "
             "microswitches (`0.49 N` operating force, `OP = 8.8 +/- 0.8 mm`). Each switch is "
-            "located on a `Ø2.20 mm` pin (Hole 1, `0.075 mm/side` fit) and clamped to its tower "
-            "by a `3 x 10` thread-forming screw driven from behind into Hole 2 (C2). "
+            "dropped into its tower from above and held by two `M2.5 x 10` screws driven from "
+            "behind through close-fit tower holes into both of its holes (C2, coupon plate 2). "
             "Each button presses its switch lever through a ridge under its centre, 72% along "
             "the lever (C3), with `2.10 mm` of travel to front-and-rear stops and `Ø2.80 mm` "
             "anti-tilt guide poles on `usb_retainer_bracket.py`: every switch across the full "

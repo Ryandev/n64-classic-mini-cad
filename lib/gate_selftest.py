@@ -285,6 +285,23 @@ MUTATIONS = [
         "OMRON_SCREW_L = 12.0",
         "OMRON_SCREW",
     ),
+    # The tower hole drawn as the old Ø3.4 clearance: the switch is no longer held without play.
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "OMRON_SCREW_CLEAR_D = 3.0",
+        "OMRON_SCREW_CLEAR_D = 3.4",
+        "OMRON_SCREW",
+    ),
+    # Coupon plate 2: something in the switch's way down. The stop post pushed 2 mm forward over
+    # the switch: it can't be dropped in.
+    (
+        "top_controls_check",
+        "variant/lower_tub.py",
+        "                    cq.Vector(cx - 2.50, -20.80, 17.50),",
+        "                    cq.Vector(cx - 2.50, -22.80, 17.50),",
+        "OMRON_INSTALL",
+    ),
     (
         "top_controls_check",
         "assembly/datum.py",

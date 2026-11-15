@@ -127,6 +127,18 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   (`part/shared/n64_text._local_glyphs`). CI never has `cad/local/`, so released files are
   public by construction. Look at every picture before committing it.
 
+## Lessons (coupon plate 2, 2026-11-15)
+
+- **A part that clears in place can still have no way in.** The switch sat on a horizontal pin
+  with its legs down in the tower's slots: in place nothing clashed (G13), but it could only
+  slide along the pin, and its legs hit the slot wall after 1 mm. Only the printed coupon showed
+  it. `OMRON_INSTALL` now drops each switch in from above and fails on any contact on the way;
+  the pin became a second screw.
+- **A real-print record checks what was printed, not today's CAD.** The plate-1 outcome rows
+  rebuilt each piece from the current design; removing the switch pin would have made the
+  failed tower "pass". They now load the STLs the slicer was given
+  (`testing/fixtures/coupon_plate1/`).
+
 ## Lessons (coupon plate 1, 2026-11-14)
 
 - **Four of seven coupons failed on the printer; the overhang row had passed them all, and they

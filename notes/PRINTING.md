@@ -84,7 +84,7 @@ Declared as of 2026-11-14, all measured by layers and all inside the console or 
 | `upper_shell` | 9,010 mm² (8,490) | inside of the top deck | printed split-face down, the deck is a roof over the hollow shell; that face is hidden |
 | `cooling_hood` | 900 (853) | stepped wall tops, closed top | inside the console |
 | `cooling_duct` | 480 (456) | fan seat ring round the bore, plate-frame ledge | inside; reached through the fan bore and the floor opening. The floor itself is the separate `duct_floor` (owner, 2026-11-13) |
-| `lower_tub` | 55 (49) | rear port-opening tops, LED hole top, the two switch V-pins | inside openings; the V-pin's support is under its V tip, clear of the switch's round hole |
+| `lower_tub` | 48 (44) | rear port-opening tops, LED hole top | inside openings (the switch V-pins went on 2026-11-15: two screws per switch instead) |
 | `usb_retainer_bracket` | 4 (3.5) | the sideways guide pole | clears the button by 0.57 mm a side, so 0.10 mm proud doesn't matter |
 | everything else | 0 | | prints support-free by the row |
 
@@ -143,7 +143,7 @@ so they outrank the generic ±0.2 mm in our `TOLERANCES.md`.
 | Shell lip over the tub | 0.15 mm/side | in the proven locating range |
 | M3 inserts, corner bosses | Ø4.0 | same as GBA |
 | M2.5 inserts, standoffs | Ø3.2 | **untested** anywhere: coupon 4 |
-| Switch V-pin in the switch's moulded Ø2.35 hole | Ø2.2 | only the printed pin varies: coupon 2 |
+| M2.5 switch screws in the tower | Ø3.0 drawn (~Ø2.67 printed) | close fit, untested: coupon 2 reprint. (The Ø2.2 V-pin fitted the switch hole well, slight resistance, but left the switch no way in: removed 2026-11-15) |
 | Door hinge pins in their sockets | Ø1.8 in Ø2.4 (0.30 mm/side) | **at risk**: a small hole; at −0.4 mm it leaves ~0.1 mm/side and may bind. Coupon 3 |
 | Magnets in their pockets | Ø3.0 in Ø3.2 (0.10 mm/side) | **at risk**: at −0.3 mm the pocket is ~Ø2.9 and the magnet won't go in. Not yet measured on GBA either. Coupon 3 |
 

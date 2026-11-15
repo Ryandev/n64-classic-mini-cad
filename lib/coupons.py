@@ -173,8 +173,9 @@ COUPONS = (
     ),
     Coupon(
         "2_switch_tower",
-        "SS-5GL hole 1 slides onto the Ø2.2 V-pin without force or play; the 3x10 PT screw, from "
-        "behind through the Ø3.4 hole, pulls the switch tight to the tower without cracking it",
+        "SS-5GL drops into the tower from above; two M2.5 x 10 screws, from behind through the "
+        "close-fit holes, bite into both switch holes and pull it flat to the tower without "
+        "cracking it",
         (
             Piece(
                 "tub_tower",

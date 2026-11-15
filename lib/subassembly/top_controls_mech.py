@@ -31,14 +31,15 @@ def omron_switches() -> list[cq.Shape]:
 
 
 def omron_screws() -> list[cq.Shape]:
-    """2x switch screws (hole 2), head on the tower's rear face, tip inside the switch (C2).
+    """4x switch screws (both holes of each switch), head on the tower's rear face, tip inside the
+    switch (C2).
 
-    The thread-forming screw is modelled as its head, its Ø3.0 shank through the tower's clearance
-    hole, and the Ø2.35 pilot it fills in the switch, where it rolls its own thread.
+    Each is modelled as its head, its M2.5 shank through the tower's close-fit hole, and the Ø2.35
+    hole it fills in the switch, where it bites.
     """
     y = cq.Vector(0.0, -1.0, 0.0)
     out = []
-    for x in (-33.73, 33.73):
+    for x in (-33.73, -24.23, 24.23, 33.73):
         y1 = D.OMRON_TOWER_Y1
         y_switch = D.OMRON_Y + omron_ss5gl.BODY_WIDTH / 2.0  # switch rear face (-20.95)
         y_tip = y1 - D.OMRON_SCREW_L
