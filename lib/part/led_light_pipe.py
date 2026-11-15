@@ -28,6 +28,7 @@ from shared import n64_contours as C  # noqa: E402
 
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
+PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 MATERIAL = "Clear PETG"
 PRINT_NORMAL = (0, -1, 0)
 VISIBLE_FACES = ("-Y",)

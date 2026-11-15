@@ -25,6 +25,7 @@ from OCP.BRepFilletAPI import BRepFilletAPI_MakeFillet  # noqa: E402
 
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
+PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, -1, 0)
 VISIBLE_FACES = ("-Y",)
 

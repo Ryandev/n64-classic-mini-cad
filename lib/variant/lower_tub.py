@@ -30,6 +30,7 @@ from standoffs import standoff  # noqa: E402
 
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
+PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, 0, 1)
 # 44 mm^2 measured by layers (2026-11-15), all reachable for removal: the tops of the rear port
 # openings (the 12.3 mm RJ45 roof and the rounded USB-C / HDMI / audio counterbores), the top of

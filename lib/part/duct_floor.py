@@ -16,6 +16,7 @@ from part import cooling_duct  # noqa: E402
 
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
+PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, 0, -1)  # the plenum-side face on the bed; the board-side reliefs face up
 VISIBLE_FACES: tuple[str, ...] = ()
 

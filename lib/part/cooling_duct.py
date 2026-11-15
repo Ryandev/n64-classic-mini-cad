@@ -26,6 +26,7 @@ from assembly import datum as D  # noqa: E402
 
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
+PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, 0, -1)  # cover face on the bed
 # The plenum floor under the fan is a separate plate (`part/duct_floor.py`), glued in after
 # printing (owner, 2026-11-13): printed upside down, the floor was a 34 x 16 mm roof over the fan

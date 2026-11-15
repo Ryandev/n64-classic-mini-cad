@@ -33,6 +33,7 @@ from shared import n64_contours as C  # noqa: E402
 
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
+PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, 0, 1)
 VISIBLE_FACES = ("-X", "+X", "-Y", "+Y", "-Z")
 

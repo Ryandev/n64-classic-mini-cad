@@ -61,6 +61,23 @@ for the light pipe. PLA only as the support interface (below).
   raise `RESET_CLEAR`/`SLIDER_CLEAR` by `PAINT_T`. **Coupons are cut from the painted design**:
   paint coupon 3 before judging the door fit (unpainted it is 0.3 mm looser on purpose).
 
+## Manufacturing profiles: design nominal, allowances at print time
+
+The CAD is the design at true size, with every fit drawn as the finished gap (owner, 2026-11-15).
+What a process does to sizes lives in `lib/process/profiles.py`, one profile per material on a
+machine, and is added at print time, so a part changes process by changing its `PROFILE`, never
+its geometry. A profile's allowances come only from measured prints; `process/profile_check.py`
+fails any made part with no profile, or whose profile has no measurement behind it.
+
+| Profile | Holes (per side) | Outside faces (per side) | Measured from |
+|---|---|---|---|
+| `fdm_petg_x2d` | print 0.22 mm small | up to 0.05 mm big (one face came out 0.15 small) | coupon plate 1 button and shell chimney, owner 2026-11-15 |
+| `resin_mars` | not yet measured | not yet measured | print one resin button first |
+
+Don't bake these into the CAD (a hole drawn big "so it prints right"): it ties the part to one
+process. The CAD changes that did are being moved back to nominal (switch-tower holes, Ø3.0
+drawn for a ~Ø2.67 close fit).
+
 ## Supports
 
 **The design aims to need none, and nothing is sliced with supports off unless the overhang row

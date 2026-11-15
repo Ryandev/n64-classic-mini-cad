@@ -122,6 +122,22 @@ MUTATIONS = [
         "    side = bb.ylen + 10.0",
         "PRINT_RULE a pin 60 mm along",
     ),
+    # Manufacturing profiles (2026-11-15): a made part that names no profile...
+    (
+        "profile_check",
+        "part/power_slider.py",
+        'PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time',
+        "PROFILE = None",
+        "PROFILE part/power_slider",
+    ),
+    # ...and one moved to resin before a resin print has been measured.
+    (
+        "profile_check",
+        "part/power_slider.py",
+        'PROCESS = "fdm"\nMANUFACTURE = "fdm"\nPROFILE = "fdm_petg_x2d"',
+        'PROCESS = "resin"\nMANUFACTURE = "resin"\nPROFILE = "resin_mars"',
+        "PROFILE part/power_slider",
+    ),
     # A part that needs more support than it declares
     (
         "top_controls_check",

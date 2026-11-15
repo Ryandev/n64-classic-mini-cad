@@ -29,6 +29,7 @@ from assembly import datum as D  # noqa: E402
 
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
+PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, 1, 0)
 # Printed on its rear face, the Ø2.8 guide pole lies sideways, held only at its root: its first
 # layers need support (3.5 mm^2 measured by layers, 2026-11-14; coupon plate 1 lost it printed
