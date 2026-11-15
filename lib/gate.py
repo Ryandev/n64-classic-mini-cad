@@ -24,7 +24,7 @@ HERE = os.environ.get("N64_CAD_LIB_DIR") or os.path.dirname(os.path.abspath(__fi
 sys.path.insert(0, HERE)
 from testing import gate_cache  # noqa: E402
 
-SCAN_DIRS = ("subassembly", "assembly", "tiling", "slicing")
+SCAN_DIRS = ("subassembly", "assembly", "process", "slicing")
 LINT = os.path.join("testing", "lint_subassembly.py")
 ROW_RE = re.compile(r"^\s*(PASS|FAIL)\s+(\S.*?)\s*$")
 CHECK_TIMEOUT_S = int(os.environ.get("N64_GATE_TIMEOUT", "420"))

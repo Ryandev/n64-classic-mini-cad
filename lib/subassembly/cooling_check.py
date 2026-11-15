@@ -11,7 +11,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
-import printable  # noqa: E402
 import thermal  # noqa: E402
 from assembly import datum as D  # noqa: E402
 from assembly import n64_mini  # noqa: E402
@@ -20,6 +19,7 @@ from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
 from OCP.BRepExtrema import BRepExtrema_DistShapeShape  # noqa: E402
 from part import cooling_duct, cooling_hood, duct_floor  # noqa: E402
 from part.shared import n64_contours as C  # noqa: E402
+from process import printable  # noqa: E402
 from subassembly import cooling_mech  # noqa: E402
 from testing import probe  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402

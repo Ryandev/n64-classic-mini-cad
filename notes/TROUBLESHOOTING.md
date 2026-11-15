@@ -11,7 +11,7 @@ CadQuery string selectors such as `.faces(">Z")` or `.edges("|Z")` evaluate face
 
 `shape.isValid()` wraps `BRepCheck_Analyzer`, which returns `True` even when two solids self-intersect.
 
-- **Fix:** Always run `BRepAlgoAPI_Check` (`lib/printable.py:check_manifold`) or explicit boolean intersection (`BRepAlgoAPI_Common`) when checking interferences.
+- **Fix:** Always run `BRepAlgoAPI_Check` (`lib/process/printable.py:check_manifold`) or explicit boolean intersection (`BRepAlgoAPI_Common`) when checking interferences.
 - **Enforced by:** `isvalid-as-gate` rule in `lib/testing/lint_structure.py`.
 
 ## 3. Fillets before booleans

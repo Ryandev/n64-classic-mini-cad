@@ -24,7 +24,7 @@ import math
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
 from assembly import n64_mini  # noqa: E402
@@ -37,7 +37,7 @@ from part import (  # noqa: E402
     n64_port_insert,
     power_slider,
 )
-from printable import OVERHANG_DEG  # noqa: E402
+from process.printable import OVERHANG_DEG  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
 PARTS = (

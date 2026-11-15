@@ -27,8 +27,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
-import printable  # noqa: E402
 from assembly import datum as D  # noqa: E402
+from process import printable  # noqa: E402
 from shared import n64_contours as C  # noqa: E402
 
 PROCESS = "fdm"

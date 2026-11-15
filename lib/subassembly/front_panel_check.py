@@ -22,7 +22,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
-import printable  # noqa: E402
 from assembly import datum as D  # noqa: E402
 from component import radxa_x4  # noqa: E402
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
@@ -33,6 +32,7 @@ from part import (  # noqa: E402
     n64_port_insert,
     usb_retainer_bracket,
 )
+from process import printable  # noqa: E402
 from subassembly import front_panel_mech  # noqa: E402
 from testing import probe  # noqa: E402
 from variant import lower_tub  # noqa: E402

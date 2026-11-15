@@ -14,13 +14,15 @@ import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
 from assembly import datum as D  # noqa: E402
 from part import front_port_cover, power_slider, usb_retainer_bracket  # noqa: E402
-from plate import orient_to_bed  # noqa: E402
-from printable import check_footprint  # noqa: E402
+from process.printable import (
+    check_footprint,  # noqa: E402
+    orient_to_bed,  # noqa: E402
+)
 from variant import lower_tub, upper_shell  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

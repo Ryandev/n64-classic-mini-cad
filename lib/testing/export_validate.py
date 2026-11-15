@@ -14,8 +14,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
-import plate  # noqa: E402
 from cadquery.occ_impl.shapes import check as bop_check  # noqa: E402
+from slicing import plate  # noqa: E402
 from testing.export_harness import export_shape  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

@@ -30,8 +30,16 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   - `lib/component/`: bought hardware reference envelopes (`radxa_x4.py`).
   - `lib/part/`: individual parametric parts exposing `PROCESS = "fdm" | "laser"`, `MANUFACTURE = "fdm" | "laser"`, and `get_shape() -> cq.Shape`.
   - `lib/subassembly/`: multi-part mechanisms (`<name>_mech.py` + `<name>_check.py`). Every `*_mech.py` that exposes `get_shape()` **must** have a matching `*_check.py` exposing `check_all()`, enforced by `lib/testing/lint_subassembly.py`.
+  - `lib/process/`: how a part is made, between the nominal design and slicing (owner, 2026-11-15).
+    The design stays at true size, fits drawn as the finished gap; a process adds its own
+    allowances at print time, so a part can change process without changing its geometry.
+    Holds the FDM rules (`printable.py`: layer overhang, walls, footprint), print-test coupons
+    (`coupons.py`), orientation study, and the record of real prints (`print_outcome_check.py`,
+    `fixtures/`). Process profiles and their per-profile gates go here.
+  - `lib/slicing/`: turning parts into print files (`plate.py`; the slicer wrappers and resin
+    slicing come here when built).
   - `lib/gate.py` & `lib/gate_selftest.py`: parallel cached gate runner and mutation self-tester.
-  - `lib/printable.py`, `lib/min_wall.py`, `lib/standoffs.py`, `lib/cad_lint.py`, `lib/bom.py`: shared geometry checks and helpers.
+  - `lib/min_wall.py`, `lib/standoffs.py`, `lib/cad_lint.py`, `lib/bom.py`: shared geometry checks and helpers.
 
 ## Rules
 
@@ -137,7 +145,7 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
 - **A real-print record checks what was printed, not today's CAD.** The plate-1 outcome rows
   rebuilt each piece from the current design; removing the switch pin would have made the
   failed tower "pass". They now load the STLs the slicer was given
-  (`testing/fixtures/coupon_plate1/`).
+  (`process/fixtures/coupon_plate1/`).
 
 ## Lessons (coupon plate 1, 2026-11-14)
 
@@ -147,7 +155,7 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   and called any face under 10 mm a bridge without asking what held it (the shell skin, cut out
   of its walls, was 100+ narrow faces). It now slices each part in 0.2 mm layers and fails what
   a layer prints onto air unless it bridges in some direction, is within half a line of a hold,
-  or sits in the first 1.0 mm (`printable.check_overhang`). `subassembly/print_outcome_check.py` holds it to the real print:
+  or sits in the first 1.0 mm (`printable.check_overhang`). `process/print_outcome_check.py` holds it to the real print:
   each piece's check verdict must match what the printer did.
 - **When a part needs support, it is PETG with a PLA interface from the external spool, never
   "no supports".** The owner had said so repeatedly (notes/PRINTING.md, from GBA). Slice nothing

@@ -39,7 +39,7 @@ case "$target" in
         $PY python3 lib/testing/export_harness.py "$@"
         ;;
     plate)
-        $PY python3 lib/plate.py "$@"
+        $PY python3 lib/slicing/plate.py "$@"
         ;;
     export-validate)
         $PY python3 lib/testing/export_validate.py "$@"
@@ -54,10 +54,10 @@ case "$target" in
         $PY python3 lib/step/build_radxa_x4.py "$@"
         ;;
     coupons)
-        $PY python3 lib/coupons.py "$@"
+        $PY python3 lib/process/coupons.py "$@"
         ;;
     orient)
-        $PY python3 lib/orientation_study.py "$@"
+        $PY python3 lib/process/orientation_study.py "$@"
         ;;
     all)
         ./run lint

@@ -64,7 +64,7 @@ for the light pipe. PLA only as the support interface (below).
 ## Supports
 
 **The design aims to need none, and nothing is sliced with supports off unless the overhang row
-passes it.** The row (`lib/printable.py`) slices the part in 0.2 mm layers and finds what each layer
+passes it.** The row (`lib/process/printable.py`) slices the part in 0.2 mm layers and finds what each layer
 prints past the layer below (beyond the 50° step). That still prints if it is within half a line
 (0.21 mm) of a hold, or bridges (one direction in which every line across it is held at both ends,
 no longer than 10 mm: windows, pocket ceilings, holes closed over, the two-layer counterbore

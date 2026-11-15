@@ -31,7 +31,7 @@ When a mating pair is added or changed, its row goes into the Joint Register in 
 - **G11 — Two locators per split:** Any split part joined at bench assembly (`>= 2` pieces) requires **at least 2 locating features** (pins, dowels, or stepped lip corners) separated by `>= 2x` feature diameter to constrain rotation in the split plane, or a closed perimeter tongue-and-groove lip.
 - **G12 — No support inside sliding bores or blind counterbores:** Any bore or guide track that mates with a moving plunger, slider, or dowel must either run within `<= 45 deg` of vertical in the print orientation, use a teardrop/bridged crown, or be reamed post-print.
 - **G13 — Zero bought-part interference on the printed solid:** Every bought component (`Radxa X4`, `USB-A` jacks, `RJ45` keystone/panel mount, tactile switches, heat-set inserts, magnets, fasteners) must be boolean-checked (`BRepAlgoAPI_Common`) against the mating printed solid at rest and across full travel (`intersection volume == 0.00 mm^3`).
-- **Overhang: 50 deg** from vertical before the slicer adds support (`lib/printable.py`).
+- **Overhang: 50 deg** from vertical before the slicer adds support (`lib/process/printable.py`).
 - **XY tolerance: +/-0.2 mm.** Fits narrower than ~0.4 mm total are inside the process band and must be verified by a physical print coupon.
 
 ### Laser, 3 mm cast acrylic (optional fixtures / templates)

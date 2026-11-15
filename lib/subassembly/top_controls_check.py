@@ -26,7 +26,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
-import printable  # noqa: E402
 from assembly import datum as D  # noqa: E402
 from assembly import n64_scan_profiles as S  # noqa: E402
 from component import omron_ss5gl, radxa_x4  # noqa: E402
@@ -46,6 +45,7 @@ from part import (  # noqa: E402
     usb_retainer_bracket,
 )
 from part.shared import n64_text as T  # noqa: E402
+from process import printable  # noqa: E402
 from subassembly import front_panel_mech, top_controls_mech  # noqa: E402
 from testing import probe, variant_manifest  # noqa: E402
 from testing.load import load_by_path  # noqa: E402

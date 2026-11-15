@@ -17,8 +17,8 @@ from OCP.BRepBuilderAPI import BRepBuilderAPI_Transform
 from OCP.gp import gp_Dir, gp_Pln, gp_Pnt, gp_Trsf, gp_Vec
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import plate  # noqa: E402
 from assembly import n64_mini  # noqa: E402
+from slicing import plate  # noqa: E402
 from testing.load import load_by_path  # noqa: E402
 
 PART_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "part")

@@ -1,7 +1,7 @@
 """Gate checks for `radxa_mount_mech.py`, `lower_tub`, `radxa_x4`, and the SoC heat sink.
 
 Measures the actual 3D solids (`BRepAlgoAPI_Common`, `BRepClass3d_SolidClassifier`,
-`lib/printable.py`, and `lib/testing/variant_manifest.py`) to verify:
+`lib/process/printable.py`, and `lib/testing/variant_manifest.py`) to verify:
   - `lower_tub` printability (`manifold`, `single_body`, `bed`, `overhang`, `wall`, `footprint`)
   - `variant/lower_tub.py` manifest against `part/lower_tub.py` (`DEVIATIONS`)
   - `variant/radxa_x4.py` manifest against `step/radxa_x4.py` (all 6 tall headers stripped)
@@ -16,7 +16,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
-import printable  # noqa: E402
 from assembly import datum as D  # noqa: E402
 from component import radxa_x4  # noqa: E402
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
@@ -24,6 +23,7 @@ from OCP.BRepClass3d import BRepClass3d_SolidClassifier  # noqa: E402
 from OCP.gp import gp_Pnt  # noqa: E402
 from OCP.TopAbs import TopAbs_IN, TopAbs_OUT  # noqa: E402
 from part import usb_retainer_bracket  # noqa: E402
+from process import printable  # noqa: E402
 from step import build_radxa_x4  # noqa: E402
 from step import radxa_x4 as radxa_ref  # noqa: E402
 from subassembly import radxa_mount_mech  # noqa: E402

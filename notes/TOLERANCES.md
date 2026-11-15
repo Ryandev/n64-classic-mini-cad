@@ -11,7 +11,7 @@ Every figure here is stated with its source (process specification or measured h
     XY dimensional band     +/-0.20 mm   nominal process tolerance
     minimum local wall       0.80 mm     two perimeters at 0.4 mm nozzle
     structural shell wall    2.00 mm     five perimeters (enclosure tub & upper shell)
-    unsupported overhang    50.0 deg     from vertical (`lib/printable.py`)
+    unsupported overhang    50.0 deg     from vertical (`lib/process/printable.py`)
 
 ### Heat-set brass inserts (Ruthex — shared with GBA BOM)
 

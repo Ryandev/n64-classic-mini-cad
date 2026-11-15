@@ -2,7 +2,7 @@
 
 Ground truth (MFIC rung 1, a real system): coupon plate 1, printed 2026-11-14 on the X2D in black
 PETG at 0.20 mm with NO supports, judged by the owner. Each piece is loaded from the very STL that
-was sliced (`testing/fixtures/coupon_plate1/`, bedded as printed), so later design changes (the
+was sliced (`process/fixtures/coupon_plate1/`, bedded as printed), so later design changes (the
 switch pin removed on 2026-11-15) can't rewrite what the printer was given. It goes to
 `printable.check_overhang` with no support declared, as it was sliced. A piece that failed on the
 bed must fail the check, and one that printed clean must pass it. A row fails when the two
@@ -22,17 +22,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
-import printable  # noqa: E402
 from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeSolid, BRepBuilderAPI_Sewing  # noqa: E402
 from OCP.StlAPI import StlAPI_Reader  # noqa: E402
 from OCP.TopoDS import TopoDS, TopoDS_Shape  # noqa: E402
+from process import printable  # noqa: E402
 
-FIXTURES = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "testing",
-    "fixtures",
-    "coupon_plate1",
-)
+FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "coupon_plate1")
 
 
 def _printed(name: str) -> cq.Shape:

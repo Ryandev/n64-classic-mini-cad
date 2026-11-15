@@ -1,6 +1,6 @@
 """Part verification harness (`./run test [part_names...]`).
 
-Runs structural lint, subassembly pattern lint, and `lib/printable.py` checks on
+Runs structural lint, subassembly pattern lint, and `lib/process/printable.py` checks on
 every native part in `lib/part/`.
 """
 
@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import printable  # noqa: E402
+from process import printable  # noqa: E402
 from testing.lint_structure import run as run_lint  # noqa: E402
 from testing.lint_subassembly import main as run_sub_lint  # noqa: E402
 from testing.load import load_by_path  # noqa: E402

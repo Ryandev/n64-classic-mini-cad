@@ -12,7 +12,7 @@ spacing inside the `256 x 256 mm` Bambu Lab P1S / X1C build plate, and writes
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
 from part import (  # noqa: E402
@@ -25,7 +25,7 @@ from part import (  # noqa: E402
     reset_button,
     usb_retainer_bracket,
 )
-from printable import orient_to_bed  # noqa: E402,F401 - re-exported for coupons and the gate
+from process.printable import orient_to_bed  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
