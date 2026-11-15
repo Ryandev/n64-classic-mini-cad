@@ -98,6 +98,12 @@ When a part does need support, use the GBA set-up (`PRINTING.md`, DECISIONS 10-1
   don't fit (G5; dovetail coupon 11-10).
 - **Tree supports, build plate only**, so the PLA stands on the bed. PLA laid *onto* a PETG face
   keys into it for good; PETG laid onto PLA lets go (06b, 10-29).
+- **Tree supports only suit hidden faces.** Each branch tip gets its own PLA interface patch, so a
+  large supported face prints partly onto PLA and partly onto air between patches, and areas no
+  branch can reach from the bed get nothing. Coupon plate 3 (2026-11-15): the inside of the shell
+  corner (a ~57° face) came out rough. Fine where it is hidden. **For any supported face with a
+  user-facing finish**, slice with normal (grid) supports and a solid, full-coverage PLA
+  interface, so the PETG prints onto one continuous PLA surface (owner, 2026-11-15).
 - **Always enable the prime tower** (`enable_prime_tower = 1`, at 200, 210). Only the left nozzle
   primes on layer 1. Without the tower, the right nozzle's first interface layer extrudes air and
   the overhang above it turns to spaghetti (11-10).
@@ -143,7 +149,7 @@ so they outrank the generic ±0.2 mm in our `TOLERANCES.md`.
 | Shell lip over the tub | 0.15 mm/side | in the proven locating range |
 | M3 inserts, corner bosses | Ø4.0 | same as GBA |
 | M2.5 inserts, standoffs | Ø3.2 | **untested** anywhere: coupon 4 |
-| M2.5 switch screws in the tower | Ø3.0 drawn (~Ø2.67 printed) | close fit, untested: coupon 2 reprint. (The Ø2.2 V-pin fitted the switch hole well, slight resistance, but left the switch no way in: removed 2026-11-15) |
+| M2.5 switch screws in the tower | Ø3.0 drawn | coupon plate 3 (2026-11-15): screws into the switch well; a little play in the tower hole (minor, owner). Ø2.8 drawn would tighten it. (The Ø2.2 V-pin fitted the switch hole well, slight resistance, but left the switch no way in: removed 2026-11-15) |
 | Door hinge pins in their sockets | Ø1.8 in Ø2.4 (0.30 mm/side) | **at risk**: a small hole; at −0.4 mm it leaves ~0.1 mm/side and may bind. Coupon 3 |
 | Magnets in their pockets | Ø3.0 in Ø3.2 (0.10 mm/side) | **at risk**: at −0.3 mm the pocket is ~Ø2.9 and the magnet won't go in. Not yet measured on GBA either. Coupon 3 |
 
