@@ -386,7 +386,8 @@ def check_all():
             or tip_margin < 0.3
             or engaged < 4.0
             or path > 1e-3
-            or not 0.05 <= fit <= 0.30
+            # nominal close fit; rounded so 0.05 drawn isn't lost to float noise
+            or not 0.05 <= round(fit, 3) <= 0.10
         ):
             screw_bad.append(
                 f"{name} x {x:+.2f}: tip {tip_margin:.2f} mm inside the switch front, "
@@ -401,7 +402,7 @@ def check_all():
             f"4 x M{D.OMRON_SCREW_D:g} x {D.OMRON_SCREW_L:.0f} mm: tip "
             f"{screws[0].BoundingBox().ymin - sw_left.BoundingBox().ymin:.2f} mm short of the "
             f"switch front (min 0.3), >= 4 mm in the switch, tower fit "
-            f"{min(fits):.3f}..{max(fits):.3f} mm/side (0.05..0.30), 0 mm^3 with "
+            f"{min(fits):.3f}..{max(fits):.3f} mm/side (0.05..0.10 nominal), 0 mm^3 with "
             "tub/switch/USB/bracket, 40 mm driver path clear"
             if not screw_bad
             else "; ".join(screw_bad),

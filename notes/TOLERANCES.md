@@ -41,7 +41,7 @@ Every figure here is stated with its source (process specification or measured h
 |---|---|---|---|
 | **datum / butt** | `0.00 mm` nominal | `0.00 mm` | Flat Z parting faces, PCB bottom on standoff top faces |
 | **press / magnet pocket** | `-0.05 .. +0.05 mm` | `0.00 .. 0.10 mm` | Neodymium magnet pockets (`Ø3.0 x 1.0 mm` in `Ø3.2 x 1.15 mm` with glue relief) |
-| **switch screw locating** | `0.25 mm` drawn (~`0.08` printed) | `0.30 mm` | `M2.5` screws in the `Omron SS-5GL` towers' `Ø3.0 mm` drawn holes (print ~`Ø2.67`), both switch holes (`9.50 mm` pitch); no locator pin (`OMRON_INSTALL`) |
+| **switch screw locating** | `0.05 mm` | `0.10 mm` | `M2.5` screws in the `Omron SS-5GL` towers' `Ø2.6 mm` holes (nominal; the slicer adds the PETG allowance), both switch holes (`9.50 mm` pitch); no locator pin (`OMRON_INSTALL`) |
 | **locating (split lip / pocket)** | `0.15 mm` | `0.30 mm` | Upper-to-lower shell perimeter alignment lip (`J-01`), front jewel (`J-06`), cartridge flaps (`J-09`) |
 | **sliding (button plunger bore)** | `0.22 mm` | `0.44 mm` | Momentary `POWER` (`J-03`) & `RESET` (`J-04`) stadium plungers (`8.50 x 14.50 mm` in `8.94 x 14.94 mm` bores, matching GBA `TOLERANCES.md` §4 row 5) |
 | **fastener clearance** | `0.20 .. 0.25 mm` | `0.40 .. 0.50 mm` | `Ø2.4 mm` bore for M2; `Ø2.9 mm` bore for M2.5; `Ø3.4 mm` bore for M3 screw |

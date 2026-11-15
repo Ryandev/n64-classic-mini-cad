@@ -321,7 +321,7 @@ MUTATIONS = [
     (
         "top_controls_check",
         "assembly/datum.py",
-        "OMRON_SCREW_CLEAR_D = 3.0",
+        "OMRON_SCREW_CLEAR_D = 2.6",
         "OMRON_SCREW_CLEAR_D = 3.4",
         "OMRON_SCREW",
     ),

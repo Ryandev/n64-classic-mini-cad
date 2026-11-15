@@ -399,8 +399,9 @@ OMRON_HOLE_D = 2.35
 # plate 2; OMRON_INSTALL).
 OMRON_SCREW_D = 2.5
 OMRON_SCREW_L = 10.0  # under the head: tower 4.0 + gap 0.15 + 5.85 into the switch
-# Drawn Ø3.0: holes under ~Ø3 print ~0.33 mm small (notes/PRINTING.md), so ~Ø2.67, a close fit
-OMRON_SCREW_CLEAR_D = 3.0
+# Nominal close fit on the M2.5, 0.05 mm a side. It was drawn Ø3.0 to come out ~Ø2.67 in PETG
+# (and had a little play); allowances now go in at slicing (process/profiles.py), not here.
+OMRON_SCREW_CLEAR_D = 2.6
 OMRON_SCREW_HEAD_D, OMRON_SCREW_HEAD_H = 5.0, 2.0  # M2.5 pan-head envelope
 OMRON_TOWER_Y1 = -16.80  # tower rear face: the screw head seats here
 OMRON_HOLE_PITCH = 9.50

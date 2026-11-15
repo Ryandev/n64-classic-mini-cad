@@ -82,8 +82,10 @@ and refuses its own output unless the file's settings say all of that (`slicing/
 holds the refusal to coupon plate 3, sliced before any of this with both compensations at 0).
 
 Don't bake these into the CAD (a hole drawn big "so it prints right"): it ties the part to one
-process. The CAD changes that did are being moved back to nominal (switch-tower holes, Ø3.0
-drawn for a ~Ø2.67 close fit).
+process. Audit 2026-11-15: the switch-tower screw holes (drawn Ø3.0 to print ~Ø2.67) went back
+to nominal Ø2.6. The one FDM-specific feature left in the CAD is the two-layer bridge over the
+tub's corner counterbores (`part/lower_tub.py`, steps of `LAYER_MM`): it sets no size or fit,
+and a resin print just reproduces the steps.
 
 ## Supports
 
@@ -173,7 +175,7 @@ so they outrank the generic ±0.2 mm in our `TOLERANCES.md`.
 | Shell lip over the tub | 0.15 mm/side | in the proven locating range |
 | M3 inserts, corner bosses | Ø4.0 | same as GBA |
 | M2.5 inserts, standoffs | Ø3.2 | **untested** anywhere: coupon 4 |
-| M2.5 switch screws in the tower | Ø3.0 drawn | coupon plate 3 (2026-11-15): screws into the switch well; a little play in the tower hole (minor, owner). Ø2.8 drawn would tighten it. (The Ø2.2 V-pin fitted the switch hole well, slight resistance, but left the switch no way in: removed 2026-11-15) |
+| M2.5 switch screws in the tower | Ø3.0 drawn (now Ø2.6 nominal, compensated at slicing) | coupon plate 3 (2026-11-15): screws into the switch well; a little play in the tower hole (minor, owner). Ø2.8 drawn would tighten it. (The Ø2.2 V-pin fitted the switch hole well, slight resistance, but left the switch no way in: removed 2026-11-15) |
 | Door hinge pins in their sockets | Ø1.8 in Ø2.4 (0.30 mm/side) | **at risk**: a small hole; at −0.4 mm it leaves ~0.1 mm/side and may bind. Coupon 3 |
 | Magnets in their pockets | Ø3.0 in Ø3.2 (0.10 mm/side) | **at risk**: at −0.3 mm the pocket is ~Ø2.9 and the magnet won't go in. Not yet measured on GBA either. Coupon 3 |
 

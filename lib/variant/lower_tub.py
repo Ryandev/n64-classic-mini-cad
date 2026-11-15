@@ -107,14 +107,14 @@ DEVIATIONS = {
         "kind": "added",
         "why": "Left Omron SS-5GL tower, two close-fit screw holes & button stop (J-03)",
         "bbox": (-36.6, -20.9, 1.5, -21.4, -16.7, 23.6),
-        "volume_mm3": 1018.85,
+        "volume_mm3": 1032.93,
         "tolerance_mm3": 8.0,
     },
     "omron_stop_r": {
         "kind": "added",
         "why": "Right Omron SS-5GL tower, two close-fit screw holes & button stop (J-04)",
         "bbox": (21.4, -20.9, 1.5, 36.6, -16.7, 23.6),
-        "volume_mm3": 1018.85,
+        "volume_mm3": 1032.93,
         "tolerance_mm3": 8.0,
     },
     "front_led_bore": {
