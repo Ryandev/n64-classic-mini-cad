@@ -81,7 +81,7 @@ FAN_Y1 = D.FAN_Y0 + D.FAN_W
 # underside) and seats against a ledge; 0.15 mm a side is GBA's measured PETG locating fit,
 # and the glue bead fills it and seals the plenum (notes/PRINTING.md).
 FLOOR_GAP = 0.15
-LEDGE_W, LEDGE_T = 1.0, 0.4
+LEDGE_W, LEDGE_T = 1.0, 0.8  # 0.8: two perimeters' worth; at 0.4 it was two layers (NECK)
 Y_FLOOR0 = Y_PLATE0 + W  # front frame strip's rear face
 
 

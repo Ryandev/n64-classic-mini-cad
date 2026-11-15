@@ -214,9 +214,11 @@ def get_shape() -> cq.Shape:
         z_roof + 0.2,
         cq.Vector(0.0, 0.0, -0.2),
     ).fuse(
+        # the slot only spans the counterbore: its square corners poked 0.35 mm into the boss
+        # wall and left it 0.69 mm for that layer (NECK, 2026-11-15)
         cq.Solid.makeBox(
             D.M3_CBORE_D, clear, layer, cq.Vector(-D.M3_CBORE_D / 2.0, -clear / 2.0, z_roof)
-        ),
+        ).intersect(cq.Solid.makeCylinder(D.M3_CBORE_D / 2.0, layer, cq.Vector(0, 0, z_roof))),
         cq.Solid.makeBox(
             clear, clear, layer, cq.Vector(-clear / 2.0, -clear / 2.0, z_roof + layer)
         ),

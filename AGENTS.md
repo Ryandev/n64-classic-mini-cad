@@ -136,6 +136,21 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   (`part/shared/n64_text._local_glyphs`). CI never has `cad/local/`, so released files are
   public by construction. Look at every picture before committing it.
 
+## Lessons (coupon plate 3, 2026-11-15)
+
+- **A feature can hang on a joint no row measured.** The shell's inner rim was joined to the
+  wall by one 0.2 mm layer above the lip groove and came off both shell coupons.
+  `process/neck_check.py` (`printable.check_necks`) slices every printed part across X and Y
+  and fails where a shrunk slice splits: a piece hanging on less than the 0.8 mm minimum wall.
+  A 2D slice can show a wall joined along its length as hanging; such a spot is accepted by
+  name with the reason, never by loosening the check.
+- **Fixing one weak joint made three more.** Raising the hollow above the rim left a 0.4 mm
+  skin across the whole shell and pushed the front corners' hollow into their domed tops (a
+  0.7 mm wall); the two-layer counterbore bridge's slot corners cut the boss wall to 0.69 mm.
+  The neck check found all three before anything was printed. Re-run it after every fix.
+- **GEOS can segfault on a raw traced section** (near-duplicate points from following curves).
+  Sections are snapped to a 0.001 mm grid before any buffer.
+
 ## Lessons (coupon plate 2, 2026-11-15)
 
 - **A part that clears in place can still have no way in.** The switch sat on a horizontal pin

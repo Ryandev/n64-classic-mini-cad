@@ -154,6 +154,22 @@ MUTATIONS = [
         "            pass",
         "SLICE_REFUSES coupon plate 3",
     ),
+    # Weak joints (coupon plate 3): the shell's rim back on one 0.2 mm layer...
+    (
+        "neck_check",
+        "part/upper_shell.py",
+        "RIM_JOINT_T = 1.2",
+        "RIM_JOINT_T = 0.2",
+        "NECK upper_shell",
+    ),
+    # ...and the counterbore bridge's slot corners back in the boss wall.
+    (
+        "neck_check",
+        "part/lower_tub.py",
+        ").intersect(cq.Solid.makeCylinder(D.M3_CBORE_D / 2.0, layer, cq.Vector(0, 0, z_roof)))",
+        ")",
+        "NECK lower_tub",
+    ),
     # A part that needs more support than it declares
     (
         "top_controls_check",

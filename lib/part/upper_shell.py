@@ -49,6 +49,9 @@ def _magnet_bore_y(x: float, y0: float, z: float) -> cq.Shape:
     )
 
 
+RIM_JOINT_T = 1.2  # six layers between the lip groove's top and the hollow above the rim
+
+
 def get_shape() -> cq.Shape:
     """Construct the faithful 50%-scale N64 Upper Shell solid."""
     # 1. Exact 50%-scale N64 upper outer solid (Z = 12.94 .. 33.50 mm)
@@ -69,21 +72,29 @@ def get_shape() -> cq.Shape:
     )
 
     inner_roof_cap = outer.moved(cq.Location(cq.Vector(0.0, 0.0, -2.05)))
+    # The hollow starts RIM_JOINT_T above the lip groove's top, so the flat rim is joined to the
+    # wall through that much material. It started 0.2 mm above it, one printed layer, and the rim
+    # came off both shell coupons on plate 3 (2026-11-15; NECK in process/neck_check.py).
+    z_cavity = D.SPLIT_Z + D.LIP_H + 0.2 + RIM_JOINT_T
     upper_cavity_wing = C.main_wing_prism(
-        z0=D.SPLIT_Z + D.LIP_H + 0.4,
+        z0=z_cavity,
         height=D.SHELL_H,
         inset=D.SHELL_WALL_T,
     )
     upper_cavity_pods = C.n64_plan_prism(
-        z0=D.SPLIT_Z + D.LIP_H + 0.4,
-        height=5.2,
+        z0=z_cavity,
+        # its top stays at 20.34: raised with z_cavity it reached into the front corners' domed
+        # tops and left a 0.7 mm wall where they meet the front (NECK)
+        height=D.SPLIT_Z + D.LIP_H + 0.4 + 5.2 - z_cavity,
         inset=D.SHELL_WALL_T,
     )
     upper_cavity_outer = upper_cavity_wing.fuse(upper_cavity_pods).intersect(inner_roof_cap)
 
+    # Through the rim's inner edge up into the hollow, overlapping it, so no skin is left between
+    # (raising the hollow alone left a 0.4 mm floor across the whole shell; NECK found it)
     lower_window = C.n64_plan_prism(
         z0=D.SPLIT_Z - 0.5,
-        height=D.LIP_H + 1.4,
+        height=z_cavity + 0.2 - (D.SPLIT_Z - 0.5),
         inset=D.UPPER_FLANGE_W,
     )
 

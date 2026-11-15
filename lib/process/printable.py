@@ -35,6 +35,8 @@ from shapely.validation import make_valid  # noqa: E402
 BED_MM = (256.0, 256.0, 256.0)
 OVERHANG_DEG = 50.0  # past this from vertical, the slicer adds support
 MIN_WALL_MM = 0.8  # two perimeters on a 0.4 mm nozzle
+NECK_STEP_MM = 2.0  # slice spacing for the weak-joint check
+NECK_MIN_PIECE_MM2 = 2.0  # smaller crumbs left by shrinking a slice are noise, not features
 # Widest downward face printed with no support: a short bridge between walls. The tub's floating
 # floor (93 mm across) passed for months while this row was advisory only (C9, 2026-11-13); the
 # widest the flush tub keeps is the Ø6.5 counterbore ceilings.
@@ -44,6 +46,7 @@ SECTION_STEP_MM = 0.1  # how finely a section's curved edges are followed
 # A traced section must match OpenCASCADE's exact area: a dropped or doubled loop raises (a first
 # version that rebuilt loops from loose edges filled the shell's holes: 8,685 mm^2 for 2,177).
 SECTION_AREA_TOL = 0.01
+SECTION_GRID_MM = 0.001
 ANCHOR_REACH_MM = 0.05  # an unheld region touching the layer below within this is held there
 MIN_LOOSE_MM2 = 0.001  # numerical dust from the section boolean, skipped before measuring
 LINE_W_MM = 0.42  # extrusion width on the 0.4 mm nozzle (notes/PRINTING.md)
@@ -149,7 +152,9 @@ def _section(shape: cq.Shape, z: float, bb) -> BaseGeometry:
     exact = sum(f.Area() for f in faces)
     if abs(out.area - exact) > SECTION_AREA_TOL * max(exact, 1.0):
         raise ValueError(f"section at z={z:.2f}: {out.area:.1f} mm^2 traced vs {exact:.1f} exact")
-    return out
+    # Snapped to a 0.001 mm grid: GEOS segfaulted shrinking a raw traced section of the shell
+    # (curved edges followed every 0.1 mm leave near-duplicate points; 2026-11-15).
+    return shapely.set_precision(out, SECTION_GRID_MM)
 
 
 def _bridges(region: Polygon, hold: BaseGeometry, max_bridge: float, angle: float) -> bool:
@@ -265,6 +270,59 @@ def check_overhang(
         f"needs support under {needs:.0f} mm^2 (declared {support_mm2:.0f}); largest unheld "
         f"region {worst:.1f} mm^2 at {where} (up={up})",
     )
+
+
+def find_necks(shape: cq.Shape, min_mm: float = MIN_WALL_MM, step_mm: float = NECK_STEP_MM):
+    """Every slice where a piece hangs on a joint thinner than `min_mm`: (across, at, area).
+
+    See `check_necks`."""
+    found = []
+    for up, across in (((1, 0, 0), "x"), ((0, 1, 0), "y")):
+        s = orient_to_bed(shape, up)
+        bb = s.BoundingBox()
+        at = step_mm / 2.0
+        while at < bb.zlen:
+            sec = _section(s, at, bb)
+            for piece in getattr(sec, "geoms", [sec]):
+                if piece.is_empty or piece.area < 2 * NECK_MIN_PIECE_MM2:
+                    continue
+                shrunk = piece.buffer(-min_mm / 2.0)
+                parts = sorted(
+                    (g for g in getattr(shrunk, "geoms", [shrunk]) if g.area >= NECK_MIN_PIECE_MM2),
+                    key=lambda g: g.area,
+                )
+                if len(parts) > 1:
+                    found.append((across, round(at, 1), round(parts[0].area, 1)))
+            at += step_mm
+    return found
+
+
+def check_necks(
+    shape: cq.Shape,
+    min_mm: float = MIN_WALL_MM,
+    step_mm: float = NECK_STEP_MM,
+    accepted: tuple = (),
+):
+    """Find features joined to the rest of the part through a joint thinner than `min_mm`.
+
+    The part is cut into slices across X and across Y, every `step_mm`. Each piece of a slice is
+    shrunk by half of `min_mm`: a thin wall just vanishes, but a feature hanging on a thin joint
+    comes away as a separate piece. Coupon plate 3 (2026-11-15) lost the shell's inner rim on
+    both its shell coupons: it hung on the wall by one 0.2 mm layer above the lip groove, which
+    no other row saw.
+
+    A slice cuts a 3D part in 2D, so a wall joined to the rest along its length can show up in
+    one slice hanging on a thin ledge. Such a spot is accepted by name, with the reason, in
+    `accepted` ((across, at, reason), matched to 0.1 mm); anything else fails.
+    """
+    found = []
+    for across, at, area in find_necks(shape, min_mm, step_mm):
+        if not any(a == across and abs(z - at) < 0.1 for a, z, _why in accepted):
+            found.append((across, at, area))
+    if not found:
+        return True, f"no feature hangs on a joint under {min_mm:.1f} mm ({step_mm:g} mm slices)"
+    where = ", ".join(f"{a} slice {z:.0f} ({area:.1f} mm^2)" for a, z, area in found[:6])
+    return False, f"{len(found)} slice(s) where a piece hangs on under {min_mm:.1f} mm: {where}"
 
 
 def check_wall(shape: cq.Shape, min_mm=MIN_WALL_MM):
