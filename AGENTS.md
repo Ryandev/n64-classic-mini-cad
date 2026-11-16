@@ -49,7 +49,7 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
 3. **One feature holds an axis:** Every mating pair in [`notes/TOLERANCES.md`](notes/TOLERANCES.md) names one datum per axis; every other feature on that axis clears the tolerance stack.
 4. **Never treat a bounding box as a surface:** Check interference by boolean common volume (`BRepAlgoAPI_Common`) or `BRepExtrema_DistShapeShape` / point classification (`BRepClass3d_SolidClassifier`), not bounding-box arithmetic.
 5. **Write the failing row first, and red-confirm it:** Add a mutation case in `lib/gate_selftest.py` for every new check module.
-- **Fix the cause, not the side effect (owner, 2026-11-16).** When a feature needs a second
+6. **Fix the cause, not the side effect (owner, 2026-11-16).** When a feature needs a second
   feature to make up for a problem it creates, redesign or remove the first; don't add the patch.
   Before adding anything, ask "what is this making up for?" and if the answer is another of our
   features, change that one. And prefer the standard solution for a common job (joining two
