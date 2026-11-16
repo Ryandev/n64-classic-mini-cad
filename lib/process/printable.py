@@ -419,6 +419,16 @@ def check_footprint(
     return ok, msg
 
 
+def _row(label: str, check, *args, **kwargs):
+    """Run one check; one that raises fails its own row (naming the error) instead of taking the
+    other rows down with it: a self-intersecting shape crashed the overhang check before the
+    manifold row could report it (gate selftest D4, 2026-11-16)."""
+    try:
+        return (label, *check(*args, **kwargs))
+    except Exception as e:  # noqa: BLE001 - reported as a failed row, never swallowed
+        return (label, False, f"check raised {type(e).__name__}: {e}")
+
+
 def check_part(
     name: str,
     shape: cq.Shape,
@@ -430,22 +440,21 @@ def check_part(
 ):
     """Returns a list of (check_name, passed, message) for `gate.py`."""
     rows = [
-        (f"{name}:manifold", *check_manifold(shape)),
-        (f"{name}:single_body", *check_single_body(shape)),
-        (f"{name}:bed", *check_bed(shape)),
-        (f"{name}:overhang", *check_overhang(shape, up=up, support_mm2=support_mm2)),
-        (f"{name}:wall", *check_wall(shape, min_mm=min_wall_mm)),
+        _row(f"{name}:manifold", check_manifold, shape),
+        _row(f"{name}:single_body", check_single_body, shape),
+        _row(f"{name}:bed", check_bed, shape),
+        _row(f"{name}:overhang", check_overhang, shape, up=up, support_mm2=support_mm2),
+        _row(f"{name}:wall", check_wall, shape, min_mm=min_wall_mm),
     ]
     if min_bed_ratio is not None:
         rows.append(
-            (
+            _row(
                 f"{name}:footprint",
-                *check_footprint(
-                    shape,
-                    up=up,
-                    min_bed_ratio=min_bed_ratio,
-                    max_aspect=max_aspect,
-                ),
+                check_footprint,
+                shape,
+                up=up,
+                min_bed_ratio=min_bed_ratio,
+                max_aspect=max_aspect,
             )
         )
     return rows

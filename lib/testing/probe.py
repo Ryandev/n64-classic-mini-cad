@@ -6,8 +6,29 @@ helpers find where the material actually is.
 
 import cadquery as cq
 from OCP.BRepClass3d import BRepClass3d_SolidClassifier
-from OCP.gp import gp_Pnt
+from OCP.gp import gp_Dir, gp_Lin, gp_Pnt
+from OCP.IntCurvesFace import IntCurvesFace_ShapeIntersector
 from OCP.TopAbs import TopAbs_IN
+
+
+def crossings(
+    shape: cq.Shape,
+    start: tuple[float, float, float],
+    direction: tuple[float, float, float],
+    max_len: float = 40.0,
+) -> list[float]:
+    """Every distance from `start` along unit `direction` (up to `max_len`) where the line
+    crosses the surface of `shape`, sorted: exact, from the faces themselves."""
+    line = gp_Lin(gp_Pnt(*start), gp_Dir(*direction))
+    hits = IntCurvesFace_ShapeIntersector()
+    hits.Load(shape.wrapped, 1e-6)
+    hits.Perform(line, 0.0, max_len)
+    out = sorted(hits.WParameter(i) for i in range(1, hits.NbPnt() + 1))
+    merged: list[float] = []
+    for t in out:  # a line through an edge between two faces hits both
+        if not merged or t - merged[-1] > 1e-6:
+            merged.append(t)
+    return merged
 
 
 def first_hit(

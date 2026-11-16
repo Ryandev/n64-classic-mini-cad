@@ -154,13 +154,13 @@ MUTATIONS = [
         "            pass",
         "SLICE_REFUSES coupon plate 3",
     ),
-    # Weak joints (coupon plate 3): the shell's rim back on one 0.2 mm layer...
+    # Weak joints (coupon plate 3): the tub's lip stood on a ledge only one layer deep...
     (
         "neck_check",
-        "part/upper_shell.py",
-        "RIM_JOINT_T = 1.2",
-        "RIM_JOINT_T = 0.2",
-        "NECK upper_shell",
+        "part/lower_tub.py",
+        "    z_ledge = D.SPLIT_Z - D.LIP_LEDGE_DROP",
+        "    z_ledge = D.SPLIT_Z - 0.2",
+        "NECK lower_tub",
     ),
     # ...and the counterbore bridge's slot corners back in the boss wall.
     (
@@ -294,7 +294,7 @@ MUTATIONS = [
     (
         "radxa_mount_check",
         "variant/lower_tub.py",
-        '"volume_mm3": 281.25,',
+        '"volume_mm3": 301.8,',
         '"volume_mm3": 999.00,',
         "VARIANT   lower_tub.rear_rj45_cutout",
     ),
@@ -418,8 +418,8 @@ MUTATIONS = [
     (
         "console_check",
         "assembly/datum.py",
-        "RABBET_INSET = 1.00",
-        "RABBET_INSET = 1.80",
+        "LIP_IN0 = SHELL_WALL_T + LIP_CLEAR  #",
+        "LIP_IN0 = SHELL_WALL_T + 0.5  #",
         "J01_SPLIT",
     ),
     (

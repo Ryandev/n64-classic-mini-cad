@@ -192,16 +192,44 @@ def check_all():
     ref = _ref_n64_shell.get_shape().BoundingBox()
     ref_w, ref_d, ref_h = ref.xlen * D.SCALE, ref.ylen * D.SCALE, ref.zlen * D.SCALE
     shell_clash = _common_volume(tub, top)
-    # Lip gap at the +X side wall: find the lip's outer face from outside, then step on to the shell
-    z_lip = D.SPLIT_Z + D.LIP_H / 2.0
-    x_out = D.SHELL_W / 2.0 + 2.0  # just outside the side wall
-    to_lip = probe.first_hit(tub, (x_out, 0.0, z_lip), (-1, 0, 0), max_len=10.0, step=0.005)
-    lip_gap = None
-    if to_lip is not None:
-        x_lip = x_out - to_lip
-        lip_gap = probe.first_hit(
-            top, (x_lip + 0.001, 0.0, z_lip), (1, 0, 0), max_len=3.0, step=0.005
-        )
+    # J-01 joint, measured at both side walls (owner's design, 2026-11-16): each half's wall is
+    # full thickness at the split and sits on the other's; the tub's lip stands inside the shell's
+    # wall line, a locating gap from it; no shell material inside the wall at the split (the old
+    # lip groove left a 1 mm skirt and an inner rim that broke off on two coupon plates).
+    joint_bad, lip_gaps = [], []
+    for side in (1.0, -1.0):
+        for y in (0.0, 20.0):
+            x_out = side * (D.SHELL_W / 2.0 + 2.0)
+            inward = (-side, 0.0, 0.0)
+            z_up, z_down = D.SPLIT_Z + 0.5, D.SPLIT_Z - 0.5
+            # surface crossings along the line in from outside: shell wall in/out, then the lip
+            sh = probe.crossings(top, (x_out, y, z_up), inward, max_len=12.0)
+            lp = probe.crossings(tub, (x_out, y, z_up), inward, max_len=12.0)
+            tb = probe.crossings(tub, (x_out, y, z_down), inward, max_len=12.0)
+            if len(sh) < 2:
+                joint_bad.append(f"x{side:+.0f} y{y:.0f}: no shell wall")
+                continue
+            shell_t = sh[1] - sh[0]
+            more_shell = (sh[2] - sh[1]) if len(sh) > 2 and sh[2] - sh[1] < 6.0 else None
+            lip_gap = (lp[0] - sh[1]) if lp else None
+            tub_t = (tb[1] - tb[0]) if len(tb) > 1 else None
+            if lip_gap is not None:
+                lip_gaps.append(lip_gap)
+            if (
+                shell_t < D.SHELL_WALL_T - 0.05
+                or more_shell is not None
+                or lip_gap is None
+                or not 0.10 <= lip_gap <= 0.25
+                or tub_t is None
+                or tub_t < D.SHELL_WALL_T - 0.05
+            ):
+                joint_bad.append(
+                    f"x{side:+.0f} y{y:.0f}: shell wall {shell_t:.2f} mm, "
+                    + (f"shell again {more_shell:.2f} mm inside it, " if more_shell else "")
+                    + (f"lip gap {lip_gap:.3f}, " if lip_gap is not None else "no lip, ")
+                    + (f"tub wall {tub_t:.2f}" if tub_t is not None else "no tub wall")
+                )
+    lip_gap = min(lip_gaps) if lip_gaps and not joint_bad else None
     env_ok = (
         abs(bb.xlen - ref_w) < 0.25
         and abs(bb.ylen - ref_d) < 0.25
@@ -212,11 +240,16 @@ def check_all():
     )
     rows.append(
         (
-            "J01_SPLIT upper_shell + lower_tub make the real N64 outline; lip in rebate, no clash",
+            "J01_SPLIT the halves make the N64 outline; full walls meet, lip inside, no clash",
             env_ok,
             f"envelope {bb.xlen:.2f}x{bb.ylen:.2f}x{bb.zlen:.2f} mm vs N64 model x{D.SCALE:.2f} "
-            f"{ref_w:.2f}x{ref_d:.2f}x{ref_h:.2f}; measured lip gap "
-            + (f"{lip_gap:.3f} mm (0.10..0.25)" if lip_gap is not None else "NOT FOUND")
+            f"{ref_w:.2f}x{ref_d:.2f}x{ref_h:.2f}; "
+            + (
+                f"walls >= {D.SHELL_WALL_T - 0.05:.2f} mm meet at 4 points, lip gap "
+                f"{lip_gap:.3f} mm (0.10..0.25)"
+                if lip_gap is not None
+                else "joint: " + "; ".join(joint_bad)
+            )
             + f", overlap {shell_clash:.3f} mm^3",
         )
     )

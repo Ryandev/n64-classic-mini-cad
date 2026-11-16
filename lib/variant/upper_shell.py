@@ -5,7 +5,6 @@ and opens:
   - 13 vertical rear `+Y` exhaust louver slits (`1.425 x 4.60 mm` on `2.675 mm` centres across
     `X = -16.76 .. +16.76 mm`, `Z = 19.50 .. 24.10 mm`) aligned to the top louver array
   - all 25 top louvers through the roof: the fan's intake, sealed to it by `part/cooling_hood.py`
-  - a 0.4 mm relief inside the rear wall over a tall part on the Radxa X4 (C10)
 
 Verified against `DEVIATIONS` by `lib/testing/variant_manifest.py`.
 """
@@ -23,6 +22,10 @@ PROCESS = "fdm"
 MANUFACTURE = "fdm"
 PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, 0, 1)
+# It stands on its 2 mm wall edge (7 % of its footprint, under the 15 % rule): the owner's J-01
+# joint (2026-11-16) dropped the inner rim that widened its base, because that rim broke off on
+# two coupon plates. The 8 mm brim takes the hold-down (notes/PRINTING.md).
+MIN_BED_RATIO = 0.07
 # Printed split face down, the deck is a roof over the hollow shell: ~9,000 mm^2 of its INSIDE
 # needs support (hidden once assembled). PETG body, PLA interface, tree supports from the bed
 # (notes/PRINTING.md). Measured 2026-11-13; the overhang row fails if the part ever needs more.
@@ -50,14 +53,6 @@ DEVIATIONS = {
         "bbox": (6.8, 46.0, 19.0, 17.5, 50.5, 24.6),
         "volume_mm3": 52.45,
         "tolerance_mm3": 2.0,
-    },
-    "radxa_part_relief": {
-        "kind": "removed",
-        "why": "0.4 mm pocket inside the rear wall over a 4 mm part on the Radxa X4 (solid 354 "
-        "of Radxa's own STEP), which the hand-edited board model lacked (C10)",
-        "bbox": (31.4, 42.7, 12.8, 37.4, 43.5, 13.8),
-        "volume_mm3": 1.93,
-        "tolerance_mm3": 0.2,
     },
     "top_louvers_intake": {
         "kind": "removed",
@@ -94,6 +89,4 @@ def get_shape() -> cq.Shape:
                 cq.Vector(x0, y0, 24.2),
             )
         )
-    # Radxa part relief (C10): x 31.47..37.27, y 42.8..43.4, z 12.84..13.67 (the part, +0.2)
-    cuts.append(cq.Solid.makeBox(5.8, 0.6, 0.83, cq.Vector(31.47, 42.8, 12.84)))
     return base.cut(*cuts)

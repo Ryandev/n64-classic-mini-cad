@@ -32,11 +32,10 @@ PROCESS = "fdm"
 MANUFACTURE = "fdm"
 PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, 0, 1)
-# 44 mm^2 measured by layers (2026-11-15), all reachable for removal: the tops of the rear port
-# openings (the 12.3 mm RJ45 roof and the rounded USB-C / HDMI / audio counterbores), the top of
-# the front LED hole. PETG body, PLA interface (notes/PRINTING.md). (The switch V-pins that also
-# needed it are gone: the switches are now held by two screws each.)
-SUPPORT_MM2 = 48.0
+# 33 mm^2 measured by layers (2026-11-16), all reachable for removal: the rounded USB-C / HDMI /
+# audio counterbore tops at the rear and the top of the front LED hole. The RJ45 opening now runs
+# up to the split, so its old 12.3 mm roof is gone. PETG body, PLA interface (notes/PRINTING.md).
+SUPPORT_MM2 = 40.0
 VISIBLE_FACES = ("-X", "+X", "-Y", "+Y", "-Z")
 
 DEVIATIONS = {
@@ -154,9 +153,10 @@ DEVIATIONS = {
     },
     "rear_rj45_cutout": {
         "kind": "removed",
-        "why": "Rear-right +Y aperture for relocated panel-mount RJ45 jack at X=+44.1mm (REQ-05)",
-        "bbox": (37.5, 46.7, 1.5, 50.7, 49.5, 12.9),
-        "volume_mm3": 281.25,
+        "why": "Rear-right +Y aperture for relocated panel-mount RJ45 jack at X=+44.1mm (REQ-05), "
+        "open to the split in the wall's thickness (the shell's wall closes it; J-01, 2026-11-16)",
+        "bbox": (37.5, 45.8, 1.5, 50.7, 49.5, 13.0),
+        "volume_mm3": 301.8,
         "tolerance_mm3": 5.0,
     },
 }
@@ -363,6 +363,14 @@ def get_shape() -> cq.Shape:
             5.80,
             11.00,
             cq.Vector(44.10 - 6.40, 45.20, D.REAR_RJ45_Z_CENTRE - 5.50),
+        )
+    )
+    # ...open to the split in the wall's thickness: the shell's wall above closes it. Left to the
+    # tub, its roof there was the wall's last 0.24 mm once the J-01 lip moved inside the wall line
+    # (wall). The lip and its ledge still cross inside the wall line.
+    cuts.append(
+        cq.Solid.makeBox(12.80, 10.0, 0.26, cq.Vector(44.10 - 6.40, 42.0, 12.69)).cut(
+            C.n64_plan_prism(z0=12.0, height=2.0, inset=D.LIP_IN0)
         )
     )
     cuts.extend(floor_vent_cutters())

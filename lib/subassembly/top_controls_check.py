@@ -87,7 +87,7 @@ def check_all():
                 shape,
                 up=mod.PRINT_NORMAL,
                 min_wall_mm=0.8,
-                min_bed_ratio=0.15,
+                min_bed_ratio=getattr(mod, "MIN_BED_RATIO", 0.15),
                 max_aspect=3.0,
                 # Parts that declare no SUPPORT_MM2 must print without support.
                 support_mm2=getattr(mod, "SUPPORT_MM2", 0.0),

@@ -97,9 +97,22 @@ SPLIT_Z = 12.94  # exact 50%-scale N64 parting plane between lower_tub and upper
 PARTING_GROOVE_H = 0.38  # authentic Z = 12.56 .. 12.94 mm exterior shadow-line groove
 LIP_H = 1.8  # Z height of perimeter locating step lip
 LIP_CLEAR = 0.15  # locating clearance per side on perimeter lip (J-01)
-LIP_OUTER_INSET = 1.15  # lower_tub lip outer face inset from outer shell (1.00 skirt + 0.15 gap)
-RABBET_INSET = 1.00  # upper_shell rabbet inner face inset from outer shell (1.00 mm skirt wall)
-UPPER_FLANGE_W = 6.5  # internal stiffening & flat Z = SPLIT_Z bed-contact rim on upper_shell
+# J-01, the standard joint (owner, 2026-11-16): both halves' walls are full SHELL_WALL_T at the
+# split and sit on each other; a lip on the tub stands inside the shell's wall line, LIP_CLEAR
+# from it. It replaced a groove in the shell's wall plus an inner rim added as a printing foot,
+# which left the rim on a thin seam (broke off on coupon plates 3 and 4).
+LIP_T = 0.85  # the tub lip's thickness
+LIP_IN0 = SHELL_WALL_T + LIP_CLEAR  # lip's outer face, inset from the outer surface (2.15)
+LIP_LEDGE_DROP = 1.0  # the lip stands on a ledge this far below the split, stepped up at 45 deg
+
+
+def lip_gaps() -> list[tuple[float, float, float, float]]:
+    """(x0, x1, y0, y1) where the J-01 lip and its channel stop: across the front, from the left
+    bay's outer edge to the right bay's (the doors sit there, and the shell's badge block between
+    them would be thinned by the channel); the lip locates on the sides, back and front corners."""
+    half = FRONT_BAY_W / 2.0 + 1.4
+    return [(min(FRONT_BAY_XS) - half, max(FRONT_BAY_XS) + half, -60.0, -34.0)]
+
 
 # 4x M3 enclosure corner bosses (J-01), coaxial with front pods and rear rounded corners
 CORNER_BOSS_XS = (-52.8, 52.8)

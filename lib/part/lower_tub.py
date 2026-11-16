@@ -46,12 +46,34 @@ def get_shape() -> cq.Shape:
     #    only replicates what is visible, so the whole bottom is now the bed face (BED_FLAT).
     upper_body = C.n64_plan_prism(z0=0.0, height=D.SPLIT_Z, inset=0.0)
 
-    # J-01 inner perimeter locating lip (inset = 1.15 .. 2.00 mm, Z = SPLIT_Z .. SPLIT_Z + LIP_H)
-    lip = C.n64_plan_prism(
-        z0=D.SPLIT_Z - 0.5,
-        height=D.LIP_H + 0.5,
-        inset=D.LIP_OUTER_INSET,
-    )
+    # J-01 locating lip (owner's joint, 2026-11-16): it stands inside the shell's wall line,
+    # LIP_IN0 .. LIP_IN0 + LIP_T in from the outside, from a ledge on the wall's inner face. The
+    # ledge steps out 0.2 mm per 0.2 mm layer (45 deg) so it prints without support.
+    def ring(z0: float, height: float, outer: float, inner: float) -> cq.Shape:
+        return C.n64_plan_prism(z0=z0, height=height, inset=outer).cut(
+            C.n64_plan_prism(z0=z0 - 0.1, height=height + 0.2, inset=inner)
+        )
+
+    lip_in1 = D.LIP_IN0 + D.LIP_T
+    z_ledge = D.SPLIT_Z - D.LIP_LEDGE_DROP
+    lip_parts = [
+        ring(z_ledge, D.LIP_LEDGE_DROP, D.SHELL_WALL_T - 0.01, lip_in1),
+        ring(D.SPLIT_Z - 0.01, D.LIP_H + 0.01, D.LIP_IN0, lip_in1),
+    ]
+    step = 0.2
+    k = 1
+    while lip_in1 - step * k > D.SHELL_WALL_T + 1e-6:
+        lip_parts.append(
+            ring(z_ledge - step * k, step + 0.01, D.SHELL_WALL_T - 0.01, lip_in1 - step * k)
+        )
+        k += 1
+
+    # No lip across the front port bays, where the doors sit (cut from the lip alone)
+    gaps = [
+        cq.Solid.makeBox(x1 - x0, y1 - y0, 40.0, cq.Vector(x0, y0, -5.0))
+        for x0, x1, y0, y1 in D.lip_gaps()
+    ]
+    lip_parts = [p.cut(*gaps) for p in lip_parts]
 
     # Hollow interior cavity above Z = FLOOR_T (1.60 mm)
     cavity = C.n64_plan_prism(
@@ -60,7 +82,7 @@ def get_shape() -> cq.Shape:
         inset=D.SHELL_WALL_T,
     )
 
-    tub_shell = upper_body.fuse(lip).cut(cavity)
+    tub_shell = upper_body.cut(cavity).fuse(*lip_parts)
 
     # 2. Internal louver backing ribs + twin-bay keeper blocks + central LED boss + M3 bosses
     add_solids = [
@@ -252,15 +274,6 @@ def get_shape() -> cq.Shape:
                 y_seat - (-50.0),
                 (D.SPLIT_Z + D.LIP_H + 0.5) - z_bay0,
                 cq.Vector(bx - D.FRONT_BAY_W / 2.0, -50.0, z_bay0),
-            )
-        )
-        # Trim the J-01 locating lip (Z >= SPLIT_Z) across the open front twin-port bay
-        cuts.append(
-            cq.Solid.makeBox(
-                D.FRONT_BAY_W + 2.8,
-                8.0,
-                D.LIP_H + 1.0,
-                cq.Vector(bx - (D.FRONT_BAY_W + 2.8) / 2.0, -50.0, D.SPLIT_Z),
             )
         )
         # Coaxial bottom hinge pivot sockets in outer and inner cheeks of each twin bay

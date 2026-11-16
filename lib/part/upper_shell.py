@@ -49,33 +49,18 @@ def _magnet_bore_y(x: float, y0: float, z: float) -> cq.Shape:
     )
 
 
-RIM_JOINT_T = 1.2  # six layers between the lip groove's top and the hollow above the rim
-
-
 def get_shape() -> cq.Shape:
     """Construct the faithful 50%-scale N64 Upper Shell solid."""
     # 1. Exact 50%-scale N64 upper outer solid (Z = 12.94 .. 33.50 mm)
     outer = C.upper_outer_body()
 
-    # 2. Hollow interior cavity with uniform sculpted roof thickness, J-01 annular rabbet,
-    #    and wide flat Z = SPLIT_Z bed-contact stiffening rim
-    rabbet_ring = C.n64_plan_prism(
-        z0=D.SPLIT_Z - 0.3,
-        height=D.LIP_H + 0.5,
-        inset=D.RABBET_INSET,
-    ).cut(
-        C.n64_plan_prism(
-            z0=D.SPLIT_Z - 0.4,
-            height=D.LIP_H + 0.7,
-            inset=D.SHELL_WALL_T + 0.15,
-        )
-    )
-
+    # 2. Hollow interior cavity with uniform sculpted roof thickness,
     inner_roof_cap = outer.moved(cq.Location(cq.Vector(0.0, 0.0, -2.05)))
-    # The hollow starts RIM_JOINT_T above the lip groove's top, so the flat rim is joined to the
-    # wall through that much material. It started 0.2 mm above it, one printed layer, and the rim
-    # came off both shell coupons on plate 3 (2026-11-15; NECK in process/neck_check.py).
-    z_cavity = D.SPLIT_Z + D.LIP_H + 0.2 + RIM_JOINT_T
+    # The hollow reaches down through the split: the wall stays full SHELL_WALL_T to its bottom and
+    # sits on the tub's wall (J-01). The front corners' hollow keeps its old top (20.34): higher,
+    # it reaches into their domed tops and thins the wall (NECK).
+    z_cavity = D.SPLIT_Z - 0.5
+    z_pods_top = D.SPLIT_Z + D.LIP_H + 0.4 + 5.2
     upper_cavity_wing = C.main_wing_prism(
         z0=z_cavity,
         height=D.SHELL_H,
@@ -83,22 +68,20 @@ def get_shape() -> cq.Shape:
     )
     upper_cavity_pods = C.n64_plan_prism(
         z0=z_cavity,
-        # its top stays at 20.34: raised with z_cavity it reached into the front corners' domed
-        # tops and left a 0.7 mm wall where they meet the front (NECK)
-        height=D.SPLIT_Z + D.LIP_H + 0.4 + 5.2 - z_cavity,
+        height=z_pods_top - z_cavity,
         inset=D.SHELL_WALL_T,
     )
     upper_cavity_outer = upper_cavity_wing.fuse(upper_cavity_pods).intersect(inner_roof_cap)
 
-    # Through the rim's inner edge up into the hollow, overlapping it, so no skin is left between
-    # (raising the hollow alone left a 0.4 mm floor across the whole shell; NECK found it)
-    lower_window = C.n64_plan_prism(
-        z0=D.SPLIT_Z - 0.5,
-        height=z_cavity + 0.2 - (D.SPLIT_Z - 0.5),
-        inset=D.UPPER_FLANGE_W,
+    shell_hollow = outer.cut(upper_cavity_outer)
+    # Room for the tub's lip inside the wall line, clearing anything fused on later (bosses)
+    lip_channel = C.n64_plan_prism(
+        z0=D.SPLIT_Z - 0.5, height=D.LIP_H + 0.5 + D.LIP_CLEAR, inset=D.SHELL_WALL_T
+    ).cut(
+        C.n64_plan_prism(
+            z0=D.SPLIT_Z - 1.0, height=D.LIP_H + 2.0, inset=D.LIP_IN0 + D.LIP_T + D.LIP_CLEAR
+        )
     )
-
-    shell_hollow = outer.cut(rabbet_ring.fuse(upper_cavity_outer, lower_window))
 
     # 3. Additive internal bosses & upper twin-port bay housing blocks:
     #    - 4x corner M3 enclosure bosses (Ø8.5 mm, Z = SPLIT_Z .. 28.9 mm)
@@ -175,7 +158,13 @@ def get_shape() -> cq.Shape:
     )
     boss_sub_roof = outer.intersect(outer.moved(cq.Location(cq.Vector(0.0, 0.0, -0.5))))
     bosses_clipped = cq.Compound.makeCompound(boss_raw).intersect(boss_sub_roof)
-    with_bosses = shell_hollow.fuse(*bosses_clipped.Solids()).cut(rabbet_ring)
+    lip_channel = lip_channel.cut(
+        *[
+            cq.Solid.makeBox(x1 - x0, y1 - y0, 40.0, cq.Vector(x0, y0, -5.0))
+            for x0, x1, y0, y1 in D.lip_gaps()
+        ]
+    )
+    with_bosses = shell_hollow.fuse(*bosses_clipped.Solids()).cut(lip_channel)
 
     # 4. Surface-conforming 0.28 mm skin cutter for top louvers, MEMORY EXPANSION & Nintendo
     surface_skin = outer.cut(outer.moved(cq.Location(cq.Vector(0.0, 0.0, -0.28))))
