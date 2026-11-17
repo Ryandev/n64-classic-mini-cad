@@ -25,7 +25,11 @@ from process.printable import (
 )
 from variant import lower_tub, upper_shell  # noqa: E402
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# cad/, three levels up from lib/<stage>/this_file.py. Two levels pointed at lib/ after the move
+# into lib/<stage>/ (2026-11-15), so exports went to lib/export/ and stale copies were sliced.
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if not os.path.isfile(os.path.join(REPO, "run")):
+    raise RuntimeError(f"{REPO} is not the cad/ folder (no ./run): exports would go astray")
 OUT_DIR = os.path.join(REPO, "export", "coupons")
 TOP = 60.0  # above every part: crops that keep a part's full height use it
 LOOSE_MAX = 0.02  # loose crop fragments may total at most 2% of the coupon
@@ -158,15 +162,12 @@ def _plate_gauge() -> cq.Shape:
 COUPONS = (
     Coupon(
         "1_button_chimney",
-        "power button slides freely in the chimney (0.22 mm/side) and drops onto the bracket pole "
-        "(Ø2.8 in Ø4.0); no rocking, no binding at full 2.1 mm stroke",
+        "power button's sleeve slides on the bracket's pole (Ø3.1 on Ø2.8) with no binding over "
+        "the 2.1 mm stroke; the button slides freely in the chimney (0.22 mm/side); held on the "
+        "pole and in the chimney together it doesn't rock (plate 4 wobbled)",
         (
             Piece("shell_chimney", upper_shell.get_shape, upper_shell.PRINT_NORMAL, _button_box()),
             Piece("power_button", power_slider.get_shape, power_slider.PRINT_NORMAL),
-            # On its straight side (the orientation study's 100 %-wall pick stands it on its round
-            # end, with no flat bed contact): 74 % wall, 26 % rough underside, vs 66 % terraced
-            # printed top-up. Print both and compare before choosing.
-            Piece("power_button_on_side", power_slider.get_shape, (1, 0, 0)),
             Piece(
                 "bracket",
                 lambda: usb_retainer_bracket.bracket_at(_BAY),

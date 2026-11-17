@@ -28,7 +28,11 @@ from part import (  # noqa: E402
 from process.printable import orient_to_bed  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# cad/, three levels up from lib/<stage>/this_file.py. Two levels pointed at lib/ after the move
+# into lib/<stage>/ (2026-11-15), so exports went to lib/export/ and stale copies were sliced.
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if not os.path.isfile(os.path.join(REPO, "run")):
+    raise RuntimeError(f"{REPO} is not the cad/ folder (no ./run): exports would go astray")
 PLATE_STEP = os.path.join(REPO, "export", "plate", "print_plate.step")
 BED_XY = (256.0, 256.0)
 SPACING_MM = 6.0
