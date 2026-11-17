@@ -138,7 +138,7 @@ When a part does need support, use the GBA set-up (`PRINTING.md`, DECISIONS 10-1
   first two-material print, and clean the calibration plate and both tips after purging.
 - **Visible faces never sit on support.** Orient for the faces the user sees first.
 - **Never let support fill a bore that something slides in** (G12): here, the button sleeves
-  and the door hinge sockets.
+  and the door hinge holes.
 - **A face printed on support comes out about 0.10 mm proud.** Give each supported mating face an
   extra 0.10–0.12 mm of clearance (TOLERANCES.md §4, class 3).
 
@@ -177,7 +177,7 @@ so they outrank the generic ±0.2 mm in our `TOLERANCES.md`.
 | M3 inserts, corner bosses | Ø4.0 | same as GBA |
 | M2.5 inserts, standoffs | Ø3.2 | **untested** anywhere: coupon 4 |
 | M2.5 switch screws in the tower | Ø3.0 drawn (now Ø2.6 nominal, compensated at slicing) | coupon plate 3 (2026-11-15): screws into the switch well; a little play in the tower hole (minor, owner). Ø2.8 drawn would tighten it. (The Ø2.2 V-pin fitted the switch hole well, slight resistance, but left the switch no way in: removed 2026-11-15) |
-| Door hinge pins in their sockets | Ø1.8 in Ø2.4 (0.30 mm/side) | **at risk**: a small hole; at −0.4 mm it leaves ~0.1 mm/side and may bind. Coupon 3 |
+| Door hinge: steel pins in the door knuckle and bay walls | Ø1.5 pin: Ø1.8 where it turns, Ø1.5 pressed in the outer wall | **to test**: small holes print ~0.3 mm/side small (hole gauge, plate 4), so check the pin turns in the knuckle and presses in the wall. Coupon 3 and the hole gauge |
 | Magnets in their pockets | Ø3.0 in Ø3.2 (0.10 mm/side) | **at risk**: at −0.3 mm the pocket is ~Ø2.9 and the magnet won't go in. Not yet measured on GBA either. Coupon 3 |
 
 ## Prove it small first

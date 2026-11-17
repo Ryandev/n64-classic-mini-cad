@@ -268,12 +268,13 @@ FRONT_BAY_XS = (-25.0, 25.0)  # Left (`P1+P2`) and Right (`P3+P4`) twin-port bay
 FRONT_BAY_X = -25.0  # Left (`P1+P2`) bay centre (`part/front_port_cover.py` canonical instance)
 FRONT_BAY_W = 28.4  # X = +-10.8 .. +-39.2 mm -> keeps central 21.6 mm front apron 100% untouched!
 # The bays' bottom edge, and the doors' bottom edge and hinge with it, sit FRONT_BAY_DROP below
-# the 11.4 mm opening centred on the ports. The glued port bezels stand 2.47 mm proud of the hinge
-# axis; with the hinge this much lower they swing out past the case front before they drop, instead
-# of into the sill (C1: at no drop they hit it from 13 deg open). The ports and bay tops don't move.
-# 2.0 clears with a 0.05 mm gap at 90 deg; 2.5 leaves 0.55 mm. Plus the door's paint allowance,
-# so the sill drops instead of the door and pivot rising: the swing and pins stay as they were.
-FRONT_BAY_DROP = 2.5 + 2.0 * PAINT_T
+# the 11.4 mm opening centred on the ports. The glued port bezels stand proud of the door: as it
+# swings down they sweep below the hinge, so the hinge must sit well below the bezels (C1: at no
+# drop they hit the sill from 13 deg open). The steel hinge pin needs 0.8 mm of door round it,
+# which puts the pivot 1.7 mm in from the door's front-bottom edge (HINGE_KNUCKLE_R); swept on the
+# real tub and bezels 0..90 deg, that needs 1.5 mm more drop than the old printed pins (2.5, pivot
+# 0.9 in): 2026-11-17. Plus the door's paint allowance. The ports and bay tops don't move.
+FRONT_BAY_DROP = 2.5 + 1.5 + 2.0 * PAINT_T
 FRONT_BAY_Z1 = USB_A_Z_CENTRE + 11.4 / 2.0  # 18.89 mm
 FRONT_BAY_Z0 = USB_A_Z_CENTRE - 11.4 / 2.0 - FRONT_BAY_DROP
 FRONT_BAY_H = FRONT_BAY_Z1 - FRONT_BAY_Z0
@@ -282,13 +283,26 @@ FRONT_COVER_FIT = 0.20  # J-05 XZ locating clearance per side in each twin-port 
 FRONT_COVER_CLEAR = FRONT_COVER_FIT + 2.0 * PAINT_T  # as drawn: door and bay edges both painted
 FRONT_COVER_T = 2.0  # nominal bay seat depth (each twin hinge cover is 1.8 mm thick)
 
-# Bottom coaxial flip-hinge pins on each `front_port_cover` & sockets in `lower_tub` (J-05)
-HINGE_PIN_D = 1.8
-HINGE_SOCKET_D = 2.4  # 0.30 mm/side radial pivot clearance
-HINGE_PIN_EXT = 0.8  # pin extension beyond each end of a twin-port cover
-HINGE_SOCKET_DEPTH = 1.2  # blind socket depth in `lower_tub` bay cheeks
-HINGE_Y = FRONT_BAY_Y0 + (FRONT_COVER_T - 0.2) - HINGE_PIN_D / 2.0  # -45.22 mm, flush on +Y bed
-HINGE_Z = FRONT_BAY_Z0 + FRONT_COVER_CLEAR + 0.90  # pivot 0.90 mm above the door's bottom edge
+# Door hinge (J-05, owner 2026-11-17): a steel rod through the door's thickened bottom edge (its
+# knuckle), turning in a blind hole in the bay's inner wall and held by a press fit in the outer
+# wall. There's no room inside to push one long rod in, so it goes in as HINGE_PIN_COUNT short
+# pins pushed end to end through the outer wall from the hollow front corner behind it
+# (HINGE_PINS row). No printed snap: nothing flexes to fit the door.
+HINGE_PIN_D = 1.5  # steel dowel pins (ISO 8734 1.5 x 12, or cut from 1.5 mm rod)
+HINGE_PIN_L = 12.0
+HINGE_TURN_CLEAR = 0.15  # per side, where the door turns on the pins
+HINGE_BORE_D = HINGE_PIN_D + 2.0 * HINGE_TURN_CLEAR  # door knuckle and the inner blind hole
+HINGE_PRESS_D = HINGE_PIN_D  # outer wall: line to line, the last pin is pressed and holds the rest
+HINGE_KNUCKLE_R = HINGE_BORE_D / 2.0 + 0.8  # 0.8 mm wall round the bore: 1.7 mm
+HINGE_BLIND_DEPTH = 1.0  # into the inner wall, leaving 0.8 mm before the hollow behind it
+HINGE_LEDGE_CLEAR = 0.25  # the knuckle turns in a groove in the ledge behind the door
+HINGE_Y = FRONT_BAY_Y0 + HINGE_KNUCKLE_R  # pivot at the knuckle's centre, 1.7 mm behind the front
+HINGE_Z = FRONT_BAY_Z0 + FRONT_COVER_CLEAR + HINGE_KNUCKLE_R  # and 1.7 mm above the door's bottom
+HINGE_OUTER_WALL = 6.6  # bay edge to where the pin line is clear of the curved corner wall
+HINGE_PIN_COUNT = 3
+# Beside each door's outer end the front curves 0.7 mm behind the door face; this strip is brought
+# flush with the door so the outer hinge wall is solid (owner, 2026-11-17)
+FRONT_BAY_FLUSH_W = 4.1
 
 # Top-centre fingernail slit on each twin-port cover (-Y/+Z edge at X = +-25.0 mm)
 FINGER_SLIT_W = 6.4

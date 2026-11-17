@@ -89,6 +89,36 @@ RULES = (
 )
 
 
+def _knuckle(wall: float) -> cq.Shape:
+    """A 1.8 mm plate with a bored knuckle along one edge standing proud of its back, like the
+    port door's hinge: the knuckle's flat end is a face whose UV midpoint is on the bore's edge."""
+    bore_r = 0.9
+    r = bore_r + wall
+    along = cq.Vector(1.0, 0.0, 0.0)
+    plate = cq.Solid.makeBox(3.0, 1.8, 8.0)
+    knuckle = cq.Solid.makeCylinder(r, 3.0, cq.Vector(0.0, r, r), along)
+    return plate.fuse(knuckle).cut(cq.Solid.makeCylinder(bore_r, 3.0, cq.Vector(0.0, r, r), along))
+
+
+# The wall row's own rules: a door knuckle's flat end once read as a 0.68 mm wall, because the
+# probe started on the bore's edge (2026-11-17); a knuckle that is thin must still read so.
+def _louver_slat() -> cq.Shape:
+    """One 1.25 mm slat between two top louvers, cut from the real shell: its side faces have a
+    curved top edge under the dome, so a probe can start 0.06 mm below it (2026-11-17)."""
+    from variant import upper_shell  # noqa: PLC0415 - only this rule needs the shell
+
+    return upper_shell.get_shape().intersect(
+        cq.Solid.makeBox(1.6, 10.0, 5.0, cq.Vector(16.6, -6.0, 27.0))
+    )
+
+
+WALL_RULES = (
+    ("a hinge knuckle with 0.8 mm round its bore is not thin", _knuckle(0.8), True),
+    ("a hinge knuckle with 0.4 mm round its bore is thin", _knuckle(0.4), False),
+    ("a 1.25 mm louver slat under the dome is not thin", _louver_slat(), True),
+)
+
+
 def _verdict(shape: cq.Shape) -> tuple[bool | None, str]:
     """The overhang row's verdict with no support declared; None if it refused the shape."""
     try:
@@ -102,6 +132,9 @@ def check_all():
     for label, shape, printable_ok in RULES:
         ok, msg = _verdict(shape)
         rows.append((f"PRINT_RULE {label}", ok is not None and ok == printable_ok, msg))
+    for label, shape, wall_ok in WALL_RULES:
+        ok, msg = printable.check_wall(shape, 0.8)
+        rows.append((f"WALL_RULE {label}", ok == wall_ok, msg))
     for name, printed_ok in PLATE1.items():
         if not os.path.isfile(os.path.join(FIXTURES, name + ".stl")):
             rows.append((f"PRINT_OUTCOME {name}", False, f"no plate-1 STL for {name}"))

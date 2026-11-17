@@ -38,6 +38,93 @@ PRINT_NORMAL = (0, 0, 1)
 VISIBLE_FACES = ("-X", "+X", "-Y", "+Y", "-Z")
 
 
+def _outward(bay_x: float) -> float:
+    """+1 or -1: the direction from a bay towards the console's side (its outer wall)."""
+    return -1.0 if bay_x < 0.0 else 1.0
+
+
+def _flush_strip_xs(bx: float) -> tuple[float, float]:
+    """X span of the strip beside a bay's outer end that is brought flush with the door."""
+    side = _outward(bx)
+    edge = bx + side * D.FRONT_BAY_W / 2.0
+    lo, hi = sorted((edge, edge + side * D.FRONT_BAY_FLUSH_W))
+    return lo, hi
+
+
+def _hinge_wall_blocks() -> list[cq.Shape]:
+    """Material each door hinge needs in the outer bay wall (J-05, owner 2026-11-17).
+
+    Beside each door's outer end the N64 front curves back 0.7 mm behind the door face, which left
+    0.13 mm in front of the hinge pin: that strip is brought forward flush with the door (the shell
+    does the same above the split). A block round the pin hole carries it out to the hollow front
+    corner the pins are pushed in from.
+    """
+    out = []
+    for bx in D.FRONT_BAY_XS:
+        side = _outward(bx)
+        edge = bx + side * D.FRONT_BAY_W / 2.0
+        x0, x1 = _flush_strip_xs(bx)
+        out.append(cq.Solid.makeBox(x1 - x0, 1.1, D.SPLIT_Z, cq.Vector(x0, D.FRONT_BAY_Y0, 0.0)))
+        # a block round the pin hole from the bay wall out to where the pins go in
+        px0, px1 = sorted((edge + side * 1.0, edge + side * D.HINGE_OUTER_WALL))
+        # it stands on the floor, so it prints without support
+        r = D.HINGE_PRESS_D / 2.0 + 0.85
+        out.append(
+            cq.Solid.makeBox(
+                px1 - px0,
+                D.HINGE_Y + r + 0.5 - (D.FRONT_BAY_Y0 + 0.1),
+                D.HINGE_Z + r - D.FLOOR_T,
+                cq.Vector(px0, D.FRONT_BAY_Y0 + 0.1, D.FLOOR_T),
+            )
+        )
+    return out
+
+
+def _hinge_cuts(bx: float) -> list[cq.Shape]:
+    """The bay's hinge holes and the groove the door's knuckle turns in (J-05)."""
+    side = _outward(bx)
+    half = D.FRONT_BAY_W / 2.0
+    along = cq.Vector(1.0, 0.0, 0.0)
+    return [
+        # blind hole in the inner wall: the end of the pin train turns in it
+        cq.Solid.makeCylinder(
+            D.HINGE_BORE_D / 2.0,
+            D.HINGE_BLIND_DEPTH + 0.2,
+            cq.Vector(bx - side * (half - 0.2), D.HINGE_Y, D.HINGE_Z),
+            -side * along,
+        ),
+        # through the outer wall into the hollow corner: the pins go in here, the last pressed
+        cq.Solid.makeCylinder(
+            D.HINGE_PRESS_D / 2.0,
+            D.HINGE_OUTER_WALL + 1.0,
+            cq.Vector(bx + side * (half - 0.2), D.HINGE_Y, D.HINGE_Z),
+            side * along,
+        ),
+        # the knuckle turns in this groove through the ledge behind the door
+        _teardrop(D.HINGE_KNUCKLE_R + D.HINGE_LEDGE_CLEAR, bx - half, D.FRONT_BAY_W),
+    ]
+
+
+def _teardrop(r: float, x0: float, length: float) -> cq.Shape:
+    """A round groove along X on the hinge axis with a 45 deg peaked roof, so it prints.
+
+    A round roof open to the front is held only from behind, so its top read as needing support
+    (8.5 mm^2 a door, 2026-11-17). The peak is the standard fix for a horizontal hole.
+    """
+    centre = cq.Vector(x0, D.HINGE_Y, D.HINGE_Z)
+    along = cq.Vector(1.0, 0.0, 0.0)
+    roof = (
+        cq.Solid.makeBox(length, 2.0 * r, 2.0 * r, cq.Vector(x0, D.HINGE_Y - r, D.HINGE_Z - r))
+        .rotate(centre, centre + along, 45.0)
+        .intersect(
+            cq.Solid.makeBox(
+                length, 4.0 * r, 2.0 * r, cq.Vector(x0, D.HINGE_Y - 2.0 * r, D.HINGE_Z)
+            )
+        )
+    )
+    return cq.Solid.makeCylinder(r, length, centre, along).fuse(roof)
+
+
 def get_shape() -> cq.Shape:
     """Construct the faithful 50%-scale N64 Lower Tub solid."""
     # 1. Main outer tub body, flat-bottomed from Z = 0 (C9, owner 2026-11-13). The original's
@@ -175,6 +262,7 @@ def get_shape() -> cq.Shape:
         C.n64_plan_prism(z0=D.FLOOR_T, height=D.SPLIT_Z - D.FLOOR_T, inset=0.0)
     )
     add_solids.extend(front_clipped.Solids())
+    add_solids.extend(_hinge_wall_blocks())
 
     tub_with_bosses = tub_shell.fuse(*add_solids)
 
@@ -196,6 +284,15 @@ def get_shape() -> cq.Shape:
             height=D.PARTING_GROOVE_H + 0.30,
             inset=0.30,
         )
+    )
+    # the flush strips beside the doors' outer ends get their own groove on their face (below)
+    groove_ring = groove_ring.cut(
+        *[
+            cq.Solid.makeBox(
+                x1 - x0, 3.0, 2.0, cq.Vector(x0, D.FRONT_BAY_Y0 - 0.5, D.SPLIT_Z - 1.0)
+            )
+            for x0, x1 in map(_flush_strip_xs, D.FRONT_BAY_XS)
+        ]
     )
     cuts.append(groove_ring)
 
@@ -276,17 +373,17 @@ def get_shape() -> cq.Shape:
                 cq.Vector(bx - D.FRONT_BAY_W / 2.0, -50.0, z_bay0),
             )
         )
-        # Coaxial bottom hinge pivot sockets in outer and inner cheeks of each twin bay
-        for side in (-1.0, 1.0):
-            sx = bx + side * (D.FRONT_BAY_W / 2.0 - 0.2)
-            cuts.append(
-                cq.Solid.makeCylinder(
-                    D.HINGE_SOCKET_D / 2.0,
-                    D.HINGE_SOCKET_DEPTH + 0.2,
-                    cq.Vector(sx, D.HINGE_Y, D.HINGE_Z),
-                    cq.Vector(side, 0.0, 0.0),
-                )
+        cuts.extend(_hinge_cuts(bx))
+        # the parting groove along the flush strip's face, 0.3 mm deep like the ring's
+        gx0, gx1 = _flush_strip_xs(bx)
+        cuts.append(
+            cq.Solid.makeBox(
+                gx1 - gx0,
+                0.5,
+                D.PARTING_GROOVE_H + 0.10,
+                cq.Vector(gx0, D.FRONT_BAY_Y0 - 0.2, D.SPLIT_Z - D.PARTING_GROOVE_H),
             )
+        )
         # Lower keeper magnet pocket at (bx, y_seat, 9.90 mm)
         cuts.append(
             cq.Solid.makeCylinder(

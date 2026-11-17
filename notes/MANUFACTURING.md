@@ -64,7 +64,7 @@ standby light.
 ## 4. Top-Down Assembly Sequence (`lower_tub` -> `upper_shell`)
 
 1. **Front Controller Ports (`lower_tub`):**
-   - Press-fit `4x` `n64_port_insert` rings (`P1..P4`) and `8x` `Ø3.0 x 1.0 mm` N52 magnets into the front apron and `2x` `front_port_cover` doors; snap the cover hinge trunnions into the side walls.
+   - Press-fit `4x` `n64_port_insert` rings (`P1..P4`) and `8x` `Ø3.0 x 1.0 mm` N52 magnets into the front apron and `2x` `front_port_cover` doors. Slide each door into its bay from the front, then push its `3x Ø1.5 x 12 mm` steel pins one after another through the hole in the bay's outer wall (reached from inside the tub's hollow front corner) until the last is flush: it presses in and holds the others.
    - Drop `4x TE Connectivity 292303-7` right-angle USB-A receptacles straight down (`-Z`) onto the stepped `Z = 10.80 / 9.55 mm` cradle floors so their PCB kink legs engage the `Y = -32.35 .. -30.00 mm` retention slots.
 2. **Glue `2x usb_retainer_bracket` Bridges:**
    - Apply a drop of CA / epoxy to the outer, centre (`X = ±25.00 mm`), and inner USB divider walls of `lower_tub` and press the Left and Right `usb_retainer_bracket` pieces down until their `Z = 16.85 mm` bridges seat over the `4x` USB-A metal shells (`0.15 mm` top clearance) and their `Z = BUTTON_STOP_Z` stop blocks (`22.97 mm`) (`Face854` extended to `Y = -27.80 mm`) and `Ø2.80 mm` guide poles stand vertical at `(±32.32, -32.20)`.

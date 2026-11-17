@@ -20,12 +20,15 @@ import cadquery as cq  # noqa: E402
 import shapely  # noqa: E402
 from cadquery.occ_impl.shapes import check as bop_check  # noqa: E402
 from OCP.BRepAdaptor import BRepAdaptor_Curve, BRepAdaptor_Surface  # noqa: E402
+from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeVertex  # noqa: E402
 from OCP.BRepClass3d import BRepClass3d_SolidClassifier  # noqa: E402
+from OCP.BRepExtrema import BRepExtrema_DistShapeShape  # noqa: E402
 from OCP.BRepGProp import BRepGProp_Face  # noqa: E402
 from OCP.BRepTools import BRepTools_WireExplorer  # noqa: E402
+from OCP.BRepTopAdaptor import BRepTopAdaptor_FClass2d  # noqa: E402
 from OCP.GeomAbs import GeomAbs_Torus  # noqa: E402
-from OCP.gp import gp_Pnt, gp_Vec  # noqa: E402
-from OCP.TopAbs import TopAbs_IN, TopAbs_ON, TopAbs_REVERSED  # noqa: E402
+from OCP.gp import gp_Pnt, gp_Pnt2d, gp_Vec  # noqa: E402
+from OCP.TopAbs import TopAbs_IN, TopAbs_REVERSED  # noqa: E402
 from shapely.affinity import rotate  # noqa: E402
 from shapely.geometry import LineString, Polygon  # noqa: E402
 from shapely.geometry.base import BaseGeometry  # noqa: E402
@@ -325,9 +328,71 @@ def check_necks(
     return False, f"{len(found)} slice(s) where a piece hangs on under {min_mm:.1f} mm: {where}"
 
 
+def _point_inside_face(f: cq.Face) -> tuple[float, float] | None:
+    """A (u, v) strictly inside the face: its UV midpoint, or the nearest grid point that is.
+
+    The midpoint of a face with a hole can land in the hole or on its edge (a ring's lands on
+    the bore), where a probe measures nothing: the knuckle end faces read as 0.68 mm thin walls
+    (2026-11-17)."""
+    u0, u1, v0, v1 = f._uvBounds()
+    fc = BRepTopAdaptor_FClass2d(f.wrapped, 1e-6)
+    n = 6
+    nearest_first = sorted(
+        (((i + 0.5) / n, (j + 0.5) / n) for i in range(n) for j in range(n)),
+        key=lambda t: (t[0] - 0.5) ** 2 + (t[1] - 0.5) ** 2,
+    )
+    grid = [(0.5, 0.5), *nearest_first]
+    for a, b in grid:
+        u, v = u0 + a * (u1 - u0), v0 + b * (v1 - v0)
+        if fc.Perform(gp_Pnt2d(u, v)) == TopAbs_IN:
+            return u, v
+    return None
+
+
+def _deepest_point_in_face(f: cq.Face) -> tuple[float, float] | None:
+    """Of a grid of points inside the face, the one furthest from its edges.
+
+    A probe started near an edge can leave through the next face over: a louver slat's side
+    face has a curved top under the dome, and a point 0.06 mm below it read the 1.25 mm slat as
+    0.32 mm thin (2026-11-17). A wall that is really thin is thin from anywhere in it."""
+    u0, u1, v0, v1 = f._uvBounds()
+    fc = BRepTopAdaptor_FClass2d(f.wrapped, 1e-6)
+    edges = cq.Compound.makeCompound(f.Edges()).wrapped
+    surf = BRepAdaptor_Surface(f.wrapped)
+    n = 8
+    best, best_d = None, -1.0
+    for i in range(n):
+        for j in range(n):
+            u = u0 + (i + 0.5) / n * (u1 - u0)
+            v = v0 + (j + 0.5) / n * (v1 - v0)
+            if fc.Perform(gp_Pnt2d(u, v)) != TopAbs_IN:
+                continue
+            ext = BRepExtrema_DistShapeShape(
+                BRepBuilderAPI_MakeVertex(surf.Value(u, v)).Vertex(), edges
+            )
+            ext.Perform()
+            if ext.IsDone() and ext.Value() > best_d:
+                best, best_d = (u, v), ext.Value()
+    return best
+
+
+def _probe_in(clf, f: cq.Face, uv: tuple[float, float], probe: float) -> bool:
+    """Is the point `probe` in from the face at (u, v), along its inward normal, in the solid?"""
+    p, vn = gp_Pnt(), gp_Vec()
+    BRepGProp_Face(f.wrapped).Normal(uv[0], uv[1], p, vn)
+    if vn.Magnitude() < 1e-9:
+        return True
+    vn.Normalize()
+    clf.Perform(
+        gp_Pnt(p.X() - vn.X() * probe, p.Y() - vn.Y() * probe, p.Z() - vn.Z() * probe), 1e-4
+    )
+    return clf.State() == TopAbs_IN
+
+
 def check_wall(shape: cq.Shape, min_mm=MIN_WALL_MM):
-    """For each face's UV midpoint on the surface, step inward along -normal;
-    if already outside the solid before `min_mm`, the wall there is thinner than `min_mm`."""
+    """For a point inside each face, step inward along -normal; if already outside the solid
+    before `min_mm`, retry from the point furthest from the face's edges, and only if that is
+    outside too is the wall there thinner than `min_mm`."""
     clf = BRepClass3d_SolidClassifier(shape.wrapped)
     probe = min_mm * 0.85
     thin = 0
@@ -336,31 +401,21 @@ def check_wall(shape: cq.Shape, min_mm=MIN_WALL_MM):
     for f in shape.Faces():
         if f.Area() < 1.0:
             continue  # chamfer/fillet sliver, not a wall
-        try:
-            u0, u1, v0, v1 = f._uvBounds()
-            u, v = 0.5 * (u0 + u1), 0.5 * (v0 + v1)
-            p, vn = gp_Pnt(), gp_Vec()
-            BRepGProp_Face(f.wrapped).Normal(u, v, p, vn)
-            if vn.Magnitude() < 1e-9:
-                continue
-            vn.Normalize()
-            # Skip if (u_mid, v_mid) falls inside an interior hole of a perforated face
-            clf.Perform(p, 1e-3)
-            if clf.State() != TopAbs_ON:
-                continue
-        except Exception:
+        uv = _point_inside_face(f)
+        if uv is None:
             continue
+        p, vn = gp_Pnt(), gp_Vec()
+        BRepGProp_Face(f.wrapped).Normal(uv[0], uv[1], p, vn)
+        if vn.Magnitude() < 1e-9:
+            continue
+        vn.Normalize()
         checked += 1
-        pin = gp_Pnt(
-            p.X() - vn.X() * probe,
-            p.Y() - vn.Y() * probe,
-            p.Z() - vn.Z() * probe,
-        )
-        clf.Perform(pin, 1e-4)
-        if clf.State() != TopAbs_IN:
-            thin += 1
-            if thinnest_at is None:
-                thinnest_at = (p.X(), p.Y(), p.Z())
+        if not _probe_in(clf, f, uv, probe):
+            deep = _deepest_point_in_face(f)
+            if deep is None or not _probe_in(clf, f, deep, probe):
+                thin += 1
+                if thinnest_at is None:
+                    thinnest_at = (p.X(), p.Y(), p.Z())
     ok = thin == 0 and checked > 0
     msg = f"{checked} faces >=1 mm^2 probed at {probe:.2f} mm, {thin} thin"
     if thinnest_at:

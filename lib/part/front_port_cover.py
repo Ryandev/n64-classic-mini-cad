@@ -7,8 +7,8 @@ Charcoal Grey bottom-hinged, magnet-latched twin-port front controller cover
 Features:
   - Leaves the `21.60 mm` central front apron (`X = -10.80 .. +10.80 mm`), flush Clear Acrylic
     N64 jewel, and horizontal lenticular red Power LED lens 100% untouched authentic N64 shell
-  - Coaxial bottom pivot pins (`Ø1.8 mm` at `Z = 6.09 mm`) engaging `Ø2.4 mm` sockets in
-    `lower_tub` plus 45-degree bottom swing-relief bevels (doors + bezels clear `0..90 deg`)
+  - Hinge knuckle along the bottom edge (`Ø3.4 mm`, bored `Ø1.8 mm`) turning on the steel
+    hinge pins (`HINGE_PIN_*`) held in `lower_tub`'s bay walls (doors + bezels clear `0..90 deg`)
   - Continuous `Z = 12.56 .. 12.94 mm` exterior parting-line shadow groove across the front face
   - Top-centre fingernail slit (`6.4 x 1.1 x 0.9 mm`) to flip down each twin cover and reveal
     its pair of horizontal `TE Connectivity 292303-7` USB-A receptacles
@@ -25,19 +25,20 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
 from assembly import datum as D  # noqa: E402
-from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeFace  # noqa: E402
 
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
 PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
-PRINT_NORMAL = (0, -1, 0)
+# Printed front face down (2026-11-17): the hinge knuckle stands proud of the back, so the back
+# can't sit on the bed; the visible face takes the bed's flat finish instead.
+PRINT_NORMAL = (0, 1, 0)
 VISIBLE_FACES = ("-Y",)
 
 
 def cover_at(bay_x: float = D.FRONT_BAY_X) -> cq.Shape:
     """Build one twin-port (`P1+P2` or `P3+P4`) hinged front controller cover at `bay_x`."""
-    w = D.FRONT_BAY_W - 2.0 * D.FRONT_COVER_CLEAR  # 28.0 mm
-    h = D.FRONT_BAY_H - 2.0 * D.FRONT_COVER_CLEAR  # 13.5 mm
+    w = D.FRONT_BAY_W - 2.0 * D.FRONT_COVER_CLEAR
+    h = D.FRONT_BAY_H - 2.0 * D.FRONT_COVER_CLEAR
     t = D.FRONT_COVER_T - 0.2  # 1.8 mm
     y_front = D.FRONT_BAY_Y0  # -46.12 mm
     y_back = y_front + t  # -44.32 mm
@@ -50,32 +51,32 @@ def cover_at(bay_x: float = D.FRONT_BAY_X) -> cq.Shape:
         cq.Vector(bay_x - w / 2.0, y_front, z0),
     )
 
-    # Coaxial bottom flip-hinge pivot pins flushed to the +Y rear bed plane (zero overhang)
-    pins = [
+    # Hinge knuckle along the bottom edge (J-05): a round rib of HINGE_KNUCKLE_R about the pivot,
+    # bored for the steel pins. Below the pivot the door is cut to that same radius, so nothing
+    # of it sweeps lower than its bottom edge as it opens (the sill clears it at any angle).
+    r = D.HINGE_KNUCKLE_R
+    axis_x0 = bay_x - w / 2.0 - 0.1
+    keep = cq.Solid.makeBox(
+        w + 0.2, t + 2.0 * r, h, cq.Vector(axis_x0, y_front - r, D.HINGE_Z)
+    ).fuse(
         cq.Solid.makeCylinder(
-            D.HINGE_PIN_D / 2.0,
-            D.HINGE_PIN_EXT + 0.4,
-            cq.Vector(bay_x + side * (w / 2.0 - 0.4), D.HINGE_Y, D.HINGE_Z),
-            cq.Vector(side, 0.0, 0.0),
+            r, w + 0.2, cq.Vector(axis_x0, D.HINGE_Y, D.HINGE_Z), cq.Vector(1.0, 0.0, 0.0)
         )
-        for side in (-1.0, 1.0)
-    ]
-    body = plate.fuse(*pins)
+    )
+    # trimmed to the front face: the round would otherwise touch it along a line, a hair proud
+    knuckle = cq.Solid.makeCylinder(
+        r, w, cq.Vector(bay_x - w / 2.0, D.HINGE_Y, D.HINGE_Z), cq.Vector(1.0, 0.0, 0.0)
+    ).intersect(cq.Solid.makeBox(w, 2.0 * r, 2.0 * r, cq.Vector(bay_x - w / 2.0, y_front, z0)))
+    body = plate.intersect(keep).fuse(knuckle)
 
-    cuts = []
-    # 1. 45-deg bottom swing-relief chamfers on both +Y/-Z and -Y/-Z edges (clears sill 0..90 deg)
-    cham = 0.55
-    for y_corner, y_in in ((y_back, y_back - cham), (y_front, y_front + cham)):
-        y_out = y_corner + 0.1 if y_corner > D.HINGE_Y else y_corner - 0.1
-        wp_cham = (
-            cq.Workplane("YZ", origin=(bay_x - w / 2.0 - 0.1, 0.0, 0.0))
-            .moveTo(y_in, z0 - 0.1)
-            .lineTo(y_out, z0 - 0.1)
-            .lineTo(y_out, z0 + cham)
-            .close()
+    cuts = [
+        cq.Solid.makeCylinder(
+            D.HINGE_BORE_D / 2.0,
+            w + 0.2,
+            cq.Vector(axis_x0, D.HINGE_Y, D.HINGE_Z),
+            cq.Vector(1.0, 0.0, 0.0),
         )
-        f_cham = cq.Face.cast(BRepBuilderAPI_MakeFace(wp_cham.wire().val().wrapped, True).Face())
-        cuts.append(cq.Solid.extrudeLinear(f_cham, cq.Vector(w + 0.2, 0.0, 0.0)))
+    ]
 
     # 2. Continuous Z = 12.56 .. 12.94 mm parting-line shadow groove across the -Y face
     cuts.append(

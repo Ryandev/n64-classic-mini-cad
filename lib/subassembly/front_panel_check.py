@@ -16,6 +16,7 @@ Verifies:
     pockets on `front_port_cover` with `0.20 mm/side` clearance
 """
 
+import math
 import os
 import sys
 
@@ -44,6 +45,77 @@ def _common_volume(a: cq.Shape, b: cq.Shape) -> float:
     if not com.IsDone():
         return -1.0
     return cq.Shape.cast(com.Shape()).Volume()
+
+
+def _hinge_pins_row(tub: cq.Shape, covers: list, usb: cq.Shape) -> tuple:
+    """HINGE_PINS (J-05, owner 2026-11-17): the steel pins, pushed end to end through the outer
+    bay wall from the hollow corner behind it, run the door's knuckle into the inner wall; each
+    hole has 0.8 mm of plastic round it; and the corner leaves room to push them in."""
+    from OCP.BRepClass3d import BRepClass3d_SolidClassifier
+    from OCP.gp import gp_Pnt
+    from OCP.TopAbs import TopAbs_IN
+
+    def solid_round(shape: cq.Shape, x: float, r: float) -> bool:
+        clf = BRepClass3d_SolidClassifier(shape.wrapped)
+        for k in range(12):
+            a = math.radians(30.0 * k)
+            clf.Perform(gp_Pnt(x, D.HINGE_Y + r * math.cos(a), D.HINGE_Z + r * math.sin(a)), 1e-4)
+            if clf.State() != TopAbs_IN:
+                return False
+        return True
+
+    along = cq.Vector(1.0, 0.0, 0.0)
+    wall = 0.8 - 0.01
+    msgs, ok = [], True
+    for bx, door in zip(D.FRONT_BAY_XS, covers):
+        side = -1.0 if bx < 0.0 else 1.0  # towards the outer wall
+        half = D.FRONT_BAY_W / 2.0
+        inner_edge, outer_edge = bx - side * half, bx + side * half
+        start = inner_edge - side * D.HINGE_BLIND_DEPTH  # bottom of the blind hole
+        length = D.HINGE_PIN_COUNT * D.HINGE_PIN_L
+        end = start + side * length
+        train = cq.Solid.makeCylinder(
+            D.HINGE_PIN_D / 2.0, length, cq.Vector(min(start, end), D.HINGE_Y, D.HINGE_Z), along
+        )
+        clash = _common_volume(train, tub) + _common_volume(train, door)
+        clash += _common_volume(train, usb)  # <= 0.01: the press fit is drawn line to line
+        corner = outer_edge + side * D.HINGE_OUTER_WALL  # where the hole meets the hollow corner
+        # how much of the last pin is in the outer wall's press fit
+        last0, last1 = sorted((end - side * D.HINGE_PIN_L, end))
+        wall0, wall1 = sorted((outer_edge, corner))
+        pressed = max(0.0, min(last1, wall1) - max(last0, wall0))
+        # room to bring each pin up to the hole and push it in: a pin's length plus 1 mm
+        path = cq.Solid.makeCylinder(
+            D.HINGE_PIN_D / 2.0 + 0.3,
+            D.HINGE_PIN_L + 1.0,
+            cq.Vector(corner, D.HINGE_Y, D.HINGE_Z),
+            side * along,
+        )
+        blocked = _common_volume(path, tub)
+        walls = (
+            solid_round(door, bx, D.HINGE_BORE_D / 2.0 + wall)
+            and solid_round(tub, outer_edge + side * 1.0, D.HINGE_PRESS_D / 2.0 + wall)
+            and solid_round(
+                tub, outer_edge + side * (D.HINGE_OUTER_WALL - 1.0), D.HINGE_PRESS_D / 2.0 + wall
+            )
+            and solid_round(tub, inner_edge - side * 0.6, D.HINGE_BORE_D / 2.0 + wall)
+        )
+        sticks_out = side * (end - corner)
+        bay_ok = (
+            clash <= 0.01 and blocked <= 1e-3 and walls and pressed >= 3.0 and sticks_out <= 2.0
+        )
+        ok = ok and bay_ok
+        msgs.append(
+            f"bay {bx:+.0f}: pins clash {clash:.3f} mm^3, last pin pressed {pressed:.1f} mm and "
+            f"{sticks_out:+.1f} mm out of the wall, 0.8 mm walls {walls}, push-in path blocked "
+            f"{blocked:.3f} mm^3"
+        )
+    return (
+        f"HINGE_PINS {D.HINGE_PIN_COUNT}x Ø{D.HINGE_PIN_D:g} x {D.HINGE_PIN_L:g} steel pins fit "
+        "the knuckle and both bay walls, pushed in from the hollow corner",
+        ok,
+        "; ".join(msgs),
+    )
 
 
 def check_all():
@@ -120,10 +192,10 @@ def check_all():
     # 3. J-05: Twin hinged covers seat with 0.20mm/side XZ & swing open clash-free
     cov_bb = cov_single.BoundingBox()
     usb_bb = usb.BoundingBox()
-    plate_w = cov_bb.xlen - 2.0 * D.HINGE_PIN_EXT
+    plate_w = cov_bb.xlen
     xz_clear_w = (D.FRONT_BAY_W - plate_w) / 2.0
     xz_clear_h = (D.FRONT_BAY_H - cov_bb.zlen) / 2.0
-    hinge_rad_clear = (D.HINGE_SOCKET_D - D.HINGE_PIN_D) / 2.0
+    hinge_rad_clear = (D.HINGE_BORE_D - D.HINGE_PIN_D) / 2.0
     usb_y_gap = usb_bb.ymin - cov_bb.ymax
     pair_span = abs(D.FRONT_PORT_XS[0] - D.FRONT_PORT_XS[1]) + D.PORT_INSERT_OD
     # The doors swing with their glued port bezels (which stand proud of the hinge axis): the
@@ -150,7 +222,7 @@ def check_all():
         # the locating band applies once paint has closed the gap (2 painted faces, PAINT_FIT)
         and 0.15 <= xz_clear_w - 2.0 * D.PAINT_T <= 0.30
         and 0.15 <= xz_clear_h - 2.0 * D.PAINT_T <= 0.30
-        and 0.20 <= hinge_rad_clear <= 0.40
+        and 0.10 <= hinge_rad_clear <= 0.25
         and D.FINGER_SLIT_W >= 6.0
         and D.FINGER_SLIT_H >= 0.8
         and usb_y_gap >= 1.0
@@ -169,6 +241,8 @@ def check_all():
             f"bezel gap open flat={bezel_gap:.2f} mm (min 0.3)",
         )
     )
+
+    rows.append(_hinge_pins_row(tub, front_panel_mech.covers(), usb))
 
     # 4. J-07: the light pipe sits in the tub's lens bore with a real clearance, flush with the
     # front, and the LED sits just behind it: measured on the solids (C8), not from the datums.

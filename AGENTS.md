@@ -146,6 +146,23 @@ Also re-run `../frontend/run check` from the repo root before finishing so repo-
   (`part/shared/n64_text._local_glyphs`). CI never has `cad/local/`, so released files are
   public by construction. Look at every picture before committing it.
 
+## Lessons (button guide and door hinge, 2026-11-17)
+
+- **Sweep a proposed fix on the real parts before recommending it.** The review said moving the
+  door pivot to its outer bottom edge would remove the lowered sill and swing chamfers. A sweep
+  of the real door and bezels showed the drop is set by the bezels standing proud of the door,
+  and a steel pin needed it 1.5 mm deeper, not removed. The owner had already approved the
+  wrong version. Probe first, then propose.
+- **A probe started on a face's edge measures the next face, not the wall.** The wall row took
+  each face's UV midpoint: on a hinge knuckle's ring end it landed on the bore's edge, and on a
+  louver slat's side under the dome 0.06 mm below the top, so both read as thin; on a plain
+  ring it landed in the hole and the face was skipped. It now starts inside the face
+  (`_point_inside_face`) and re-probes from the point furthest from its edges before calling a
+  wall thin. `WALL_RULE` rows red-confirm all three shapes.
+- **One button guide is not enough, two far apart are.** The chimney alone let the plate 4
+  buttons tip 4.8 deg; a sleeve 3.5 mm below on the bracket's pole holds them to 2.2.
+  `BTN_TILT` searches every pivot height, because the worst tilt moved from 27 to 23 mm.
+
 ## Lessons (coupon plate 3, 2026-11-15)
 
 - **A feature can hang on a joint no row measured.** The shell's inner rim was joined to the

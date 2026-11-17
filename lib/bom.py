@@ -222,6 +222,14 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                 "spec": "3.0 x 1.0 mm N52 magnet",
                 "qty": 8,
             },
+            {
+                "item": (
+                    f"Steel door hinge pin (`Ø{D.HINGE_PIN_D:g} x {D.HINGE_PIN_L:g} mm`, "
+                    f"{D.HINGE_PIN_COUNT} per door pushed end to end; cut from 1.5 mm rod)"
+                ),
+                "spec": f"ISO 8734 {D.HINGE_PIN_D:g} x {D.HINGE_PIN_L:g} dowel pin",
+                "qty": 2 * D.HINGE_PIN_COUNT,
+            },
         ],
     },
     {

@@ -164,7 +164,19 @@ def get_shape() -> cq.Shape:
             for x0, x1, y0, y1 in D.lip_gaps()
         ]
     )
-    with_bosses = shell_hollow.fuse(*bosses_clipped.Solids()).cut(lip_channel)
+    # Beside each door's outer end the front curves 0.7 mm behind the door face: brought flush
+    # with the door, matching the tub below the split (FRONT_BAY_FLUSH_W, owner 2026-11-17)
+    flush = []
+    for bx in D.FRONT_BAY_XS:
+        side = -1.0 if bx < 0.0 else 1.0
+        edge = bx + side * D.FRONT_BAY_W / 2.0
+        x0, x1 = sorted((edge, edge + side * D.FRONT_BAY_FLUSH_W))
+        flush.append(
+            cq.Solid.makeBox(
+                x1 - x0, 1.1, D.FRONT_BAY_Z1 - D.SPLIT_Z, cq.Vector(x0, D.FRONT_BAY_Y0, D.SPLIT_Z)
+            )
+        )
+    with_bosses = shell_hollow.fuse(*bosses_clipped.Solids(), *flush).cut(lip_channel)
 
     # 4. Surface-conforming 0.28 mm skin cutter for top louvers, MEMORY EXPANSION & Nintendo
     surface_skin = outer.cut(outer.moved(cq.Location(cq.Vector(0.0, 0.0, -0.28))))

@@ -391,9 +391,17 @@ MUTATIONS = [
     (
         "front_panel_check",
         "assembly/datum.py",
-        "FRONT_BAY_DROP = 2.5",
-        "FRONT_BAY_DROP = 0.0",
+        "FRONT_BAY_DROP = 2.5 + 1.5",
+        "FRONT_BAY_DROP = 2.5 + 0.0",
         "J05_COVER",
+    ),
+    # The strip beside the door's outer end left at the curved front: 0.13 mm over the pin
+    (
+        "front_panel_check",
+        "assembly/datum.py",
+        "FRONT_BAY_FLUSH_W = 4.1",
+        "FRONT_BAY_FLUSH_W = 0.01",
+        "HINGE_PINS",
     ),
     (
         "front_panel_check",
