@@ -386,15 +386,23 @@ RESET_Z0 = DECK_H - ROOF_T - RESET_FLANGE_T - 0.2  # Z = 25.40 mm
 # Both buttons' flat underside sits 0.33 mm below RESET_Z0, with a pocket over the outer lever:
 # the pocket's edge presses the switch lever at OMRON_LEVER_RATIO (C3); the face prints flat.
 BUTTON_UNDERSIDE_Z = RESET_Z0 - 0.33
-BUTTON_POLE_HOLE_Z1 = 28.90  # where the guide-pole hole starts to narrow: its flat roof clears the
-# pole's tip by 0.3 mm at full stroke (BTN_DATUM)
-# Rule 3, one datum per axis (C9): each button is located in XY by its shell chimney (0.22 mm a
-# side). The bracket's guide pole is a backstop only, so its hole clears the whole stack: the
-# button's play in the chimney + the shell's lip clearance + the glued bracket's placement.
+BUTTON_POLE_HOLE_Z1 = 28.90  # where the guide-pole hole starts to narrow: its roof clears the
+# pole's tip at full stroke (BTN_STACK)
+# Two guides per button, far apart, so it can't rock (owner, plate 4 2026-11-16: "it wobbles as it
+# goes down"): the shell chimney at the top and, 3.5 mm below the underside, a sleeve sliding on the
+# bracket's guide pole. They must never fight: the pole can sit off the chimney's axis by the
+# halves' lip play plus the glued bracket's placement, and the chimney's play plus the sleeve's
+# must cover that (BTN_STACK), so the bracket needs no screws.
 BRACKET_PLACE_TOL = 0.20  # the USB bracket is glued into the tub, located by eye and its walls
-BUTTON_POLE_GAP = RESET_CLEAR + LIP_CLEAR + BRACKET_PLACE_TOL  # 0.57 mm a side
-BUTTON_POLE_HOLE_D = 2.80 + 2.0 * BUTTON_POLE_GAP + 0.06  # Ø4.0 round the Ø2.80 pole
-BUTTON_STOP_Z = BUTTON_UNDERSIDE_Z - RESET_STROKE_Z  # top of the bracket shelf and tub post stops
+BUTTON_POLE_D = 2.80  # the bracket's guide pole
+BUTTON_POLE_Y = -32.20  # the pole's axis: mid-depth of the bracket, so one part serves both sides
+SLEEVE_CLEAR = 0.15  # per side, sleeve on pole: RESET_CLEAR + this covers LIP_CLEAR + placement
+SLEEVE_ID = BUTTON_POLE_D + 2.0 * SLEEVE_CLEAR  # 3.10 mm
+SLEEVE_OD = SLEEVE_ID + 2.0 * 1.0  # 1.0 mm wall
+SLEEVE_L = 3.5  # below the button's underside
+SLEEVE_Z0 = BUTTON_UNDERSIDE_Z - SLEEVE_L  # 21.57 mm, the sleeve's foot at rest
+BUTTON_STOP_Z = BUTTON_UNDERSIDE_Z - RESET_STROKE_Z  # top of the tub post (rear) stops
+SLEEVE_STOP_Z = SLEEVE_Z0 - RESET_STROKE_Z  # top of the bracket's (front) stop, under the sleeve
 SLIDER_STROKE_Z = RESET_STROKE_Z  # POWER shares RESET's stops
 
 # 2x Omron SS-5GL subminiature hinge-lever microswitches under Power (J-03) and Reset (J-04)

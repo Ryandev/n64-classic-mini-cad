@@ -178,12 +178,29 @@ MUTATIONS = [
         "SUPPORT_MM2 = 8000.0",
         "upper_shell:overhang",
     ),
+    # The sleeve loose on its pole: the button rocks again
     (
         "top_controls_check",
         "assembly/datum.py",
-        "BUTTON_POLE_HOLE_D = 2.80 + 2.0 * BUTTON_POLE_GAP + 0.06",
-        "BUTTON_POLE_HOLE_D = 3.20",
-        "BTN_DATUM",
+        "SLEEVE_ID = BUTTON_POLE_D + 2.0 * SLEEVE_CLEAR",
+        "SLEEVE_ID = 4.0",
+        "BTN_TILT",
+    ),
+    # The sleeve too tight to cover the pole being off the chimney's axis: the guides fight
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "SLEEVE_CLEAR = 0.15",
+        "SLEEVE_CLEAR = 0.05",
+        "BTN_STACK",
+    ),
+    # The bracket's stop out of reach of the sleeve
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "SLEEVE_STOP_Z = SLEEVE_Z0 - RESET_STROKE_Z",
+        "SLEEVE_STOP_Z = SLEEVE_Z0 - RESET_STROKE_Z - 0.3",
+        "BTN_STOP",
     ),
     # D4: the spindle torus (R2 > R1) that once made a dimpled front-pod dome
     (

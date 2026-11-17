@@ -85,7 +85,7 @@ standby light.
    - Set `cooling_hood` on the fan rim and the duct, and run `1 mm` foam tape along the hood's wall tops.
    - Stick a `3M Bumpon SJ5012` over each corner screw counterbore on the underside.
 6. **Seat `POWER` & `RESET` Buttons on Guide Poles:**
-   - Place `power_slider` (`X = -32.32 mm`) and `reset_button` (`X = +32.32 mm`) straight down onto the `Ø2.80 mm` vertical guide poles on `usb_retainer_bracket`. The `Ø4.0 mm` blind underside holes (`BUTTON_POLE_HOLE_D`; the chimney locates the button, the pole only backstops, row `BTN_DATUM`) hold both buttons upright and oriented before the top shell is installed.
+   - Place `power_slider` (`X = -32.32 mm`) and `reset_button` (`X = +32.32 mm`) straight down onto the `Ø2.80 mm` vertical guide poles on `usb_retainer_bracket`. Each button's sleeve (`Ø3.10 mm` bore, `SLEEVE_ID`) slides on its pole and holds the button upright before the top shell is installed; with the shell on, chimney and sleeve together guide it (rows `BTN_TILT`, `BTN_STACK`).
 7. **Upper Shell Trim (`cartridge_flaps` & `front_bezel`):**
    - Glue `cartridge_flaps` into the top slot pocket and `front_bezel` (2.0 mm clear acrylic + rear Cricut N64 decal aligned with `bezel_laser_jig_0.svg`) into the front nose pocket of `upper_shell`.
 8. **Close Enclosure:**

@@ -32,22 +32,25 @@ MANUFACTURE = "fdm"
 PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, 1, 0)
 # Printed on its rear face, the Ø2.8 guide pole lies sideways, held only at its root: its first
-# layers need support (3.5 mm^2 measured by layers, 2026-11-14; coupon plate 1 lost it printed
-# without). PETG body, PLA interface (notes/PRINTING.md). The pole clears the button by 0.57 mm a
-# side (BTN_DATUM), so the ~0.10 mm a supported face comes out proud doesn't matter.
-SUPPORT_MM2 = 4.0
+# layers need support (7.1 mm^2 measured by layers since the pole reaches down to the sleeve's
+# stop, 2026-11-17; coupon plate 1 lost it printed without). PETG body, PLA interface
+# (notes/PRINTING.md). The supported side of the pole comes out
+# ~0.10 mm proud; the slicer's hole compensation doesn't touch an outside face, so this is checked
+# on the print (the sleeve has 0.15 mm a side).
+SUPPORT_MM2 = 8.0
 VISIBLE_FACES = ()
 
 BRACKET_Y0 = -36.60
 BRACKET_DY = 8.80  # Y = -36.60 .. -27.80 mm (0.45 mm ahead of Omron SS-5GL at Y = -27.35 mm)
-POLE_Y = BRACKET_Y0 + 0.5 * BRACKET_DY  # -32.20 mm (exact midpoint of Face70 for 180-deg symmetry)
-POLE_R = 1.40  # Ø2.80 mm vertical guide pole (0.20 mm/side fit in Ø3.20 mm button underside hole)
+POLE_Y = D.BUTTON_POLE_Y
+assert abs(POLE_Y - (BRACKET_Y0 + 0.5 * BRACKET_DY)) < 1e-9, "pole must sit mid-depth (180-deg)"
+POLE_R = D.BUTTON_POLE_D / 2.0  # the button's sleeve slides on it (SLEEVE_CLEAR, BTN_TILT)
 LEG_Z0 = 11.60  # 0.05 mm glue gap above lower_tub's Z = 11.55 mm cradle wall shelf
 BRIDGE_Z0 = 16.85  # 0.15 mm clearance above Z = 16.70 mm USB-A top metal shell
 BRIDGE_Z1 = 18.45
-STOP_Z1 = D.BUTTON_STOP_Z  # button stroke limit below its Z = 25.40 mm bottom face
+STOP_Z1 = D.SLEEVE_STOP_Z  # the button's front stop: its sleeve's foot lands here
 POLE_CYL_Z1 = 26.50
-POLE_TIP_Z1 = 27.10  # 3.65 mm tall pole (engaged 1.70 mm at rest, 3.60 mm at full press)
+POLE_TIP_Z1 = 27.10  # in the sleeve 5.5 mm at rest, 7.6 mm at full press
 
 
 def _left_bracket() -> cq.Shape:

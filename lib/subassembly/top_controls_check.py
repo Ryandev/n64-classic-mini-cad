@@ -20,6 +20,7 @@ Verifies:
   - `PLAQUE` The published plaque lettering (`PLAQUE_TEXT`) lies wholly inside the rear oval ring
 """
 
+import math
 import os
 import sys
 
@@ -146,13 +147,12 @@ def check_all():
             clf_shell.Perform(gp_Pnt(px, py, pz), 1e-4)
             if clf_shell.State() != TopAbs_IN:
                 return False
-        # Extended 8.80mm front/mid travel-stop shelf (BUTTON_STOP_Z) on usb_retainer_bracket
-        # (Y = -36.60 .. -27.80 mm, extending Face854 back to 0.45mm ahead of Omron SS-5GL)
+        # Front travel stop (SLEEVE_STOP_Z) on usb_retainer_bracket, under the button's sleeve
         for stop_y in (-35.00, -28.20):
-            clf_ret.Perform(gp_Pnt(cx, stop_y, D.BUTTON_STOP_Z - 0.15), 1e-4)
+            clf_ret.Perform(gp_Pnt(cx, stop_y, D.SLEEVE_STOP_Z - 0.15), 1e-4)
             if clf_ret.State() != TopAbs_IN:
                 return False
-        # Coaxial Ø2.80mm guide pole on usb_retainer_bracket engaged inside Ø3.20mm button hole
+        # Ø2.80 guide pole on usb_retainer_bracket engaged inside the button's sleeve
         clf_ret.Perform(gp_Pnt(cx, -32.20, 26.20), 1e-4)
         if clf_ret.State() != TopAbs_IN:
             return False
@@ -228,34 +228,9 @@ def check_all():
         )
     )
 
-    # 5a. BTN_DATUM (C9, rule 3): the shell chimney is each button's XY datum; the bracket's guide
-    # pole must never touch the button, at rest or pressed, even with the tolerance stack used up
-    pole_gaps = []
-    poles = ret_both.intersect(  # both guide poles, cropped once (each button's nearest is its own)
-        cq.Compound.makeCompound(
-            [
-                cq.Solid.makeCylinder(2.5, 6.0, cq.Vector(x, -32.20, D.BUTTON_STOP_Z + 0.05))
-                for x in (D.POWER_SLIDER_X, D.RESET_BTN_X)
-            ]
-        )
-    )
-    for name, button in (("POWER", slider), ("RESET", reset)):
-        for state, dz in (("rest", 0.0), ("pressed", D.RESET_STROKE_Z)):
-            moved = button.moved(cq.Location(cq.Vector(0.0, 0.0, -dz)))
-            ext = BRepExtrema_DistShapeShape(poles.wrapped, moved.wrapped)
-            ext.Perform()
-            pole_gaps.append((f"{name} {state}", ext.Value()))
-    rest = min((g for g in pole_gaps if "rest" in g[0]), key=lambda g: g[1])
-    pressed = min((g for g in pole_gaps if "pressed" in g[0]), key=lambda g: g[1])
-    rows.append(
-        (
-            "BTN_DATUM chimney locates each button; guide pole clears it by the tolerance stack",
-            rest[1] >= D.BUTTON_POLE_GAP - 0.02 and pressed[1] >= 0.2,
-            f"pole-to-button gap at rest {rest[1]:.3f} mm ({rest[0]}), needed "
-            f"{D.BUTTON_POLE_GAP:.2f} (chimney {D.RESET_CLEAR:.2f} + lip {D.LIP_CLEAR:.2f} + "
-            f"bracket placement {D.BRACKET_PLACE_TOL:.2f}); pressed {pressed[1]:.3f} mm (>= 0.20)",
-        )
-    )
+    # 5a. Two guides per button (owner, coupon plate 4 2026-11-16: "it wobbles as it goes down"):
+    # the chimney at the top, a sleeve on the bracket's guide pole below.
+    rows.extend(_button_guide_rows(shell, tub, ret_both, slider, reset))
 
     # 5b. OMRON_ACT (C3): move each real button down the real switch lever. For a button offset
     # `dz`, the lever tip sits at the highest height where the two don't overlap; that is where
@@ -489,6 +464,111 @@ def check_all():
     )
 
     rows.append(_paint_fit(shell, tub, flaps, bezel))
+    return rows
+
+
+# BTN_TILT limit: half the free tilt of the plate 4 buttons (4.8 deg, the pole then only a
+# backstop in a Ø4.0 hole), which the owner reported as wobbling.
+BTN_TILT_MAX_DEG = 2.4
+
+
+def _button_guide_rows(shell, tub, ret_both, slider, reset):
+    """BTN_TILT, BTN_STACK and BTN_STOP: the two guides hold the button straight, never fight,
+    and the stops take the stroke."""
+
+    def near(shape: cq.Shape, cx: float) -> cq.Shape:
+        return shape.intersect(
+            cq.Solid.makeBox(16, 22, 16, cq.Vector(cx - 8, D.CONTROLS_Y - 11, 16))
+        )
+
+    def gap(a: cq.Shape, b: cq.Shape) -> float:
+        ext = BRepExtrema_DistShapeShape(a.wrapped, b.wrapped)
+        ext.Perform()
+        return ext.Value()
+
+    def overlap(a: cq.Shape, b: cq.Shape) -> bool:
+        return gap(a, b) < 1e-4
+
+    def down(shape: cq.Shape, dz: float) -> cq.Shape:
+        return shape.moved(cq.Location(cq.Vector(0.0, 0.0, -dz)))
+
+    rows = []
+    tilt_msgs, tilt_ok = [], True
+    stack_msgs, stack_ok = [], True
+    stop_msgs, stop_ok = [], True
+    offset = D.LIP_CLEAR + D.BRACKET_PLACE_TOL  # how far the pole can sit off the chimney's axis
+    # The button moves toward the pole until both guides have the same play left
+    shift = (offset + D.RESET_CLEAR - D.SLEEVE_CLEAR) / 2.0
+    for name, button, cx in (("POWER", slider, D.POWER_SLIDER_X), ("RESET", reset, D.RESET_BTN_X)):
+        shell_n, ret_n, tub_n = near(shell, cx), near(ret_both, cx), near(tub, cx)
+        guides = cq.Compound.makeCompound([shell_n, ret_n])
+        # The lettered crown sits above the chimney and can't touch it; leaving it out keeps
+        # the distance queries fast
+        body = button.intersect(
+            cq.Solid.makeBox(20, 26, 10.2, cq.Vector(cx - 10, D.CONTROLS_Y - 13, 20))
+        )
+
+        # BTN_TILT: at mid-stroke, tipping the button BTN_TILT_MAX_DEG about any horizontal axis
+        # must make it touch a guide. Moving the pivot sideways only adds an up/down slide, which
+        # the button is free to make, so pivots up the axis cover every tilt.
+        mid = down(body, D.RESET_STROKE_Z / 2.0)
+        free = []
+        for zp in (21.0, 23.0, 25.0, 27.0, 29.0):
+            pivot = cq.Vector(cx, D.CONTROLS_Y, zp)
+            for axis in (cq.Vector(1, 0, 0), cq.Vector(0, 1, 0)):
+                for sign in (1.0, -1.0):
+                    tipped = mid.rotate(pivot, pivot + axis, sign * BTN_TILT_MAX_DEG)
+                    if not overlap(tipped, guides):
+                        free.append(f"z {zp:g} about {'X' if axis.x else 'Y'}{sign:+.0f}")
+        tilt_ok = tilt_ok and not free
+        tilt_msgs.append(
+            f"{name}: " + (f"free past the limit at {', '.join(free)}" if free else "held")
+        )
+
+        # BTN_STACK: with the pole as far off the chimney's axis as the lip play and the glued
+        # bracket's placement allow, in any direction, the button still slides in both guides
+        worst = float("inf")
+        for k in range(8):
+            ang = math.radians(45.0 * k)
+            ux, uy = math.cos(ang), math.sin(ang)
+            ret_off = ret_n.moved(cq.Location(cq.Vector(offset * ux, offset * uy, 0.0)))
+            for dz in (0.0, D.RESET_STROKE_Z - 0.05):
+                moved = body.moved(cq.Location(cq.Vector(shift * ux, shift * uy, -dz)))
+                worst = min(worst, gap(moved, shell_n), gap(moved, ret_off))
+        stack_ok = stack_ok and worst >= 1e-4
+        stack_msgs.append(f"{name} {worst:.3f} mm")
+
+        # BTN_STOP: 0.05 mm past the stroke the sleeve's foot is on the bracket's stop and the
+        # underside on the tub's post
+        past = down(body, D.RESET_STROKE_Z + 0.05)
+        on_front, on_rear = overlap(past, ret_n), overlap(past, tub_n)
+        stop_ok = stop_ok and on_front and on_rear
+        stop_msgs.append(f"{name}: front stop {on_front}, rear post {on_rear}")
+
+    rows.append(
+        (
+            f"BTN_TILT chimney + sleeve hold each button within {BTN_TILT_MAX_DEG} deg (was 4.8)",
+            tilt_ok,
+            "; ".join(tilt_msgs),
+        )
+    )
+    rows.append(
+        (
+            "BTN_STACK chimney and sleeve never fight with the pole off-axis by lip + bracket",
+            stack_ok,
+            f"pole off by {offset:.2f} (lip {D.LIP_CLEAR:.2f} + bracket {D.BRACKET_PLACE_TOL:.2f}),"
+            f" button follows {shift:.3f}: least gap left "
+            + ", ".join(stack_msgs)
+            + f" (chimney {D.RESET_CLEAR:.2f} + sleeve {D.SLEEVE_CLEAR:.2f} a side)",
+        )
+    )
+    rows.append(
+        (
+            "BTN_STOP sleeve lands on the bracket stop, underside on the tub post",
+            stop_ok,
+            "; ".join(stop_msgs),
+        )
+    )
     return rows
 
 

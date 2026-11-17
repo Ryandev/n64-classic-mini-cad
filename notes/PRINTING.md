@@ -110,8 +110,9 @@ Declared as of 2026-11-14, all measured by layers and all inside the console or 
 | `upper_shell` | 9,010 mm² (8,490) | inside of the top deck | printed split-face down, the deck is a roof over the hollow shell; that face is hidden |
 | `cooling_hood` | 900 (853) | stepped wall tops, closed top | inside the console |
 | `cooling_duct` | 480 (456) | fan seat ring round the bore, plate-frame ledge | inside; reached through the fan bore and the floor opening. The floor itself is the separate `duct_floor` (owner, 2026-11-13) |
-| `lower_tub` | 48 (44) | rear port-opening tops, LED hole top | inside openings (the switch V-pins went on 2026-11-15: two screws per switch instead) |
-| `usb_retainer_bracket` | 4 (3.5) | the sideways guide pole | clears the button by 0.57 mm a side, so 0.10 mm proud doesn't matter |
+| `lower_tub` | 40 | rear port-opening tops, LED hole top | inside openings (the switch V-pins went on 2026-11-15: two screws per switch instead) |
+| `usb_retainer_bracket` | 8 (7.1) | the sideways guide pole | hidden, but the button's sleeve slides on it with 0.15 mm a side: the supported side comes out ~0.10 mm proud, so check the sleeve slides on the printed pole (2026-11-17, open) |
+| `power_slider`, `reset_button` | 125 (116) each | the flange's underside round the guide sleeve | printed crown up, standing on the sleeve; the underside is hidden and only the switch lever touches it (~0.10 mm proud costs 0.10 of the 0.26 mm release margin) |
 | everything else | 0 | | prints support-free by the row |
 
 The lower-tub corner counterbores open on the bed and close with the two-layer bridge (a slot
@@ -136,7 +137,7 @@ When a part does need support, use the GBA set-up (`PRINTING.md`, DECISIONS 10-1
 - Check `filament_map` is `1,2` (PETG left, PLA right). Run the nozzle-offset calibration before the
   first two-material print, and clean the calibration plate and both tips after purging.
 - **Visible faces never sit on support.** Orient for the faces the user sees first.
-- **Never let support fill a bore that something slides in** (G12): here, the button pole holes
+- **Never let support fill a bore that something slides in** (G12): here, the button sleeves
   and the door hinge sockets.
 - **A face printed on support comes out about 0.10 mm proud.** Give each supported mating face an
   extra 0.10–0.12 mm of clearance (TOLERANCES.md §4, class 3).

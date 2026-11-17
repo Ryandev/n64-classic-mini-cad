@@ -5,7 +5,7 @@ Runs 4 linear-elastic 3D tetrahedral (`C3D10`, mesh-converged) FEA load cases
 conservative FDM PETG/PLA inter-layer yield limit `25.0 MPa`, in-plane yield `45.0 MPa`) on the
 actual B-Rep solids from `lib/part/` and `lib/variant/`:
   1. `LC1_BUTTON_MASH_50N`: `part/usb_retainer_bracket.py` under `50 N` (`-Z`) heavy thumb mash on
-     `Face70` (the button stop, `BUTTON_STOP_Z`), `15 N` (`-Y`) off-center lateral tilt on the
+     the sleeve's stop (`SLEEVE_STOP_Z`), `15 N` (`-Y`) off-center lateral tilt on the
      `Ø2.80 mm` guide pole,
      and `15 N` (`+Z`) upward USB-A cable pry under the `Z = 16.85 mm` top retainer bridge.
   2. `LC2_TUB_USB_AND_OMRON`: `variant/lower_tub.py` front USB-A & Omron bay under simultaneous
@@ -314,13 +314,14 @@ def _near_corner_screw(x: float, y: float, r: float = 2.6) -> bool:
 
 # Flex limits by what each part has to do (owner, C4 2026-11-13: don't reinforce; the old fixed
 # limits were set against a C3D4 model 5-15x too stiff):
-#   - guide pole: must not reach the button, so the BTN_DATUM gap;
+#   - guide pole: the button's sleeve slides on it, so it may bend less than the sleeve's play
+#     (beyond that the button tilts past BTN_TILT);
 #   - button stop: may let the switch go no further than its guaranteed over-travel. A nominal
 #     SS-5GL (OP 8.8) is (OP - tip at stop) past its click point at the stop and is rated for
 #     OT_min, so the stop may give (OT_min - that) at the tip, x the lever ratio at the button;
 #   - chimneys: must not close the button's sliding clearance;
 #   - standoffs: the rear jack must keep the 0.5 mm from the tub wall REAR_IO requires.
-POLE_FLEX_MAX = D.BUTTON_POLE_GAP
+POLE_FLEX_MAX = D.SLEEVE_CLEAR
 STOP_FLEX_MAX = (
     omron_ss5gl.OVERTRAVEL_MIN - (omron_ss5gl.OPERATING_POSITION - D.OMRON_TIP_AT_STOP)
 ) * D.OMRON_LEVER_RATIO
@@ -340,7 +341,7 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
     #    shelf's own give is graded against the switch margin (Gemini review #5): the part's
     #    largest movement is the pole tip, which says nothing about how far the button goes.
     def on_stop_shelf(x: float, y: float, z: float) -> bool:
-        return abs(z - STOP_Z) <= 0.15 and -35.0 <= x <= -29.6
+        return abs(z - D.SLEEVE_STOP_Z) <= 0.15 and -35.0 <= x <= -29.6
 
     r1 = solve_converged(
         "LC1_BUTTON_MASH_50N",
