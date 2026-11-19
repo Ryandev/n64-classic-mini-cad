@@ -13,7 +13,8 @@ every bought/modified internal component in the right-handed console coordinate 
   - `component/hsb26_343408.py` (bought pin-fin SoC heat sink), `component/sunon_mf30060v2.py`
     (30 mm fan), `part/cooling_duct.py` + `part/cooling_hood.py` (printed), and
     `component/bumpon_sj5012.py` (4 rubber feet)
-  - `component/radxa_x4.py` (`m2_keepout()`, `usb_a_cluster()`, `rj45_jack()`)
+  - `component/radxa_x4.py` (`m2_keepout()`, `usb_a_cluster()`)
+  - `part/front_io_carrier_l.py`, `part/front_io_carrier_r.py` & `part/usb_retainer_bracket.py`
   - `subassembly/top_controls_mech.py` (`2x` Omron SS-5GL hinge-lever switches)
 """
 
@@ -67,6 +68,7 @@ def named_bodies() -> list[tuple[str, tuple[float, float, float], cq.Shape]]:
         ("power_slider", cool_grey, power_slider.get_shape()),
         ("reset_button", cool_grey, reset_button.get_shape()),
         ("front_port_cover", charcoal, front_panel_mech.cover()),
+        ("front_io_carriers", charcoal, front_panel_mech.front_carriers_compound()),
         ("usb_retainer_brackets", charcoal, front_panel_mech.usb_retainer_compound()),
         ("n64_port_p1", cool_grey, inserts[0]),
         ("n64_port_p2", cool_grey, inserts[1]),
@@ -80,7 +82,7 @@ def named_bodies() -> list[tuple[str, tuple[float, float, float], cq.Shape]]:
         ("front_usb_a_x4", silver, radxa_x4.usb_a_cluster()),
         ("front_door_magnets_x4", silver, front_panel_mech.door_magnets()),
         ("front_tub_magnets_x4", silver, front_panel_mech.tub_magnets()),
-        ("rear_rj45_2_5gbe", silver, radxa_x4.rj45_jack()),
+        ("usb_jst_6pin_x2", (0.95, 0.92, 0.78), front_panel_mech.usb_jst_connectors()),
         ("tact_switch_power", brass, sw_l),
         ("tact_switch_reset", brass, sw_r),
         ("switch_screws", silver, cq.Compound.makeCompound(top_controls_mech.omron_screws())),
@@ -96,7 +98,7 @@ def get_shape(include_electronics: bool = True) -> cq.Shape:
     """Return the full N64 Classic Mini compound in console coordinates."""
     items = named_bodies()
     if not include_electronics:
-        items = items[:12]
+        items = items[:13]
     return cq.Compound.makeCompound([shp for _, _, shp in items])
 
 

@@ -191,8 +191,16 @@ MUTATIONS = [
         "top_controls_check",
         "assembly/datum.py",
         "SLEEVE_CLEAR = 0.15",
-        "SLEEVE_CLEAR = 0.05",
+        "SLEEVE_CLEAR = 0.01",
         "BTN_STACK",
+    ),
+    # A round guide pole instead of the oblong stadium pole: button rotates about Z with shell off
+    (
+        "top_controls_check",
+        "assembly/datum.py",
+        "BUTTON_POLE_LEN_Y = 4.20",
+        "BUTTON_POLE_LEN_Y = 2.80",
+        "BTN_TILT",
     ),
     # The bracket's stop out of reach of the sleeve
     (
@@ -275,9 +283,9 @@ MUTATIONS = [
     ),
     (
         "datum_check",
-        "component/radxa_x4.py",
-        "cq.Solid.makeBox(10.40, 20.80, 10.40, cq.Vector(38.00, 27.50, 2.00))",
-        "cq.Solid.makeBox(10.40, 20.80, 10.40, cq.Vector(36.50, 27.50, 2.00))",
+        "subassembly/front_panel_mech.py",
+        "    cx = 47.00",
+        "    cx = 36.50",
         "REAR_IO",
     ),
     (
@@ -311,9 +319,9 @@ MUTATIONS = [
     (
         "radxa_mount_check",
         "variant/lower_tub.py",
-        '"volume_mm3": 301.8,',
+        '"volume_mm3": 107.37,',
         '"volume_mm3": 999.00,',
-        "VARIANT   lower_tub.rear_rj45_cutout",
+        "VARIANT   lower_tub.rear_usbc_cutout",
     ),
     (
         "top_controls_check",
@@ -362,9 +370,9 @@ MUTATIONS = [
     # the switch: it can't be dropped in.
     (
         "top_controls_check",
-        "variant/lower_tub.py",
-        "                    cq.Vector(cx - 2.50, -20.80, 17.50),",
-        "                    cq.Vector(cx - 2.50, -22.80, 17.50),",
+        "part/front_io_carrier_l.py",
+        "            cq.Vector(cx - 2.50, -20.80, 17.50),",
+        "            cq.Vector(cx - 2.50, -22.80, 17.50),",
         "OMRON_INSTALL",
     ),
     (
@@ -399,9 +407,23 @@ MUTATIONS = [
     (
         "front_panel_check",
         "assembly/datum.py",
-        "FRONT_BAY_FLUSH_W = 4.1",
-        "FRONT_BAY_FLUSH_W = 0.01",
+        "HINGE_BARREL_R = 1.65",
+        "HINGE_BARREL_R = 1.10",
         "HINGE_PINS",
+    ),
+    (
+        "radxa_mount_check",
+        "assembly/datum.py",
+        "FRONT_SUBASM_BOSS_BORE_Z0 = 0.85",
+        "FRONT_SUBASM_BOSS_BORE_Z0 = 1.60",
+        "J02_SEAT",
+    ),
+    (
+        "front_panel_check",
+        "part/front_io_carrier_l.py",
+        "cq.Vector(side_sign * 25.00 - 7.0, -11.65, 0.0)",
+        "cq.Vector(side_sign * 25.00 - 7.0, -5.00, 0.0)",
+        "SUBASM_CLEAR",
     ),
     (
         "front_panel_check",
@@ -453,6 +475,13 @@ MUTATIONS = [
         "BRIDGE_Z0 = 16.85",
         "BRIDGE_Z0 = 18.00",
         "USB_LOCK",
+    ),
+    (
+        "radxa_mount_check",
+        "assembly/datum.py",
+        "USB_SOLDER_BAY_W = 8.40",
+        "USB_SOLDER_BAY_W = 1.00",
+        "USB_WIRING",
     ),
     (
         "radxa_mount_check",

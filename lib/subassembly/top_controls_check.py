@@ -72,6 +72,7 @@ def check_all():
     jig = bezel_laser_jig.get_shape()
     sw_left, sw_right = top_controls_mech.omron_switches()
     ret_both = cq.Compound.makeCompound(usb_retainer_bracket.brackets())
+    carriers = front_panel_mech.front_carriers_compound()
 
     # 1. Printability rows on all top-deck printed & laser-cut parts
     for name, shape, mod in (
@@ -113,6 +114,11 @@ def check_all():
         ("reset_button/usb_retainer_brackets", reset, ret_both),
         ("usb_retainer_brackets/omron_left", ret_both, sw_left),
         ("usb_retainer_brackets/omron_right", ret_both, sw_right),
+        ("upper_shell/front_carriers", shell, carriers),
+        ("power_slider/front_carriers", slider, carriers),
+        ("reset_button/front_carriers", reset, carriers),
+        ("front_carriers/omron_left", carriers, sw_left),
+        ("front_carriers/omron_right", carriers, sw_right),
     ]
     bad_pairs = []
     for pname, a, b in pairs:
@@ -131,7 +137,7 @@ def check_all():
 
     # 4. J-03: Momentary Power button matches Reset profile, guided in chimney & actuates Omron
     clf_shell = BRepClass3d_SolidClassifier(shell.wrapped)
-    clf_tub = BRepClass3d_SolidClassifier(tub.wrapped)
+    clf_car = BRepClass3d_SolidClassifier(carriers.wrapped)
     clf_ret = BRepClass3d_SolidClassifier(ret_both.wrapped)
     clf_slider = BRepClass3d_SolidClassifier(slider.wrapped)
     clf_reset = BRepClass3d_SolidClassifier(reset.wrapped)
@@ -163,9 +169,9 @@ def check_all():
         clf_btn.Perform(gp_Pnt(cx + 2.20, -32.20, 26.20), 1e-4)
         if clf_btn.State() != TopAbs_IN:
             return False
-        # Rear travel-stop post on lower_tub (Y = -20.80 .. -16.80 mm)
-        clf_tub.Perform(gp_Pnt(cx, -20.50, D.BUTTON_STOP_Z - 0.15), 1e-4)
-        if clf_tub.State() != TopAbs_IN:
+        # Rear travel-stop post on front_io_carrier (Y = -20.80 .. -16.80 mm)
+        clf_car.Perform(gp_Pnt(cx, -20.50, D.BUTTON_STOP_Z - 0.15), 1e-4)
+        if clf_car.State() != TopAbs_IN:
             return False
         clf_shell.Perform(gp_Pnt(cx, -31.00, 24.00), 1e-4)
         return clf_shell.State() == TopAbs_OUT
@@ -176,6 +182,7 @@ def check_all():
     v_p_shell = (
         _common_volume(shell, slider_pressed)
         + _common_volume(tub, slider_pressed)
+        + _common_volume(carriers, slider_pressed)
         + _common_volume(ret_both, slider_pressed)
     )
     v_p_sw = _common_volume(sw_left, slider_pressed)
@@ -209,6 +216,7 @@ def check_all():
     v_shell_press = (
         _common_volume(shell, reset_pressed)
         + _common_volume(tub, reset_pressed)
+        + _common_volume(carriers, reset_pressed)
         + _common_volume(ret_both, reset_pressed)
     )
     v_sw_press = _common_volume(sw_right, reset_pressed)
@@ -230,7 +238,7 @@ def check_all():
 
     # 5a. Two guides per button (owner, coupon plate 4 2026-11-16: "it wobbles as it goes down"):
     # the chimney at the top, a sleeve on the bracket's guide pole below.
-    rows.extend(_button_guide_rows(shell, tub, ret_both, slider, reset))
+    rows.extend(_button_guide_rows(shell, carriers, ret_both, slider, reset))
 
     # 5b. OMRON_ACT (C3): move each real button down the real switch lever. For a button offset
     # `dz`, the lever tip sits at the highest height where the two don't overlap; that is where
@@ -292,7 +300,7 @@ def check_all():
     # 5b2. OMRON_INSTALL (coupon plate 2, 2026-11-15): a switch on a horizontal pin had no way
     # in. It could only slide along the pin, and its legs, down in the tower's slots, hit the slot
     # wall after 1 mm. Each switch must now drop in from above: lifted 0.5 mm at a time up to its
-    # own height clear of everything, it touches nothing in the tub.
+    # own height clear of everything, it touches nothing in the carrier or tub.
     install_bad = []
     for name, sw in (("POWER", sw_left), ("RESET", sw_right)):
         lift = omron_ss5gl.BODY_HEIGHT + omron_ss5gl.TERMINAL_DROP
@@ -300,11 +308,15 @@ def check_all():
         hits = [
             (k * 0.5, v)
             for k in range(1, steps + 1)
-            if (v := _common_volume(tub, sw.moved(cq.Location(cq.Vector(0, 0, k * 0.5))))) > 1e-3
+            if (
+                v := _common_volume(carriers, sw.moved(cq.Location(cq.Vector(0, 0, k * 0.5))))
+                + _common_volume(tub, sw.moved(cq.Location(cq.Vector(0, 0, k * 0.5))))
+            )
+            > 1e-3
         ]
         if hits:
             install_bad.append(
-                f"{name}: hits the tub {hits[0][1]:.2f} mm^3 at {hits[0][0]:.1f} mm up"
+                f"{name}: hits carrier/tub {hits[0][1]:.2f} mm^3 at {hits[0][0]:.1f} mm up"
             )
     rows.append(
         (
@@ -312,7 +324,7 @@ def check_all():
             not install_bad,
             "; ".join(install_bad)
             or f"lifted to {omron_ss5gl.BODY_HEIGHT + omron_ss5gl.TERMINAL_DROP:.1f} mm in 0.5 mm "
-            "steps: clear of the tub all the way",
+            "steps: clear of the carrier & tub all the way",
         )
     )
 
@@ -336,16 +348,22 @@ def check_all():
         tip_margin = sb.ymin - wb.ymin
         clashes = {
             k: _common_volume(v, screw)
-            for k, v in (("tub", tub), ("switch", sw), ("usb", usb), ("bracket", bracket))
+            for k, v in (
+                ("tub", tub),
+                ("carriers", carriers),
+                ("switch", sw),
+                ("usb", usb),
+                ("bracket", bracket),
+            )
         }
-        # the tower hole's fit: gap from the shank, inside the tower, to the tub round it
+        # the tower hole's fit: gap from the shank, inside the tower, to the carrier round it
         shank = cq.Solid.makeCylinder(
             D.OMRON_SCREW_D / 2.0,
             D.OMRON_TOWER_Y1 - (-20.80) - 0.2,
             cq.Vector(x, -20.70, D.OMRON_HOLE_Z),
             cq.Vector(0.0, 1.0, 0.0),
         )
-        ext = BRepExtrema_DistShapeShape(shank.wrapped, tub.wrapped)
+        ext = BRepExtrema_DistShapeShape(shank.wrapped, carriers.wrapped)
         ext.Perform()
         fit = ext.Value()
         fits.append(fit)
@@ -355,7 +373,7 @@ def check_all():
             cq.Vector(x, D.OMRON_TOWER_Y1 + D.OMRON_SCREW_HEAD_H + 0.05, D.OMRON_HOLE_Z),
             cq.Vector(0.0, 1.0, 0.0),
         )
-        path = _common_volume(tub, driver)
+        path = _common_volume(tub, driver) + _common_volume(carriers, driver)
         if (
             any(v > 1e-3 for v in clashes.values())
             or tip_margin < 0.3
@@ -520,6 +538,12 @@ def _button_guide_rows(shell, tub, ret_both, slider, reset):
                     tipped = mid.rotate(pivot, pivot + axis, sign * BTN_TILT_MAX_DEG)
                     if not overlap(tipped, guides):
                         free.append(f"z {zp:g} about {'X' if axis.x else 'Y'}{sign:+.0f}")
+        # Also verify Z-axis anti-rotation on the oblong guide pole alone (with upper_shell off):
+        pole_pivot = cq.Vector(cx, D.BUTTON_POLE_Y, 24.0)
+        for sign in (1.0, -1.0):
+            yawed = mid.rotate(pole_pivot, pole_pivot + cq.Vector(0, 0, 1), sign * 20.0)
+            if not overlap(yawed, ret_n):
+                free.append(f"yaw about Z{sign:+.0f} on pole")
         tilt_ok = tilt_ok and not free
         tilt_msgs.append(
             f"{name}: " + (f"free past the limit at {', '.join(free)}" if free else "held")
@@ -580,7 +604,7 @@ def _paint_fit(shell: cq.Shape, tub: cq.Shape, flaps: cq.Shape, bezel: cq.Shape)
     touch doesn't hide the edge gap. Paint lands on both faces (door, flaps) or one (the clear
     jewel and lens); `D.PAINT_T` per face.
     """
-    case = shell.fuse(tub)
+    case = shell.fuse(tub, *front_panel_mech.front_carriers())
     w_door = D.FRONT_BAY_W - 2.0 * D.FRONT_COVER_CLEAR
     door = front_port_cover.cover_at(D.FRONT_BAY_X)
     db = door.BoundingBox()

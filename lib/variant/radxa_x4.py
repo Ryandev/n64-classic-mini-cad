@@ -46,7 +46,7 @@ DEVIATIONS = {
     },
     "rj45_ethernet_tower": {
         "kind": "removed",
-        "why": "Desolder tall onboard RJ45 MagJack tower (relocated to the +X rear-right bay)",
+        "why": "Desolder tall onboard RJ45 MagJack tower (onboard Wi-Fi 6 used; +X bay open)",
         "bbox": (24.20, 9.50, -4.00, 46.00, 26.20, 13.90),
         "volume_mm3": 3612.18,
         "tolerance_mm3": 2.0,

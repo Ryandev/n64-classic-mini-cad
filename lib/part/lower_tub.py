@@ -52,77 +52,35 @@ def _flush_strip_xs(bx: float) -> tuple[float, float]:
 
 
 def _hinge_wall_blocks() -> list[cq.Shape]:
-    """Material each door hinge needs in the outer bay wall (J-05, owner 2026-11-17).
+    """Flush front strip beside each door's outer end (J-05, owner 2026-11-17).
 
-    Beside each door's outer end the N64 front curves back 0.7 mm behind the door face, which left
-    0.13 mm in front of the hinge pin: that strip is brought forward flush with the door (the shell
-    does the same above the split). A block round the pin hole carries it out to the hollow front
-    corner the pins are pushed in from.
+    Beside each door's outer end the N64 front curves back 0.7 mm behind the door face; that strip
+    is brought forward flush with the door (the shell does the same above the split) so the outer
+    hinge cheek of `front_io_carrier` sits behind a solid front wall.
     """
     out = []
     for bx in D.FRONT_BAY_XS:
-        side = _outward(bx)
-        edge = bx + side * D.FRONT_BAY_W / 2.0
         x0, x1 = _flush_strip_xs(bx)
         out.append(cq.Solid.makeBox(x1 - x0, 1.1, D.SPLIT_Z, cq.Vector(x0, D.FRONT_BAY_Y0, 0.0)))
-        # a block round the pin hole from the bay wall out to where the pins go in
-        px0, px1 = sorted((edge + side * 1.0, edge + side * D.HINGE_OUTER_WALL))
-        # it stands on the floor, so it prints without support
-        r = D.HINGE_PRESS_D / 2.0 + 0.85
-        out.append(
-            cq.Solid.makeBox(
-                px1 - px0,
-                D.HINGE_Y + r + 0.5 - (D.FRONT_BAY_Y0 + 0.1),
-                D.HINGE_Z + r - D.FLOOR_T,
-                cq.Vector(px0, D.FRONT_BAY_Y0 + 0.1, D.FLOOR_T),
-            )
-        )
     return out
 
 
 def _hinge_cuts(bx: float) -> list[cq.Shape]:
-    """The bay's hinge holes and the groove the door's knuckle turns in (J-05)."""
-    side = _outward(bx)
+    """Groove the door's knuckle turns in and flat inner shell back-face at Y = -44.48 mm."""
     half = D.FRONT_BAY_W / 2.0
-    along = cq.Vector(1.0, 0.0, 0.0)
     return [
-        # blind hole in the inner wall: the end of the pin train turns in it
-        cq.Solid.makeCylinder(
-            D.HINGE_BORE_D / 2.0,
-            D.HINGE_BLIND_DEPTH + 0.2,
-            cq.Vector(bx - side * (half - 0.2), D.HINGE_Y, D.HINGE_Z),
-            -side * along,
+        # the knuckle turns in this groove through the sill behind the door
+        C.hinge_teardrop(D.HINGE_KNUCKLE_R + D.HINGE_LEDGE_CLEAR, bx - half, D.FRONT_BAY_W),
+        # Square off the inner back face of the outer shell wall at Y = -44.48 mm so the shell
+        # wall is a single 1.70-2.00 mm step on both sides of the bay (zero 2-step lip) and its
+        # flat inner face guides the front of `front_io_carrier` (owner, 2026-11-18).
+        cq.Solid.makeBox(
+            32.00,
+            10.0,
+            (D.SPLIT_Z + D.LIP_H + 0.5) - D.FRONT_SUBASM_BASE_Z0,
+            cq.Vector(bx - 16.00, -44.48, D.FRONT_SUBASM_BASE_Z0),
         ),
-        # through the outer wall into the hollow corner: the pins go in here, the last pressed
-        cq.Solid.makeCylinder(
-            D.HINGE_PRESS_D / 2.0,
-            D.HINGE_OUTER_WALL + 1.0,
-            cq.Vector(bx + side * (half - 0.2), D.HINGE_Y, D.HINGE_Z),
-            side * along,
-        ),
-        # the knuckle turns in this groove through the ledge behind the door
-        _teardrop(D.HINGE_KNUCKLE_R + D.HINGE_LEDGE_CLEAR, bx - half, D.FRONT_BAY_W),
     ]
-
-
-def _teardrop(r: float, x0: float, length: float) -> cq.Shape:
-    """A round groove along X on the hinge axis with a 45 deg peaked roof, so it prints.
-
-    A round roof open to the front is held only from behind, so its top read as needing support
-    (8.5 mm^2 a door, 2026-11-17). The peak is the standard fix for a horizontal hole.
-    """
-    centre = cq.Vector(x0, D.HINGE_Y, D.HINGE_Z)
-    along = cq.Vector(1.0, 0.0, 0.0)
-    roof = (
-        cq.Solid.makeBox(length, 2.0 * r, 2.0 * r, cq.Vector(x0, D.HINGE_Y - r, D.HINGE_Z - r))
-        .rotate(centre, centre + along, 45.0)
-        .intersect(
-            cq.Solid.makeBox(
-                length, 4.0 * r, 2.0 * r, cq.Vector(x0, D.HINGE_Y - 2.0 * r, D.HINGE_Z)
-            )
-        )
-    )
-    return cq.Solid.makeCylinder(r, length, centre, along).fuse(roof)
 
 
 def get_shape() -> cq.Shape:
@@ -174,7 +132,7 @@ def get_shape() -> cq.Shape:
     # 2. Internal louver backing ribs + twin-bay keeper blocks + central LED boss + M3 bosses
     add_solids = [
         cq.Solid.makeCylinder(
-            D.CORNER_BOSS_OD / 2.0,
+            D.CORNER_BOSS_OD / 2.0 + 0.02,
             D.SPLIT_Z - 1.0,
             cq.Vector(bx, by, 1.0),
         )
@@ -186,64 +144,9 @@ def get_shape() -> cq.Shape:
         x0 = -D.WAIST_HALF_W + 1.4 if sx < 0 else D.WAIST_HALF_W - 2.8
         add_solids.append(cq.Solid.makeBox(1.4, 37.3, 9.8, cq.Vector(x0, 1.5, D.FLOOR_T)))
 
-    # Left (X = -25.0) and Right (X = +25.0) lower twin-port bay keeper blocks +
-    # full-depth 4-sided USB-A mounting cradles (Y = -41.75 .. -25.25 mm, Z = FLOOR_T .. SPLIT_Z)
-    y_keeper_back = D.USB_A_Y0 - 0.05  # -41.75 mm (clears TE 292303-7 front flange at -41.70 mm)
+    # Central front apron backing pad behind the lenticular Power LED lens (X = -5.4..+5.4)
+    # and rear I/O bezel boss; the twin USB/door/switch cradles live in `front_io_carrier_l`/`_r`.
     front_raw_blocks = [
-        cq.Solid.makeBox(
-            D.FRONT_BAY_W + 3.6,
-            y_keeper_back - (D.FRONT_BAY_Y0 - 1.5),
-            D.SPLIT_Z - D.FLOOR_T,
-            cq.Vector(
-                bx - (D.FRONT_BAY_W + 3.6) / 2.0,
-                D.FRONT_BAY_Y0 - 1.5,
-                D.FLOOR_T,
-            ),
-        ).fuse(
-            # Full-depth Z = 9.55 mm seating floor under the pair of TE 292303-7 USB-A receptacles
-            cq.Solid.makeBox(
-                D.FRONT_BAY_W + 3.6,
-                15.95,
-                9.55 - D.FLOOR_T,
-                cq.Vector(
-                    bx - (D.FRONT_BAY_W + 3.6) / 2.0,
-                    y_keeper_back,
-                    D.FLOOR_T,
-                ),
-            ),
-            # Stepped Z = 10.80 mm front metal-shell seating shelf (Y = -40.80 .. -32.35 mm)
-            # that supports the Z = 10.95 mm front shell floor and aligns flush with the
-            # Y = -32.35 mm retention-leg slot wall to form a continuous 5.00 mm tall -Y pull stop
-            cq.Solid.makeBox(
-                D.FRONT_BAY_W + 3.6,
-                8.45,
-                10.80 - 9.55,
-                cq.Vector(
-                    bx - (D.FRONT_BAY_W + 3.6) / 2.0,
-                    -40.80,
-                    9.55,
-                ),
-            ),
-            # Central divider wall + 3.10mm front registration shoulder (Y=-39.80..-36.70, Z=12.94)
-            # and flat Z=11.55mm glue shelf (Y=-36.70..-25.80) for part/usb_retainer_bracket.py
-            cq.Solid.makeBox(1.70, 14.00, 2.00, cq.Vector(bx - 0.85, -39.80, 9.55)),
-            cq.Solid.makeBox(1.70, 3.10, D.SPLIT_Z - 11.55, cq.Vector(bx - 0.85, -39.80, 11.55)),
-            # Left and right lateral guide walls (1.50 mm thick) for each twin USB-A cradle
-            cq.Solid.makeBox(1.50, 14.00, 2.00, cq.Vector(bx - 15.80, -39.80, 9.55)),
-            cq.Solid.makeBox(1.50, 3.10, D.SPLIT_Z - 11.55, cq.Vector(bx - 15.80, -39.80, 11.55)),
-            cq.Solid.makeBox(1.50, 14.00, 2.00, cq.Vector(bx + 14.30, -39.80, 9.55)),
-            cq.Solid.makeBox(1.50, 3.10, D.SPLIT_Z - 11.55, cq.Vector(bx + 14.30, -39.80, 11.55)),
-            # Rear plug-insertion backstop wall (0.85 mm thick, Y = -26.65 .. -25.80 mm)
-            cq.Solid.makeBox(
-                D.FRONT_BAY_W + 3.6,
-                0.85,
-                2.00,
-                cq.Vector(bx - (D.FRONT_BAY_W + 3.6) / 2.0, -26.65, 9.55),
-            ),
-        )
-        for bx in D.FRONT_BAY_XS
-    ] + [
-        # Central front apron backing pad behind the lenticular Power LED lens (X = -5.4..+5.4)
         cq.Solid.makeBox(
             10.8,
             (-42.50) - (D.FRONT_APRON_Y0 - 1.0),
@@ -384,32 +287,5 @@ def get_shape() -> cq.Shape:
                 cq.Vector(gx0, D.FRONT_BAY_Y0 - 0.2, D.SPLIT_Z - D.PARTING_GROOVE_H),
             )
         )
-        # Lower keeper magnet pocket at (bx, y_seat, 9.90 mm)
-        cuts.append(
-            cq.Solid.makeCylinder(
-                D.MAGNET_BORE_D / 2.0,
-                D.MAGNET_BORE_DEPTH + 0.05,
-                cq.Vector(bx, y_seat - 0.05, D.MAGNET_ZS[0]),
-                cq.Vector(0.0, 1.0, 0.0),
-            )
-        )
-
-    # 4x lower USB-A plug access windows through the keeper walls (11.6 mm wide, Z = 9.75..14.9)
-    # + downward PCB retention kink-leg lock slots (Y = -32.45..-30.00, Z = 5.80..9.65)
-    # + central rear wire-exit notch through the Y = -26.25 mm backstop wall
-    win_w = 11.60
-    for px in D.FRONT_PORT_XS:
-        cuts.append(
-            cq.Solid.makeBox(
-                win_w,
-                6.0,
-                (D.SPLIT_Z + D.LIP_H + 0.5) - 9.75,
-                cq.Vector(px - win_w / 2.0, y_seat - 0.2, 9.75),
-            )
-        )
-        for side in (-1.0, 1.0):
-            x_leg0 = px + 6.00 if side > 0.0 else px - 8.80
-            cuts.append(cq.Solid.makeBox(2.80, 2.35, 3.85, cq.Vector(x_leg0, -32.35, 5.80)))
-        cuts.append(cq.Solid.makeBox(8.60, 1.50, 2.50, cq.Vector(px - 4.30, -26.80, 9.55)))
 
     return tub_with_bosses.cut(*cuts)

@@ -6,18 +6,18 @@ conservative FDM PETG/PLA inter-layer yield limit `25.0 MPa`, in-plane yield `45
 actual B-Rep solids from `lib/part/` and `lib/variant/`:
   1. `LC1_BUTTON_MASH_50N`: `part/usb_retainer_bracket.py` under `50 N` (`-Z`) heavy thumb mash on
      the sleeve's stop (`SLEEVE_STOP_Z`), `15 N` (`-Y`) off-center lateral tilt on the
-     `Ø2.80 mm` guide pole,
+     `2.80 x 4.20 mm` oblong guide pole,
      and `15 N` (`+Z`) upward USB-A cable pry under the `Z = 16.85 mm` top retainer bridge.
-  2. `LC2_TUB_USB_AND_OMRON`: `variant/lower_tub.py` front USB-A & Omron bay under simultaneous
-     `40 N` (`+Y`) USB-A plug insertion, `30 N` (`-Y`) USB-A cable yank against the `Z = 5.80 ..
-     10.80 mm` pull-stop step, and `50 N` (`-Z`) rear button mash on the button stop post
-     (`BUTTON_STOP_Z`).
+  2. `LC2_TUB_USB_AND_OMRON`: `part/front_io_carrier_l.py` front USB-A & Omron carrier under
+     simultaneous `40 N` (`+Y`) USB-A plug insertion, `30 N` (`-Y`) USB-A cable yank against the
+     `Z = 5.80 .. 10.80 mm` pull-stop step, and `50 N` (`-Z`) rear button mash on the button stop
+     post (`BUTTON_STOP_Z`).
   3. `LC3_UPPER_SHELL_DOME_100N`: `variant/upper_shell.py` full top shell under a `100 N` (`~10 kgf`
      `-Z`) crush load across the central barrel dome & 25 parabolic cooling louvers, checking peak
      Von Mises stress, dome vertical sag, and `POWER`/`RESET` guide-chimney radial `XY` distortion.
   4. `LC4_RADXA_RJ45_STANDOFFS`: `variant/lower_tub.py` rear chassis & standoffs under `30 N` (`-Y`)
      rear cable insertion + `60 N` (`-Z`) M2.5 screw clamp preload across the 4 Radxa X4 standoffs
-     (`Z = 8.20 mm`) and 2 RJ45 standoffs (`Z = 5.60 mm`).
+     (`Z = 8.20 mm`).
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ from assembly.datum import CORNER_BOSS_XS as CORNER_XS  # noqa: E402
 from assembly.datum import CORNER_BOSS_YS as CORNER_YS  # noqa: E402
 from assembly.datum import FOOT_D  # noqa: E402
 from component import omron_ss5gl  # noqa: E402
-from part import usb_retainer_bracket  # noqa: E402
+from part import front_io_carrier_l, usb_retainer_bracket  # noqa: E402
 from variant import lower_tub, upper_shell  # noqa: E402
 
 PETG_E_MPA = 2200.0
@@ -299,9 +299,8 @@ def _under_a_foot(x: float, y: float, z: float) -> bool:
 
 
 def _on_a_standoff_top(x: float, y: float, z: float) -> bool:
-    """On the top face of one of the 4 Radxa or 2 RJ45 standoffs (where the screws clamp)."""
+    """On the top face of one of the 4 Radxa standoffs (where the screws clamp)."""
     tops = [(hx, hy, D.RADXA_PCB_Z0) for hx, hy in D.radxa_hole_centres()]
-    tops += [(rx, ry, D.RJ45_SEAT_Z) for rx, ry in D.RJ45_MOUNT_HOLES]
     return any(
         abs(z - tz) <= 0.15 and (x - tx) ** 2 + (y - ty) ** 2 <= 3.6**2 for tx, ty, tz in tops
     )
@@ -336,7 +335,8 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
     """Run all 4 Gmsh + CalculiX 3D FEM load cases (C3D10, mesh-converged) as gate rows."""
     rows: list[tuple[str, bool, str]] = []
 
-    # 1. LC1: usb_retainer_bracket (glued along its base) under a 50 N mash on the button stop,
+    # 1. LC1: usb_retainer_bracket (clamped by the outer M2.5 screw at X=-43.80 and seated on the
+    #    carrier's 3 USB divider walls at Z=11.60) under a 50 N mash on the button stop,
     #    15 N sideways on the guide pole and a 15 N USB-A pry under the top bridge. The stop
     #    shelf's own give is graded against the switch margin (Gemini review #5): the part's
     #    largest movement is the pole tip, which says nothing about how far the button goes.
@@ -348,7 +348,8 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
         usb_retainer_bracket.get_shape(),
         clmin=0.45,
         clmax=1.10,
-        fix_pred=lambda x, y, z: z <= 11.75 or (y <= -36.50 and z <= 13.00),
+        fix_pred=lambda x, y, z: (x <= -39.50 and z <= 10.60) or (y <= -36.50 and z <= 13.00),
+        roller_pred=lambda x, y, z: z <= 11.75,
         watch_pred=on_stop_shelf,
         loads=[
             (on_stop_shelf, (0.0, 0.0, -50.0)),
@@ -378,20 +379,23 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
         )
     )
 
-    # 2. LC2: the tub's front-left USB-A & Omron bay, cut from the tub (the cut faces held as the
-    #    rest of the tub would hold them), resting on its floor
+    # 2. LC2: front_io_carrier_l bolted at its 3x M2.5 mounting ears (Z = 4.80 mm boss seats)
+    #    with only its front sill (y <= -43.80) resting on lower_tub's Z = 2.80 mm shelf.
     tub = lower_tub.get_shape()
-    tub_fl = tub.intersect(cq.Solid.makeBox(66.0, 36.0, 25.0, cq.Vector(-66.0, -50.0, -0.5)))
+    car_l = front_io_carrier_l.get_shape()
+    mount_l = [(-mx, my) for mx, my in D.FRONT_SUBASM_MOUNT_PTS]
     r2 = solve_converged(
         "LC2_TUB_USB_AND_OMRON",
-        tub_fl,
-        clmin=0.80,
-        clmax=2.20,
-        fix_pred=lambda x, y, z: y >= -14.2 or x >= -0.2 or _under_a_foot(x, y, z),
-        roller_pred=lambda x, y, z: z <= 0.05,
+        car_l,
+        clmin=0.70,
+        clmax=1.80,
+        fix_pred=lambda x, y, z: (
+            z <= 8.50 and any((x - mx) ** 2 + (y - my) ** 2 <= 4.0**2 for mx, my in mount_l)
+        ),
+        roller_pred=lambda x, y, z: y <= -43.80 and z <= D.FRONT_SUBASM_BASE_Z0 + 0.05,
         loads=[
             (
-                lambda x, y, z: -40.5 <= x <= -9.5 and -26.80 <= y <= -25.70 and 9.60 <= z <= 11.60,
+                lambda x, y, z: -40.5 <= x <= -9.5 and -27.30 <= y <= -25.70 and 9.50 <= z <= 11.60,
                 (0.0, 40.0, 0.0),
             ),
             (
@@ -451,7 +455,7 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
     )
 
     # 4. LC4: the tub's rear half on its floor (held vertically), the cut face held, 30 N rear plug
-    #    push + 60 N screw preload on the 4 Radxa and 2 RJ45 standoffs
+    #    push + 60 N screw preload on the 4 Radxa standoffs
     tub_rear = tub.intersect(cq.Solid.makeBox(132.0, 63.0, 16.0, cq.Vector(-66.0, -12.0, -0.5)))
     r4 = solve_converged(
         "LC4_RADXA_RJ45_STANDOFFS",
@@ -460,13 +464,13 @@ def check_all(out_dir: str | None = None) -> list[tuple[str, bool, str]]:
         clmax=2.80,
         fix_pred=lambda x, y, z: y <= -11.8 or _under_a_foot(x, y, z),
         roller_pred=lambda x, y, z: z <= 0.05,
-        # on the 6 standoff tops only (C4: a box here also caught the rear wall's top edge)
+        # on the 4 Radxa standoff tops only (C4: a box here also caught the rear wall's top edge)
         loads=[(_on_a_standoff_top, (0.0, -30.0, -60.0))],
         out_dir=out_dir,
     )
     rows.append(
         _row(
-            "FEM_LC4   lower_tub Radxa X4 & RJ45 standoffs (30N -Y plug push + 60N preload)",
+            "FEM_LC4   lower_tub 4x Radxa X4 standoffs (30N -Y plug push + 60N preload)",
             r4,
             15.0,
             STANDOFF_FLEX_MAX,

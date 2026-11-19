@@ -17,6 +17,8 @@ from part import (  # noqa: E402
     cooling_hood,
     duct_floor,
     front_bezel,
+    front_io_carrier_l,
+    front_io_carrier_r,
     front_port_cover,
     led_light_pipe,
     n64_port_insert,
@@ -30,6 +32,8 @@ from variant import lower_tub, upper_shell  # noqa: E402
 PARTS = (
     ("upper_shell", upper_shell),
     ("lower_tub", lower_tub),
+    ("front_io_carrier_l", front_io_carrier_l),
+    ("front_io_carrier_r", front_io_carrier_r),
     ("cooling_duct", cooling_duct),
     ("cooling_hood", cooling_hood),
     ("duct_floor", duct_floor),

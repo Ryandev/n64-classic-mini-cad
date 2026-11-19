@@ -77,6 +77,26 @@ def cover_at(bay_x: float = D.FRONT_BAY_X) -> cq.Shape:
             cq.Vector(1.0, 0.0, 0.0),
         )
     ]
+    # Coaxial 3-knuckle barrel-hinge reliefs at the two bottom corners so the 22.20 mm centre
+    # knuckle turns with FRONT_COVER_CLEAR (0.50 mm) clearance between the two 2.10 mm stationary
+    # carrier hinge barrels across the full 0..90 deg swing.
+    r_clear = D.HINGE_BARREL_R + D.FRONT_COVER_CLEAR
+    notch_w = D.HINGE_BARREL_W + D.FRONT_COVER_CLEAR + 0.30
+    for x0 in (bay_x - w / 2.0 - 0.30, bay_x + w / 2.0 - D.HINGE_BARREL_W - D.FRONT_COVER_CLEAR):
+        cuts.extend(
+            [
+                cq.Solid.makeCylinder(
+                    r_clear,
+                    notch_w,
+                    cq.Vector(x0, D.HINGE_Y, D.HINGE_Z),
+                    cq.Vector(1.0, 0.0, 0.0),
+                ),
+                cq.Solid.makeBox(
+                    notch_w, 5.0, 2.0 * r_clear, cq.Vector(x0, D.HINGE_Y, D.HINGE_Z - r_clear)
+                ),
+                cq.Solid.makeBox(notch_w, 5.0, r_clear, cq.Vector(x0, -47.0, D.HINGE_Z - r_clear)),
+            ]
+        )
 
     # 2. Continuous Z = 12.56 .. 12.94 mm parting-line shadow groove across the -Y face
     cuts.append(

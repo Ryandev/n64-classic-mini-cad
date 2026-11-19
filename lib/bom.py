@@ -32,9 +32,9 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
             {
                 "part": (
                     "Lower Tub (`lib/variant/lower_tub.py`, `130.00 x 99.88 x 14.74 mm` with "
-                    "integrated bi-colour LED & Clear PETG Light-Pipe Holder Cradle)"
+                    "integrated bi-colour LED & Clear Resin Light-Pipe Holder Cradle)"
                 ),
-                "material": "Charcoal Grey PETG Basic",
+                "material": "SLA Tough Resin (JLC3DP Imagine Black / 9600)",
                 "qty": 1,
             },
             {
@@ -42,16 +42,25 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Twin-Port Hinged Front Controller Covers (`lib/part/front_port_cover.py`, "
                     "`28.0 x 11.0 x 1.8 mm`: Left `P1+P2` at `X=-25.0`, Right `P3+P4` at `X=+25.0`)"
                 ),
-                "material": "Charcoal Grey PETG Basic",
+                "material": "SLA Tough Resin (JLC3DP Imagine Black / 9600 or Elegoo Mars)",
+                "qty": 2,
+            },
+            {
+                "part": (
+                    "Left & Right Removable Front Control & I/O Subassembly Carriers "
+                    "(`lib/part/front_io_carrier_l.py`, `front_io_carrier_r.py`, `46.0 x 32.7 x "
+                    "20.2 mm`, bench-assembled with door, hinge pin, 2x USB-A & Omron SS-5GL)"
+                ),
+                "material": "SLA Tough Resin (JLC3DP Imagine Black / 9600 or Elegoo Mars)",
                 "qty": 2,
             },
             {
                 "part": (
                     "USB-A Top Retainer & Button Travel-Stop Brackets "
-                    "(`lib/part/usb_retainer_bracket.py`, `31.6 x 8.8 x 11.85 mm`, glued onto "
-                    "`lower_tub` USB-A cradle walls after seating the 4 USB-A receptacles)"
+                    "(`lib/part/usb_retainer_bracket.py`, `37.3 x 8.8 x 18.7 mm`, clamped onto "
+                    "`front_io_carrier` over the 4 USB-A receptacles via the outer M2.5 screw)"
                 ),
-                "material": "Charcoal Grey PETG Basic",
+                "material": "SLA Tough Resin (JLC3DP Imagine Black / 9600 or Elegoo Mars)",
                 "qty": 2,
             },
             {
@@ -59,7 +68,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Shallow N64 Controller Port Inserts (`lib/part/n64_port_insert.py`, "
                     "`Ø10.88 x 1.92 mm` with `R=0.50mm` front rim fillet & `P1..P4` tactile pips)"
                 ),
-                "material": "Light Cool Grey PETG Basic",
+                "material": "SLA Tough Resin (JLC3DP 9600 / Elegoo Mars, Light Cool Grey)",
                 "qty": 4,
             },
             {
@@ -67,7 +76,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Lenticular N64 Power LED Light Pipe (`lib/part/led_light_pipe.py`, "
                     "`6.36 x 1.76 mm` authentic N64 almond front lens + rear optical barrel)"
                 ),
-                "material": "Clear / Transparent PETG (100% infill)",
+                "material": "SLA Clear Resin (JLC3DP 8001 Transparent)",
                 "qty": 1,
             },
             {
@@ -110,11 +119,11 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
             },
             {
                 "item": (
-                    "M.2 **2230** NVMe PCIe Gen3 x4 SSD — **64GB or 128GB** (M-key, `22 x 30 mm`; "
-                    "e.g. Kioxia BG4/BG5 128GB or WD SN530/SN740 128GB; full N64 library + "
-                    "Batocera OS + 1080p artwork uses only ~12–15 GB)"
+                    "M.2 **2230** NVMe PCIe Gen3 x4 SSD — **256GB or 512GB** (M-key, `22 x 30 mm`; "
+                    "e.g. Kioxia BG4/BG5/BG6 or WD SN530/SN740 Steam Deck pull; sized for ROMs + "
+                    "native PC ports + HD `.o2r`/`.rtz`/`.hts` texture packs + swap/shader caches)"
                 ),
-                "spec": "M.2 2230 NVMe SSD (64GB / 128GB)",
+                "spec": "M.2 2230 NVMe SSD (256GB / 512GB)",
                 "qty": 1,
             },
             {
@@ -170,19 +179,48 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
             },
             {
                 "item": (
-                    "Ruthex RX-M2.5x4.0 brass heat-set insert (`M2.5 x 4.0 mm`, `OD 3.2 mm`: "
-                    "4 for Radxa X4 standoffs + 2 for 2.5GbE RJ45 Ethernet carrier standoffs)"
+                    "Ruthex RX-M2.5x4.0 brass threaded insert (`M2.5 x 4.0 mm`, knurl `OD 3.5 mm`, "
+                    "heat-set into `Ø3.20 mm` bores on the Stage-2 FDM fit mule or cold-glued with "
+                    "medium CA / 2-part epoxy into `Ø3.60 mm` slip-fit bores on the Stage-5 SLA "
+                    "resin shell: 4 for Radxa X4 standoffs + 6 for Front Subassembly floor bosses)"
                 ),
                 "spec": "Ruthex RX-M2.5x4.0",
-                "qty": 6,
+                "qty": 10,
             },
             {
                 "item": (
                     "M2.5 x 6 ISO 7380 button-head socket screw (A2 stainless: "
-                    "4 for Radxa X4 + 2 for 2.5GbE RJ45 Ethernet carrier)"
+                    "4 for Radxa X4 + 4 for Inner/Rear Front Subassembly ears)"
                 ),
                 "spec": "M2.5 x 6 ISO 7380 BHCS",
-                "qty": 6,
+                "qty": 8,
+            },
+            {
+                "item": (
+                    "M2.5 x 16 ISO 7380 button-head socket screw (A2 stainless: 2x outer Front "
+                    "Subassembly screws clamping `usb_retainer_bracket` + `front_io_carrier` into "
+                    "`lower_tub`)"
+                ),
+                "spec": "M2.5 x 16 ISO 7380 BHCS",
+                "qty": 2,
+            },
+            {
+                "item": (
+                    "6-pin Micro-JST 1.25 mm (Molex PicoBlade / JST GH) pre-crimped Male + Female "
+                    "wire-to-wire inline connector pair (`9.5 x 8.0 x 3.4 mm` mated, 1 per front "
+                    "subassembly: `+5V, D1-, D1+, D2-, D2+, GND`)"
+                ),
+                "spec": "6-pin Micro-JST 1.25mm wire-to-wire pair",
+                "qty": 2,
+            },
+            {
+                "item": (
+                    "2-pin Micro-JST 1.25 mm (Molex PicoBlade / JST GH) pre-crimped Male + Female "
+                    "wire-to-wire inline connector pair (`4.5 x 8.0 x 3.4 mm` mated, 1 per front "
+                    "subassembly for the `POWER` and `RESET` `Omron SS-5GL` `COM` + `NO` leads)"
+                ),
+                "spec": "2-pin Micro-JST 1.25mm wire-to-wire pair",
+                "qty": 2,
             },
             {
                 "item": (
@@ -210,14 +248,6 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                 "qty": 2,
             },
             {
-                "item": (
-                    "2.5GbE 8P8C shielded RJ45 Ethernet receptacle on M2.5 breakout carrier "
-                    "(`2x Ø2.70 mm` mounting ears at `(43.00, 23.00)` & `(51.50, 28.50)`)"
-                ),
-                "spec": "Panel-mount RJ45 jack",
-                "qty": 1,
-            },
-            {
                 "item": "Neodymium disc magnet (`Ø3.0 x 1.0 mm`, N52 — 2 per cover + 2 per bay)",
                 "spec": "3.0 x 1.0 mm N52 magnet",
                 "qty": 8,
@@ -241,7 +271,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Upper Shell (`lib/variant/upper_shell.py`, `130.00 x 99.88 x 20.56 mm` "
                     "sculpted N64 top deck with 25 parabolic louvers & engraved lettering)"
                 ),
-                "material": "Charcoal Grey PETG Basic",
+                "material": "SLA Tough Resin (JLC3DP Imagine Black / 9600)",
                 "qty": 1,
             },
             {
@@ -266,7 +296,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Cartridge Slot Dust-Flap Insert (`lib/part/cartridge_flaps.py`, "
                     "`57.50 x 10.00 x 1.35 mm` with central parting seam & semicircular end tabs)"
                 ),
-                "material": "Light Cool Grey PETG Basic",
+                "material": "SLA Tough Resin (JLC3DP 9600 / Elegoo Mars, Light Cool Grey)",
                 "qty": 1,
             },
             {
@@ -274,7 +304,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Momentary Power Button Plunger (`lib/part/power_slider.py`, smooth "
                     "cylindrical-crowned stadium cap matching Reset, 3D-engraved `POWER`)"
                 ),
-                "material": "Light Cool Grey PETG Basic",
+                "material": "SLA Tough Resin (JLC3DP 9600 / Elegoo Mars, Light Cool Grey)",
                 "qty": 1,
             },
             {
@@ -282,7 +312,7 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
                     "Momentary Reset Button Plunger (`lib/part/reset_button.py`, smooth "
                     "cylindrical-crowned stadium cap, 3D-engraved `RESET`)"
                 ),
-                "material": "Light Cool Grey PETG Basic",
+                "material": "SLA Tough Resin (JLC3DP 9600 / Elegoo Mars, Light Cool Grey)",
                 "qty": 1,
             },
         ],
@@ -308,8 +338,10 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
             },
             {
                 "item": (
-                    "Ruthex RX-M3x5.7 brass heat-set insert (`M3 x 5.7 mm`, `OD 4.0 mm`, 4 in "
-                    "`upper_shell` corner bosses — shared GBA BOM part)"
+                    "Ruthex RX-M3x5.7 brass threaded insert (`M3 x 5.7 mm`, knurl `OD 4.2 mm`, "
+                    "heat-set into `Ø4.00 mm` bores on the Stage-2 FDM fit mule or cold-glued with "
+                    "medium CA / 2-part epoxy into `Ø4.30 mm` slip-fit bores on the Stage-5 SLA "
+                    "resin `upper_shell` corner bosses — shared GBA BOM part)"
                 ),
                 "spec": "Ruthex RX-M3x5.7",
                 "qty": 4,
@@ -333,6 +365,39 @@ SUBASSEMBLIES: list[dict[str, Any]] = [
         ],
     },
 ]
+
+
+# Two-number M.2 2230 SSD storage model (all figures in binary GiB = 2^30 bytes inside /userdata;
+# the separate 8.0 GiB Batocera /boot partition is subtracted in usable_ssd_limits()):
+SSD_FIXED_OVERHEAD_GIB = 20.0  # 6 GiB swap + 6 GiB shader/.htc cache + 8 GiB unpack in /userdata
+SSD_PER_ROM_BARE_GIB = 0.03  # 16.5 MiB ROM + 13.5 MiB 1080p box art, video snap & save states
+SSD_PER_ROM_WITH_HTS_GIB = (
+    0.25  # blended average when ~15% of emulated ROMs have a 1.5 GiB .hts pack
+)
+SSD_PER_PORT_HD_GIB = 2.50  # ~120 MiB port binary/.o2r + ~2.38 GiB HD texture/3D model/audio pack
+
+
+def usable_ssd_limits(sticker_gb: int) -> tuple[float, float]:
+    """Return `(usable_userdata_gib, safe_80pct_ceiling_gib)` for a `sticker_gb` decimal SSD."""
+    raw_gib = sticker_gb * 1_000_000_000 / (1024**3)
+    userdata_raw = raw_gib - 8.0  # minus 8.0 GiB Batocera /boot partition
+    usable_ext4 = userdata_raw * 0.95  # minus ~5% ext4 inode table, journal & reserved blocks
+    safe_ceiling = usable_ext4 * 0.80  # keep 20% free for DRAM-less TLC SLC cache & wear leveling
+    return round(usable_ext4, 1), round(safe_ceiling, 1)
+
+
+def estimate_ssd_gib(n_roms: int, n_ports: int, include_hts: bool = True) -> dict[str, float]:
+    """Estimate total `/userdata` usage (in `GiB`) from `(n_roms, n_ports)`."""
+    per_rom = SSD_PER_ROM_WITH_HTS_GIB if include_hts else SSD_PER_ROM_BARE_GIB
+    roms_gib = n_roms * per_rom
+    ports_gib = n_ports * SSD_PER_PORT_HD_GIB
+    total_gib = SSD_FIXED_OVERHEAD_GIB + roms_gib + ports_gib
+    return {
+        "fixed_gib": SSD_FIXED_OVERHEAD_GIB,
+        "roms_gib": round(roms_gib, 1),
+        "ports_gib": round(ports_gib, 1),
+        "total_gib": round(total_gib, 1),
+    }
 
 
 def generate_markdown() -> str:
@@ -368,26 +433,99 @@ def generate_markdown() -> str:
             "cooling_check.py` computes the junction temperature from the measured openings)."
         ),
         "",
-        "### 2. Which M.2 SSD to Buy & Storage Space Needed",
+        (
+            "### 2. Which M.2 SSD to Buy & Two-Number Storage Estimator "
+            "(`./run bom --estimate <N_ROMS> <N_PORTS>`)"
+        ),
         (
             "- **Required Form Factor:** **M.2 2230 NVMe PCIe Gen3 x4 SSD** (`22 mm wide x "
             "30 mm long`, M-key — same compact size used in Steam Deck / ROG Ally; **do not** "
-            "buy 2280)."
+            "buy 2242 or 2280)."
         ),
-        "- **Storage Math for N64 Classic Mini:**",
-        "  - Each Nintendo 64 ROM (`.z64`) is **8 MB to 64 MB** (average `~24 MB`).",
+        "- **Two-Number `/userdata` Usage Formula (in binary `GiB`, after 8.0 GiB `/boot`):**",
         (
-            "  - The **entire official North American / PAL N64 library (296–388 games)** is only "
-            "**~6.5 GB**."
+            "  Plug in **`N_roms`** (emulated N64 games) and **`N_ports`** "
+            "(native PC ports with HD packs):"
+        ),
+        "  ```text",
+        "  /userdata Used (GiB) = 20.0 GiB (fixed) + (0.25 GiB x N_roms) + (2.50 GiB x N_ports)",
+        "                         (or 0.03 GiB x N_roms if no GLideN64 .hts packs are used)",
+        "  ```",
+        "  - **Fixed `/userdata` Cache & Scratch Overhead (`20.0 GiB`, plus `8.0 GiB` `/boot`):**",
+        "    - `6.0 GiB` — `/userdata/system/swap` file (for Torch `.o2r` extraction & 4K packs)",
+        "    - `6.0 GiB` — Mesa Vulkan shader cache + `GLideN64` uncompressed `.htc` mipmap cache",
+        "    - `8.0 GiB` — Temporary archive unpack scratch buffer (`2x` largest texture pack zip)",
+        "  - **Per Emulated ROM (`0.03 GiB` bare / `0.25 GiB` with `.hts` HD packs):**",
+        (
+            "    - `0.03 GiB` (`30 MiB`): `16.5 MiB` `.z64` ROM + `13.5 MiB` 1080p box art, "
+            "`.mp4` snap & 4 save states"
         ),
         (
-            "  - Adding Batocera Linux OS (`~4 GB`) + 1080p box art, cartridge textures, and "
-            "preview videos (`~2.5 GB`) brings a **complete every-N64-game build to ~13 GB total**."
+            "    - `0.25 GiB` (`250 MiB`): blended average when ~15% of emulated ROMs have a "
+            "`1.5 GiB` `GLideN64` `.hts` pack"
+        ),
+        "  - **Per Native PC Port (`2.50 GiB` average):**",
+        (
+            "    - `0.12 GiB` (`120 MiB`): AppImage / `N64Recomp` binary + extracted `.o2r` or "
+            "stored `.z64`"
         ),
         (
-            "- **Recommended Capacity:** **64 GB or 128 GB M.2 2230 NVMe** (e.g. *Kioxia BG4 / "
-            "BG5 128GB M.2 2230*, *WD PC SN530 / SN740 128GB M.2 2230*, or *Sabrent Rocket 2230*, "
-            "`~$15–$22`)."
+            "    - `2.38 GiB`: `.o2r` / `.rtz` HD texture, 3D model & remastered audio packs "
+            "(`1.5–6.0 GiB` each)"
+        ),
+        "",
+        "- **Usable Drive Capacity After Formatting & 20% SSD Wear-Leveling Reserve:**",
+        "",
+        (
+            "  | Sticker Size | Raw Binary (`GiB`) | Usable `ext4` (`/userdata`) | "
+            "Safe 80% Ceiling (Keep 20% Free) |"
+        ),
+        "  |---:|---:|---:|---:|",
+        (
+            f"  | **128 GB** | 119.2 GiB | {usable_ssd_limits(128)[0]:.1f} GiB | "
+            f"**{usable_ssd_limits(128)[1]:.1f} GiB** |"
+        ),
+        (
+            f"  | **256 GB** | 238.4 GiB | {usable_ssd_limits(256)[0]:.1f} GiB | "
+            f"**{usable_ssd_limits(256)[1]:.1f} GiB** |"
+        ),
+        (
+            f"  | **512 GB** | 476.8 GiB | {usable_ssd_limits(512)[0]:.1f} GiB | "
+            f"**{usable_ssd_limits(512)[1]:.1f} GiB** |"
+        ),
+        "",
+        "- **Quick Lookup Table (`Total GiB` vs Safe 80% Drive Ceiling):**",
+        "",
+        (
+            "  | Build Scenario | `N_roms` | `N_ports` | Fixed | ROMs + `.hts` | Ports + HD | "
+            "**Total Used** | Recommended SSD |"
+        ),
+        "  |---|---:|---:|---:|---:|---:|---:|---|",
+        (
+            "  | Bare ROMs + Current Ports (no `.hts`) | 300 | 28 | 20.0 GiB | 9.0 GiB | "
+            f"70.0 GiB | **{estimate_ssd_gib(300, 28, False)['total_gib']:.1f} GiB** | "
+            "**256 GB** (`175 GiB` safe) |"
+        ),
+        (
+            "  | Loaded Current Build (with `.hts`) | 300 | 28 | 20.0 GiB | 75.0 GiB | "
+            f"70.0 GiB | **{estimate_ssd_gib(300, 28, True)['total_gib']:.1f} GiB** | "
+            "**256 GB** (`175 GiB` safe) / **512 GB** |"
+        ),
+        (
+            "  | Future-Proof (`+22` new Recomp ports) | 300 | 50 | 20.0 GiB | 75.0 GiB | "
+            f"125.0 GiB | **{estimate_ssd_gib(300, 50, True)['total_gib']:.1f} GiB** | "
+            "**512 GB** (`356 GiB` safe) |"
+        ),
+        (
+            "  | Heavy Future (`+42` new Recomp ports) | 300 | 70 | 20.0 GiB | 75.0 GiB | "
+            f"175.0 GiB | **{estimate_ssd_gib(300, 70, True)['total_gib']:.1f} GiB** | "
+            "**512 GB** (`356 GiB` safe) |"
+        ),
+        "",
+        (
+            "- **Recommended Capacity:** **256 GB or 512 GB M.2 2230 NVMe** (e.g. *Kioxia BG4 / "
+            "BG5 / BG6* or *WD PC SN530 / SN740* OEM Steam Deck / ROG Ally pulls). Run "
+            "`./run bom --estimate <N_ROMS> <N_PORTS>` to compute any custom combination."
         ),
         "",
         "### 3. Shared GBA BOM Parts: `Omron SS-5GL` Buttons & `Kingbright L-93WEGW` LED",
@@ -399,9 +537,10 @@ def generate_markdown() -> str:
             "dropped into its tower from above and held by two `M2.5 x 10` screws driven from "
             "behind through close-fit tower holes into both of its holes (C2, coupon plate 2). "
             "Each button presses its switch lever through a ridge under its centre, 72% along "
-            "the lever (C3), with `2.10 mm` of travel to front-and-rear stops and `Ø2.80 mm` "
-            "anti-tilt guide poles on `usb_retainer_bracket.py`: every switch across the full "
-            "`OP = 8.0..9.6 mm` band releases at rest and clicks before the stop (`OMRON_ACT`)."
+            "the lever (C3), with `2.10 mm` of travel to front-and-rear stops and `2.80 x 4.20 mm` "
+            "anti-rotation oblong guide poles on `usb_retainer_bracket.py`: every switch across "
+            "the full `OP = 8.0..9.6 mm` band releases at rest and clicks before the stop "
+            "(`OMRON_ACT`)."
         ),
         (
             "- **Dual-Colour Front LED (`Kingbright L-93WEGW`, 3 mm, `Green = ON`):** "
@@ -436,7 +575,9 @@ def generate_markdown() -> str:
     for sub in SUBASSEMBLIES:
         lines.append(f"## {sub['title']}")
         lines.append("")
-        lines.append("### Fabricated Parts (FDM 3D Print / Diode Laser / Clear Acrylic)")
+        lines.append(
+            "### Fabricated Parts (SLA Resin / PETG Cooling / Diode Laser / Clear Acrylic)"
+        )
         lines.append("")
         lines.append("| Part | Material | Qty |")
         lines.append("|---|---|---:|")
@@ -464,7 +605,56 @@ def generate_markdown() -> str:
     return "\n".join(lines)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    if args and args[0] == "--estimate":
+        include_hts = "--no-hts" not in args
+        pos = [a for a in args[1:] if a != "--no-hts"]
+        if len(pos) != 2:
+            print(
+                "usage: ./run bom [--estimate <N_ROMS> <N_PORTS> [--no-hts]]",
+                file=sys.stderr,
+            )
+            return 1
+        try:
+            n_roms, n_ports = int(pos[0]), int(pos[1])
+        except ValueError:
+            print(
+                f"error: N_ROMS and N_PORTS must be integers, got {pos!r}",
+                file=sys.stderr,
+            )
+            return 1
+        est = estimate_ssd_gib(n_roms, n_ports, include_hts=include_hts)
+        print(
+            f"Estimate for N_roms={n_roms}, N_ports={n_ports} "
+            f"({'with .hts packs' if include_hts else 'bare ROMs'}):"
+        )
+        print(f"  Fixed /userdata overhead (swap + caches + scratch): {est['fixed_gib']:6.1f} GiB")
+        print(
+            f"  ROMs + media + save states ({n_roms} games)          : {est['roms_gib']:6.1f} GiB"
+        )
+        print(
+            f"  Native PC ports + HD packs ({n_ports} ports)          : {est['ports_gib']:6.1f} GiB"
+        )
+        print(f"  TOTAL /userdata REQUIRED                        : {est['total_gib']:6.1f} GiB")
+        for gb in (128, 256, 512, 1000):
+            usable, safe = usable_ssd_limits(gb)
+            status = (
+                "OK (within 80% safe ceiling)"
+                if est["total_gib"] <= safe
+                else ("BORDERLINE (>80% full)" if est["total_gib"] <= usable else "TOO SMALL")
+            )
+            print(
+                f"  -> {gb:4d} GB SSD (usable {usable:5.1f} GiB, "
+                f"80% safe {safe:5.1f} GiB): {status}"
+            )
+        return 0
+    if args:
+        print(
+            f"error: unknown arguments {args!r}; usage: ./run bom [--estimate <N_ROMS> <N_PORTS>]",
+            file=sys.stderr,
+        )
+        return 1
     md = generate_markdown()
     with open(BOM_MD_PATH, "w", encoding="utf-8") as f:
         f.write(md)

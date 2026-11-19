@@ -22,11 +22,11 @@ from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
 from OCP.BRepClass3d import BRepClass3d_SolidClassifier  # noqa: E402
 from OCP.gp import gp_Pnt  # noqa: E402
 from OCP.TopAbs import TopAbs_IN, TopAbs_OUT  # noqa: E402
-from part import usb_retainer_bracket  # noqa: E402
+from part import cooling_duct, usb_retainer_bracket  # noqa: E402
 from process import printable  # noqa: E402
 from step import build_radxa_x4  # noqa: E402
 from step import radxa_x4 as radxa_ref  # noqa: E402
-from subassembly import radxa_mount_mech  # noqa: E402
+from subassembly import front_panel_mech, radxa_mount_mech  # noqa: E402
 from testing import variant_manifest  # noqa: E402
 from testing.load import load_by_path  # noqa: E402
 from variant import lower_tub  # noqa: E402
@@ -99,9 +99,9 @@ def check_all():
     n_solids = len(asm.Solids())
     rows.append(
         (
-            "SUBASM    radxa_mount_mech builds tub + 20 component solids",
-            n_solids == 21,
-            f"{n_solids} solids in radxa_mount_mech.get_shape() (expected 21: 1 tub + 20 bought)",
+            "SUBASM    radxa_mount_mech builds tub + 19 component solids",
+            n_solids == 20,
+            f"{n_solids} solids in radxa_mount_mech.get_shape() (expected 20: 1 tub + 19 bought)",
         )
     )
 
@@ -112,7 +112,6 @@ def check_all():
         ("hsb26_heatsink", radxa_x4.heatsink_solid()),
         ("m2_2230_nvme", radxa_x4.m2_keepout()),
         ("front_usb_a_x4", radxa_x4.usb_a_cluster()),
-        ("rear_rj45", radxa_x4.rj45_jack()),
     ]
     interferences = []
     for cname, cshape in components:
@@ -124,15 +123,14 @@ def check_all():
         (
             "G13_CLEAR zero boolean interference between lower_tub and bought hardware",
             not interferences,
-            "0.000 mm^3 intersection across all 7 component groups (incl. Radxa & heatsink STEPs)"
+            "0.000 mm^3 intersection across all 6 component groups (incl. Radxa & heatsink STEPs)"
             if not interferences
             else "INTERFERENCE: " + ", ".join(interferences),
         )
     )
 
-    # 4. J-02: Standoff annular material at Z = 8.2 mm (Radxa) & Z = 5.6 mm (RJ45) + RX-M2.5 bores
+    # 4. J-02: Standoff annular material at Z = 8.2 mm (Radxa) & Z = 4.8 mm (Front) + RX-M2.5 bores
     clf = BRepClass3d_SolidClassifier(tub.wrapped)
-    clf_rj = BRepClass3d_SolidClassifier(radxa_x4.rj45_jack().wrapped)
     z_seat = D.RADXA_PCB_Z0
     bad_standoffs = []
     for idx, (hx, hy) in enumerate(D.radxa_hole_centres(), 1):
@@ -147,26 +145,30 @@ def check_all():
                 f"H{idx}({hx:.1f},{hy:.1f}): bore_open={bore_open}, "
                 f"ring_solid={ring_solid}, top_clear={top_clear}"
             )
-    for idx, (rx, ry) in enumerate(D.RJ45_MOUNT_HOLES, 1):
-        clf.Perform(gp_Pnt(rx + 1.4, ry, D.RJ45_SEAT_Z - 1.0), 1e-4)
-        bore_open = clf.State() == TopAbs_OUT
-        clf.Perform(gp_Pnt(rx + 2.2, ry, D.RJ45_SEAT_Z - 0.2), 1e-4)
-        ring_solid = clf.State() == TopAbs_IN
-        clf_rj.Perform(gp_Pnt(rx + 1.2, ry, D.RJ45_SEAT_Z + 0.8), 1e-4)
-        ear_hole_open = clf_rj.State() == TopAbs_OUT
-        clf_rj.Perform(gp_Pnt(rx + 2.0, ry, D.RJ45_SEAT_Z + 0.8), 1e-4)
-        ear_ring_solid = clf_rj.State() == TopAbs_IN
-        if not (bore_open and ring_solid and ear_hole_open and ear_ring_solid):
-            bad_standoffs.append(f"RJ45_M{idx}({rx:.1f},{ry:.1f})")
-    clf_rj.Perform(gp_Pnt(43.0, 42.0, 7.2), 1e-4)
-    if clf_rj.State() != TopAbs_OUT:
-        bad_standoffs.append("RJ45_8P8C_cavity_closed")
+    for side in (-1.0, 1.0):
+        for idx, (mx, my) in enumerate(D.FRONT_SUBASM_MOUNT_PTS, 1):
+            bx_m = side * mx
+            # Probe at the full 4.0 mm Ruthex RX-M2.5x4.0 insert depth (Z = 1.00 mm) and verify
+            # the blind bore floor is closed below Z = 0.85 mm and clears M2.5x6 screw tips.
+            clf.Perform(gp_Pnt(bx_m + 1.4, my, D.FRONT_SUBASM_BOSS_TOP_Z - 4.0), 1e-4)
+            bore_open = clf.State() == TopAbs_OUT
+            clf.Perform(gp_Pnt(bx_m, my, D.FRONT_SUBASM_BOSS_BORE_Z0 - 0.2), 1e-4)
+            floor_closed = clf.State() == TopAbs_IN
+            clf.Perform(gp_Pnt(bx_m + 2.0, my, D.FRONT_SUBASM_BOSS_TOP_Z - 0.2), 1e-4)
+            ring_solid = clf.State() == TopAbs_IN
+            clf.Perform(gp_Pnt(bx_m + 2.0, my, D.FRONT_SUBASM_BOSS_TOP_Z + 0.2), 1e-4)
+            top_clear = clf.State() == TopAbs_OUT
+            screw_tip_z = 7.30 - 6.0
+            screw_clear = (screw_tip_z - D.FRONT_SUBASM_BOSS_BORE_Z0) >= 0.40
+            if not (bore_open and floor_closed and ring_solid and top_clear and screw_clear):
+                side_tag = "L" if side < 0 else "R"
+                bad_standoffs.append(f"FRONT_SUBASM_{side_tag}{idx}({bx_m:.1f},{my:.1f})")
 
     rows.append(
         (
-            f"J02_SEAT  4x Radxa (Z={z_seat:.1f}mm) + 2x RJ45 (Z={D.RJ45_SEAT_Z:.1f}mm) M2.5 posts",
+            f"J02_SEAT  4x Radxa (Z={z_seat:.1f}mm) & 6x Front Subassembly M2.5 posts",
             not bad_standoffs,
-            "4/4 Radxa + 2/2 RJ45 RX-M2.5x4.0 standoffs & 8P8C cavity verified by 3D point probes"
+            "4/4 Radxa + 6/6 Front Subassembly RX-M2.5x4.0 bosses verified by 3D probes"
             if not bad_standoffs
             else "; ".join(bad_standoffs),
         )
@@ -198,10 +200,6 @@ def check_all():
             "audio_overmold",
             lower_tub._stadium_y(D.REAR_AUDIO_X, 5.95, 8.40, 7.20, 49.00, 12.0),
         ),
-        (
-            "rj45_overmold",
-            cq.Solid.makeBox(12.40, 12.0, 10.60, cq.Vector(44.10 - 6.20, 49.10, 7.20 - 5.30)),
-        ),
     ]
     bad_plugs = []
     for pname, pshape in plug_overmolds:
@@ -210,29 +208,31 @@ def check_all():
             bad_plugs.append(f"{pname}={v:.3f}mm^3")
     rows.append(
         (
-            "REAR_PLUGS rear cable overmolds (USB-C, Micro-HDMI, 3.5mm, RJ45) seat without clash",
+            "REAR_PLUGS rear cable overmolds (USB-C, Micro-HDMI, 3.5mm) seat without clash",
             not bad_plugs,
-            "0.000 mm^3 interference across all 4 fully-inserted rear cable overmold boots"
+            "0.000 mm^3 interference across all 3 fully-inserted rear cable overmold boots"
             if not bad_plugs
             else "OVERMOLD CLASH: " + ", ".join(bad_plugs),
         )
     )
 
     # 7. Front 4x TE 292303-7 USB-A 6-DOF mechanical lock check (REQ-06)
+    carriers = front_panel_mech.front_carriers_compound()
+    clf_car = BRepClass3d_SolidClassifier(carriers.wrapped)
     ret_both = cq.Compound.makeCompound(usb_retainer_bracket.brackets())
     clf_ret = BRepClass3d_SolidClassifier(ret_both.wrapped)
     bad_usb = []
     for idx, px in enumerate(D.FRONT_PORT_XS, 1):
-        tub_probes = (
+        car_probes = (
             ("front_floor_-Z", (px, -36.00, 10.65), TopAbs_IN),
-            ("rear_floor_-Z", (px, -28.00, 9.40), TopAbs_IN),
+            ("rear_floor_-Z", (px + 5.00, -28.00, 9.40), TopAbs_IN),
             ("leg_slot_open", (px + 6.80, -31.20, 8.00), TopAbs_OUT),
             ("leg_pull_stop_-Y", (px + 6.80, -32.75, 8.00), TopAbs_IN),
-            ("rear_backstop_+Y", (px + 5.00, -26.20, 10.50), TopAbs_IN),
+            ("rear_backstop_+Y", (px + 6.00, -26.20, 10.50), TopAbs_IN),
         )
-        for label, (ux, uy, uz), expected in tub_probes:
-            clf.Perform(gp_Pnt(ux, uy, uz), 1e-4)
-            if clf.State() != expected:
+        for label, (ux, uy, uz), expected in car_probes:
+            clf_car.Perform(gp_Pnt(ux, uy, uz), 1e-4)
+            if clf_car.State() != expected:
                 bad_usb.append(f"P{idx}_{label}")
         clf_ret.Perform(gp_Pnt(px, -32.00, 17.50), 1e-4)
         if clf_ret.State() != TopAbs_IN:
@@ -244,6 +244,41 @@ def check_all():
             "4/4 USB-A ports locked in -Z (Z=10.80/9.55), +Z (Z=16.85 bridge), +-Y (legs/backstop)"
             if not bad_usb
             else "USB LOCK FAIL: " + ", ".join(bad_usb),
+        )
+    )
+
+    # 8. USB_WIRING: all 16 downward USB-A solder tails, rear wire arches & 2x 6-pin Micro-JST 1.25
+    #    connectors are open and clash-free across front_carriers, lower_tub, Radxa & duct (owner)
+    usb_wires = front_panel_mech.usb_solder_pins_and_wires()
+    wire_clashes = []
+    for wname, wtarget in (
+        ("front_carriers", carriers),
+        ("usb_retainer_brackets", ret_both),
+        ("lower_tub", tub),
+        ("radxa_pcb", radxa_x4.board_solid()),
+        ("radxa_step", radxa_x4.vendor_step_compound()),
+        ("cooling_duct", cooling_duct.get_shape()),
+        ("duct_floor", cooling_duct.floor_plate()),
+    ):
+        v = _common_volume(usb_wires, wtarget)
+        if v < 0 or v > 1e-3:
+            wire_clashes.append(f"{wname}={v:.3f}mm^3")
+    blocked_pins = []
+    for idx, px in enumerate(D.FRONT_PORT_XS, 1):
+        for p_idx, dx in enumerate(D.USB_SOLDER_PIN_DXS, 1):
+            for pz in (8.50, 5.00):
+                clf_car.Perform(gp_Pnt(px + dx, D.USB_SOLDER_PIN_Y, pz), 1e-4)
+                clf.Perform(gp_Pnt(px + dx, D.USB_SOLDER_PIN_Y, pz), 1e-4)
+                if clf_car.State() != TopAbs_OUT or clf.State() != TopAbs_OUT:
+                    blocked_pins.append(f"P{idx}_pin{p_idx}_z{pz:.1f}")
+    rows.append(
+        (
+            "USB_WIRING 16x USB-A solder tails, wire arches & 2x 6-pin Micro-JST 1.25 unobstructed",
+            not wire_clashes and not blocked_pins,
+            "16/16 downward solder pins, wire arches & 2x 6-pin Micro-JST (9.5x8.0x3.4mm) clear "
+            "(0.000 mm^3 clash)"
+            if (not wire_clashes and not blocked_pins)
+            else "USB WIRING BLOCKED: " + ", ".join(wire_clashes + blocked_pins),
         )
     )
 

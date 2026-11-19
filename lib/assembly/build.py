@@ -23,7 +23,6 @@ def fit_report() -> dict[str, object]:
     pcb_bb = radxa_x4.board_solid().BoundingBox()
     hs_bb = radxa_x4.heatsink_solid().BoundingBox()
     m2_bb = radxa_x4.m2_keepout().BoundingBox()
-    rj_bb = radxa_x4.rj45_jack().BoundingBox()
 
     waist_inner_x = D.WAIST_HALF_W - D.SHELL_WALL_T
     dome_inner_z = D.SHELL_H - 2.40
@@ -32,8 +31,7 @@ def fit_report() -> dict[str, object]:
         "waist_outer_mm": 2.0 * D.WAIST_HALF_W,
         "radxa_pcb_mm": (pcb_bb.xlen, pcb_bb.ylen, pcb_bb.zlen),
         "waist_left_gap_mm": pcb_bb.xmin - (-waist_inner_x),
-        "rj45_bay_avail_mm": waist_inner_x - pcb_bb.xmax,
-        "rj45_to_pcb_gap_mm": rj_bb.xmin - pcb_bb.xmax,
+        "right_bay_avail_mm": waist_inner_x - pcb_bb.xmax,
         "heatsink_zmax_mm": hs_bb.zmax,
         "dome_plenum_mm": dome_inner_z - hs_bb.zmax,
         "m2_floor_gap_mm": m2_bb.zmin - D.FLOOR_T,

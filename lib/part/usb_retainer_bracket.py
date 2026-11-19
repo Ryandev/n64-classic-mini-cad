@@ -26,26 +26,23 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
 from assembly import datum as D  # noqa: E402
+from part.shared import button_guide  # noqa: E402
+from part.shared import n64_contours as C  # noqa: E402
 
 PROCESS = "fdm"
 MANUFACTURE = "fdm"
 PROFILE = "fdm_petg_x2d"  # process/profiles.py: allowances added at print time
 PRINT_NORMAL = (0, 1, 0)
-# Printed on its rear face, the Ø2.8 guide pole lies sideways, held only at its root: its first
-# layers need support (7.1 mm^2 measured by layers since the pole reaches down to the sleeve's
-# stop, 2026-11-17; coupon plate 1 lost it printed without). PETG body, PLA interface
-# (notes/PRINTING.md). The supported side of the pole comes out
-# ~0.10 mm proud; the slicer's hole compensation doesn't touch an outside face, so this is checked
-# on the print (the sleeve has 0.15 mm a side).
-SUPPORT_MM2 = 8.0
+# Printed on its rear face, the 2.8 x 4.2 mm oblong guide pole lies sideways, held only at its
+# root: its first layers need support. PETG body, PLA interface (notes/PRINTING.md).
+SUPPORT_MM2 = 10.0
 VISIBLE_FACES = ()
 
 BRACKET_Y0 = -36.60
 BRACKET_DY = 8.80  # Y = -36.60 .. -27.80 mm (0.45 mm ahead of Omron SS-5GL at Y = -27.35 mm)
 POLE_Y = D.BUTTON_POLE_Y
 assert abs(POLE_Y - (BRACKET_Y0 + 0.5 * BRACKET_DY)) < 1e-9, "pole must sit mid-depth (180-deg)"
-POLE_R = D.BUTTON_POLE_D / 2.0  # the button's sleeve slides on it (SLEEVE_CLEAR, BTN_TILT)
-LEG_Z0 = 11.60  # 0.05 mm glue gap above lower_tub's Z = 11.55 mm cradle wall shelf
+LEG_Z0 = 11.60  # 0.05 mm assembly clearance above front_io_carrier's Z = 11.55 mm cradle wall shelf
 BRIDGE_Z0 = 16.85  # 0.15 mm clearance above Z = 16.70 mm USB-A top metal shell
 BRIDGE_Z1 = 18.45
 STOP_Z1 = D.SLEEVE_STOP_Z  # the button's front stop: its sleeve's foot lands here
@@ -82,23 +79,51 @@ def _left_bracket() -> cq.Shape:
         cq.Vector(bx + 14.30, BRACKET_Y0, LEG_Z0),
     )
     stop_block = cq.Solid.makeBox(
-        5.00,
+        5.40,
         BRACKET_DY,
         STOP_Z1 - (BRIDGE_Z1 - 0.20),
-        cq.Vector(cx - 2.50, BRACKET_Y0, BRIDGE_Z1 - 0.20),
+        cq.Vector(cx - 2.70, BRACKET_Y0, BRIDGE_Z1 - 0.20),
     )
-    pole_cyl = cq.Solid.makeCylinder(
-        POLE_R,
+    pole_cyl = C.stadium_prism(
+        cx,
+        POLE_Y,
+        D.BUTTON_POLE_D,
+        D.BUTTON_POLE_LEN_Y,
+        STOP_Z1 - 0.20,
         POLE_CYL_Z1 - (STOP_Z1 - 0.20),
-        cq.Vector(cx, POLE_Y, STOP_Z1 - 0.20),
     )
-    pole_tip = cq.Solid.makeCone(
-        POLE_R,
-        0.80,
+    pole_tip = button_guide._tapered_stadium(
+        cx,
+        POLE_Y,
+        D.BUTTON_POLE_D,
+        D.BUTTON_POLE_LEN_Y,
+        D.BUTTON_POLE_D - 1.20,
+        D.BUTTON_POLE_LEN_Y - 1.20,
+        POLE_CYL_Z1,
         POLE_TIP_Z1 - POLE_CYL_Z1,
-        cq.Vector(cx, POLE_Y, POLE_CYL_Z1),
     )
-    return bridge.fuse(leg_out, leg_mid, leg_in, stop_block, pole_cyl, pole_tip)
+    # 180-deg symmetric outer clamping ear at (-43.80, -32.20): clamped by the Outer M2.5 screw
+    # through `front_io_carrier` into `lower_tub`'s Outer-Front `RX-M2.5x4.0` boss (zero glue!).
+    clamp_bridge = cq.Solid.makeBox(
+        7.20,
+        BRACKET_DY,
+        BRIDGE_Z1 - LEG_Z0,
+        cq.Vector(-46.50, BRACKET_Y0, LEG_Z0),
+    )
+    clamp_foot = cq.Solid.makeBox(
+        5.65,
+        BRACKET_DY,
+        BRIDGE_Z1 - 8.45,
+        cq.Vector(-46.50, BRACKET_Y0, 8.45),
+    )
+    clamp_hole = cq.Solid.makeCylinder(
+        1.35,
+        25.0,
+        cq.Vector(-D.FRONT_SUBASM_MOUNT_PTS[0][0], POLE_Y, 0.0),
+    )
+    return bridge.fuse(
+        leg_out, leg_mid, leg_in, stop_block, pole_cyl, pole_tip, clamp_bridge, clamp_foot
+    ).cut(clamp_hole)
 
 
 def bracket_at(bay_x: float = D.FRONT_BAY_XS[0]) -> cq.Shape:

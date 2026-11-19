@@ -81,7 +81,7 @@ def check_all():
         return shape.BoundingBox().center
 
     p_c, r_c = centre(power_slider.get_shape()), centre(reset_button.get_shape())
-    front_c, rear_c = centre(front_panel_mech.cover()), centre(radxa_x4.rj45_jack())
+    front_c, rear_c = centre(front_panel_mech.cover()), centre(radxa_x4.board_solid())
     ex, ey, ez = (r_c - p_c).normalized(), (rear_c - front_c), (p_c - tub_bb.center)
     ey = (ey - ex * ey.dot(ex)).normalized()
     ez = (ez - ex * ez.dot(ex) - ey * ez.dot(ey)).normalized()
@@ -92,7 +92,7 @@ def check_all():
             "HANDED    built parts are right-handed: POWER left, ports front, I/O rear, deck up",
             handed_ok,
             f"POWER x {p_c.x:+.1f}, RESET x {r_c.x:+.1f}, ports y {front_c.y:+.1f}, "
-            f"RJ45 y {rear_c.y:+.1f}; det(measured axes) = {det:+.4f}",
+            f"Radxa y {rear_c.y:+.1f}; det(measured axes) = {det:+.4f}",
         )
     )
 
@@ -123,19 +123,36 @@ def check_all():
 
     # 4. REQ-04 (cooling) is measured in subassembly/cooling_check.py.
 
-    # 5. REQ-05: the rear-right bay holds the real RJ45 jack assembly (C5): >= 1.0 mm to the board,
-    # >= 0.5 mm to the tub's real side wall.
-    rj45_bb = radxa_x4.rj45_jack().BoundingBox()
-    rj_z = (rj45_bb.zmin + rj45_bb.zmax) / 2.0
-    rj_ys = [rj45_bb.ymin + f * rj45_bb.ylen for f in (0.2, 0.5, 0.8)]
-    gap_wall = probe.min_gap(tub, [(rj45_bb.xmax, y, rj_z) for y in rj_ys], (1, 0, 0))
-    gap_pcb = rj45_bb.xmin - pcb_bb.xmax
+    # 5. REQ-05: the +X right-hand bay holds the 2x 6-pin & 2x 2-pin Micro-JST 1.25 mm connectors:
+    # each individual connector solid clears the board by >= 1.0 mm and the tub wall by >= 0.5 mm.
+    from OCP.BRepExtrema import BRepExtrema_DistShapeShape
+
+    pcb_solid = radxa_x4.board_solid()
+    jst_solids = front_panel_mech.usb_jst_connectors().Solids()
+    pcb_gaps = []
+    wall_gaps = []
+    for s in jst_solids:
+        ext = BRepExtrema_DistShapeShape(s.wrapped, pcb_solid.wrapped)
+        ext.Perform()
+        pcb_gaps.append(0.0 if s.intersect(pcb_solid).Solids() else ext.Value())
+        sb = s.BoundingBox()
+        sz = (sb.zmin + sb.zmax) / 2.0
+        sys_pts = [(sb.xmax, sb.ymin + f * sb.ylen, sz) for f in (0.2, 0.5, 0.8)]
+        wall_gaps.append(probe.min_gap(tub, sys_pts, (1, 0, 0)))
+    gap_pcb = min(pcb_gaps)
+    gap_wall = (
+        None if any(g is None for g in wall_gaps) else min(g for g in wall_gaps if g is not None)
+    )
     rows.append(
         (
-            "REAR_IO   rear-right bay holds the RJ45 jack: >= 1.0 mm to the board, >= 0.5 to wall",
-            gap_wall is not None and gap_pcb >= 1.0 and gap_wall >= 0.5,
-            f"the {rj45_bb.xlen:.1f} mm jack sits {gap_pcb:.1f} mm from the board and "
-            + (f"{gap_wall:.2f} mm from the tub wall" if gap_wall is not None else "NO WALL FOUND"),
+            "REAR_IO   +X right bay holds 4x Micro-JST: >= 1.0 mm to board, >= 0.5 to wall",
+            len(jst_solids) == 4 and gap_wall is not None and gap_pcb >= 1.0 and gap_wall >= 0.5,
+            f"4x Micro-JST (2x 6-pin + 2x 2-pin) sit >= {gap_pcb:.2f} mm from the board and "
+            + (
+                f">= {gap_wall:.2f} mm from the tub wall"
+                if gap_wall is not None
+                else "NO WALL FOUND"
+            ),
         )
     )
 

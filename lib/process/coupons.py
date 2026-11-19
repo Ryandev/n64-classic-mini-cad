@@ -18,7 +18,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cadquery as cq  # noqa: E402
 from assembly import datum as D  # noqa: E402
-from part import front_port_cover, power_slider, usb_retainer_bracket  # noqa: E402
+from part import (  # noqa: E402
+    front_io_carrier_l,
+    front_port_cover,
+    power_slider,
+    usb_retainer_bracket,
+)
 from process.printable import (
     check_footprint,  # noqa: E402
     orient_to_bed,  # noqa: E402
@@ -109,15 +114,11 @@ def _marks(x: float, n: int, z: float) -> list[cq.Solid]:
 
 
 def _wall_gauge() -> cq.Shape:
-    """Holes bored sideways, as the tub prints its magnet pockets (axis Y) and hinge pin holes (X).
-
-    A 3 mm wall standing on a foot; the top row is magnet pockets, the bottom row goes right
-    through for the steel hinge pin.
-    """
-    w, t, h = 3 * GAUGE_PITCH + 4.0, 3.0, 13.0
+    """8.0 mm-deep full through-holes bored horizontally along Y (no foot or fillet), so both
+    caliper jaws and Ø3.0 magnets / Ø1.5 hinge pins can measure them cleanly (owner, plate 5)."""
+    w, t, h = 3 * GAUGE_PITCH + 4.0, 8.0, 14.0
     x0 = -w / 2
     body = cq.Solid.makeBox(w, t, h, cq.Vector(x0, -t / 2, 0.0))
-    foot = cq.Solid.makeBox(w, 10.0, 1.2, cq.Vector(x0, -5.0, 0.0))
     marks, holes = [], []
     for i in range(3):
         x = (i - 1) * GAUGE_PITCH
@@ -125,35 +126,36 @@ def _wall_gauge() -> cq.Shape:
         holes.append(
             cq.Solid.makeCylinder(
                 MAGNET_SIZES[i] / 2,
-                D.MAGNET_BORE_DEPTH,
-                cq.Vector(x, -t / 2, 9.0),
+                t + 0.4,
+                cq.Vector(x, -t / 2 - 0.2, 9.5),
                 cq.Vector(0, 1, 0),
             )
         )
         holes.append(
             cq.Solid.makeCylinder(
                 HINGE_SIZES[i] / 2,
-                t,
-                cq.Vector(x, -t / 2, 4.0),
+                t + 0.4,
+                cq.Vector(x, -t / 2 - 0.2, 4.0),
                 cq.Vector(0, 1, 0),
             )
         )
-    return body.fuse(foot, *marks).cut(*holes)
+    return body.fuse(*marks).cut(*holes)
 
 
 def _plate_gauge() -> cq.Shape:
-    """Magnet pockets bored downward, as the door prints its pocket (on its face, axis vertical)."""
-    w, d, t = 3 * GAUGE_PITCH + 4.0, 8.0, D.FRONT_COVER_T
+    """8.0 mm-deep full through-holes bored vertically along Z (no blind floor or fillet), so
+    caliper inside-jaws and Ø3.0 mm magnets can measure them cleanly (owner, plate 5)."""
+    w, d, t = 3 * GAUGE_PITCH + 4.0, 10.0, 8.0
     body = cq.Solid.makeBox(w, d, t, cq.Vector(-w / 2, -d / 2, 0.0))
     marks, holes = [], []
     for i in range(3):
         x = (i - 1) * GAUGE_PITCH
-        marks += [m.translate(cq.Vector(0, -2.8, 0)) for m in _marks(x, i + 1, t)]
+        marks += [m.translate(cq.Vector(0, -3.2, 0)) for m in _marks(x, i + 1, t)]
         holes.append(
             cq.Solid.makeCylinder(
                 MAGNET_SIZES[i] / 2,
-                D.MAGNET_BORE_DEPTH,
-                cq.Vector(x, 0.8, t - D.MAGNET_BORE_DEPTH),
+                t + 0.4,
+                cq.Vector(x, 0.8, -0.2),
             )
         )
     return body.fuse(*marks).cut(*holes)
@@ -177,33 +179,34 @@ COUPONS = (
     ),
     Coupon(
         "2_switch_tower",
-        "SS-5GL drops into the tower from above; two M2.5 x 10 screws, from behind through the "
-        "close-fit holes, bite into both switch holes and pull it flat to the tower without "
-        "cracking it",
+        "SS-5GL drops into the carrier's tower from above; two M2.5 x 10 screws, from behind "
+        "through the close-fit holes, bite into both switch holes and pull it flat to the tower",
         (
             Piece(
                 "tub_tower",
-                lower_tub.get_shape,
-                lower_tub.PRINT_NORMAL,
-                ((-38.5, -29.0, 0.0), (-19.5, -15.0, TOP)),
+                front_io_carrier_l.get_shape,
+                front_io_carrier_l.PRINT_NORMAL,
+                ((-38.6, -24.0, 0.0), (-21.5, -16.0, TOP)),
             ),
         ),
     ),
     Coupon(
         "3_port_door",
-        "door slides into the bay from the front; push the Ø1.5 steel pins in through the "
-        "outer wall until the last is flush: it should press in and stay. The door swings "
-        "0-90° freely and stays shut",
+        "door seats between the carrier's hinge cheeks on the bench; push the continuous Ø1.5 x "
+        "31.4 mm steel pin through both cheeks and the door knuckle: it presses into the outer "
+        "cheek, turns freely in the door, and pushes out from the inner cheek for disassembly; "
+        "carrier then bolts into the 3 conical RX-M2.5x4.0 bosses on tub_bay",
         (
+            Piece(
+                "carrier_bay",
+                front_io_carrier_l.get_shape,
+                front_io_carrier_l.PRINT_NORMAL,
+            ),
             Piece(
                 "tub_bay",
                 lower_tub.get_shape,
                 lower_tub.PRINT_NORMAL,
-                (
-                    # the outer wall the pins go through, out to the hollow corner
-                    (_BAY - D.FRONT_BAY_W / 2 - D.HINGE_OUTER_WALL - 0.5, -51.0, 0.0),
-                    (_BAY + D.FRONT_BAY_W / 2 + 4.0, -38.0, TOP),
-                ),
+                ((-50.0, -51.0, 0.0), (-2.0, -9.0, TOP)),
             ),
             Piece("door", lambda: front_port_cover.cover_at(_BAY), front_port_cover.PRINT_NORMAL),
         ),

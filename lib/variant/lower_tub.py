@@ -64,28 +64,28 @@ DEVIATIONS = {
         "kind": "added",
         "why": "Front-left M2.5 standoff (Z=8.2mm datum, RX-M2.5x4.0) for inverted Radxa X4 (J-02)",
         "bbox": (-48.5, -9.7, 1.5, -40.5, -1.7, 8.3),
-        "volume_mm3": 213.91,
+        "volume_mm3": 213.84,
         "tolerance_mm3": 2.5,
     },
     "radxa_standoff_fr": {
         "kind": "added",
         "why": "Front-right M2.5 standoff (Z=8.2mm, RX-M2.5x4.0) for inverted Radxa X4 (J-02)",
         "bbox": (9.5, -9.7, 1.5, 17.5, -1.7, 8.3),
-        "volume_mm3": 213.91,
+        "volume_mm3": 213.84,
         "tolerance_mm3": 2.5,
     },
     "radxa_standoff_rl": {
         "kind": "added",
         "why": "Rear-left M2.5 standoff (Z=8.2mm datum, RX-M2.5x4.0) for inverted Radxa X4 (J-02)",
         "bbox": (-48.5, 39.3, 1.5, -40.5, 47.3, 8.3),
-        "volume_mm3": 213.91,
+        "volume_mm3": 213.84,
         "tolerance_mm3": 2.5,
     },
     "radxa_standoff_rr": {
         "kind": "added",
         "why": "Rear-right M2.5 standoff (Z=8.2mm datum, RX-M2.5x4.0) for inverted Radxa X4 (J-02)",
         "bbox": (9.5, 39.3, 1.5, 17.5, 47.3, 8.3),
-        "volume_mm3": 213.91,
+        "volume_mm3": 213.84,
         "tolerance_mm3": 2.5,
     },
     "led_holder_cradle": {
@@ -95,26 +95,33 @@ DEVIATIONS = {
         "volume_mm3": 681.53,
         "tolerance_mm3": 5.0,
     },
-    "rj45_cradle": {
+    "front_subasm_bosses_l": {
         "kind": "added",
-        "why": "2x Ruthex RX-M2.5x4.0 standoffs & floor U-cradle for 2.5GbE RJ45 jack (REQ-05)",
-        "bbox": (36.7, 19.7, 1.5, 55.3, 34.1, 5.7),
-        "volume_mm3": 264.29,
-        "tolerance_mm3": 3.5,
+        "why": "3x flat-top Z=5.00mm RX-M2.5x4.0 floor bosses for Left Front Subassembly (J-05)",
+        "bbox": (-47.8, -36.2, 1.5, -2.2, -10.0, 5.5),
+        "volume_mm3": 148.01,
+        "tolerance_mm3": 5.0,
     },
-    "omron_stop_l": {
+    "front_subasm_bosses_r": {
         "kind": "added",
-        "why": "Left Omron SS-5GL tower, two close-fit screw holes & button stop (J-03)",
-        "bbox": (-36.6, -20.9, 1.5, -21.4, -16.7, 23.6),
-        "volume_mm3": 1032.93,
-        "tolerance_mm3": 8.0,
+        "why": "3x flat-top Z=5.00mm RX-M2.5x4.0 floor bosses for Right Front Subassembly (J-05)",
+        "bbox": (2.2, -36.2, 1.5, 47.8, -10.0, 5.5),
+        "volume_mm3": 148.01,
+        "tolerance_mm3": 5.0,
     },
-    "omron_stop_r": {
-        "kind": "added",
-        "why": "Right Omron SS-5GL tower, two close-fit screw holes & button stop (J-04)",
-        "bbox": (21.4, -20.9, 1.5, 36.6, -16.7, 23.6),
-        "volume_mm3": 1032.93,
-        "tolerance_mm3": 8.0,
+    "front_subasm_bores_l": {
+        "kind": "removed",
+        "why": "Extend 3x Left Front Subassembly RX-M2.5x4.0 blind bores to Z=0.85mm (4.15mm deep)",
+        "bbox": (-47.8, -36.2, 0.5, -2.2, -10.0, 1.7),
+        "volume_mm3": 18.10,
+        "tolerance_mm3": 2.5,
+    },
+    "front_subasm_bores_r": {
+        "kind": "removed",
+        "why": "Extend 3x Right Front Subassembly RX-M2.5x4.0 blind bores to Z=0.85mm (4.15mm)",
+        "bbox": (2.2, -36.2, 0.5, 47.8, -10.0, 1.7),
+        "volume_mm3": 18.10,
+        "tolerance_mm3": 2.5,
     },
     "front_led_bore": {
         "kind": "removed",
@@ -151,14 +158,6 @@ DEVIATIONS = {
         "volume_mm3": 92.82,
         "tolerance_mm3": 4.0,
     },
-    "rear_rj45_cutout": {
-        "kind": "removed",
-        "why": "Rear-right +Y aperture for relocated panel-mount RJ45 jack at X=+44.1mm (REQ-05), "
-        "open to the split in the wall's thickness (the shell's wall closes it; J-01, 2026-11-16)",
-        "bbox": (37.5, 45.8, 1.5, 50.7, 49.5, 13.0),
-        "volume_mm3": 301.8,
-        "tolerance_mm3": 5.0,
-    },
 }
 
 
@@ -193,26 +192,6 @@ def _led_holder_cradle_solid() -> cq.Shape:
     return block.cut(led_body_bore, led_rim_bore, wire_slot)
 
 
-def _rj45_cradle_solid() -> cq.Shape:
-    """2x `Ruthex RX-M2.5x4.0` standoffs + floor U-cradle for the 2.5GbE RJ45 jack (`REQ-05`)."""
-    post_h = D.RJ45_SEAT_Z - D.FLOOR_T
-    p_base = standoff(
-        bore_dia=D.INSERT_M25_BORE_D,
-        height=post_h + 0.5,
-        outer_dia=6.40,
-        bore_depth=3.80,
-    )
-    posts = [
-        p_base.moved(cq.Location(cq.Vector(hx, hy, D.FLOOR_T - 0.5)))
-        for hx, hy in D.RJ45_MOUNT_HOLES
-    ]
-    cradle_outer = cq.Solid.makeBox(12.80, 7.50, 2.50, cq.Vector(36.80, 26.50, D.FLOOR_T - 0.5))
-    bridge_f = cq.Solid.makeBox(5.00, 4.50, 1.80, cq.Vector(40.70, 23.00, D.FLOOR_T - 0.5))
-    bridge_s = cq.Solid.makeBox(4.00, 4.50, 1.80, cq.Vector(48.50, 26.50, D.FLOOR_T - 0.5))
-    cradle_inner = cq.Solid.makeBox(10.60, 9.00, 3.50, cq.Vector(37.90, 26.00, 1.95))
-    return cradle_outer.fuse(bridge_f, bridge_s, *posts).cut(cradle_inner)
-
-
 def _stadium_y(cx: float, cz: float, w: float, h: float, y0: float, dy: float) -> cq.Shape:
     """Horizontal stadium solid oriented along `+Y` (`y0 .. y0 + dy`) centred at `(cx, cz)`."""
     r = 0.5 * h
@@ -223,45 +202,43 @@ def _stadium_y(cx: float, cz: float, w: float, h: float, y0: float, dy: float) -
     )
 
 
-def _omron_stop_posts() -> list[cq.Shape]:
-    """2x `Omron SS-5GL` switch mounting & rear travel-stop towers on `lower_tub` (`OMRON_ACT`).
+def _conical_boss(mx: float, my: float, r_boss: float = 2.80) -> cq.Shape:
+    """Raised flat-top `RX-M2.5x4.0` boss in `lower_tub` (`Z = 1.60 .. 4.80 mm`), giving a flat
+    `Z = 4.80 mm` horizontal datum seat for `front_io_carrier_l`/`_r`."""
+    return cq.Solid.makeCylinder(
+        r_boss,
+        D.FRONT_SUBASM_BOSS_TOP_Z - (D.FLOOR_T - 0.5),
+        cq.Vector(mx, my, D.FLOOR_T - 0.5),
+    )
 
-    Each tower rises from the `Z = 1.60 mm` floor of `lower_tub` (`Y = -20.80 .. -16.80 mm`) and
-    provides:
-      - A close-fit screw hole through the tower behind each of the switch's two holes
-        (`X = +-24.23` and `+-33.73`, `Z = 14.60`) for the M2.5 screws driven from behind
-        (`OMRON_SCREW_*`, C2). No locator pin: the switch drops in from above (`OMRON_INSTALL`)
-      - Integral rear travel-stop post (top at `BUTTON_STOP_Z`) under the `Y = -20.28 mm` rear
-        half of the `POWER` (`J-03`) and `RESET` (`J-04`) buttons (`RESET_STROKE_Z`, paired with the
-        separately-printed `part/usb_retainer_bracket.py` front/mid travel-stop shelf at
-        `Y = -36.60 .. -27.80 mm`)
-    """
+
+def _front_subasm_bosses() -> list[cq.Shape]:
+    """6x flat-top `RX-M2.5x4.0` floor bosses (2 locating at R=2.80, 1 Z-clamp at R=2.42/side)."""
     out = []
-    for x0, cx in ((-36.50, D.POWER_SLIDER_X), (21.50, D.RESET_BTN_X)):
-        out.extend(
-            (
-                cq.Solid.makeBox(
-                    15.0,
-                    4.0,
-                    17.80 - (D.FLOOR_T - 0.5),
-                    cq.Vector(x0, -20.80, D.FLOOR_T - 0.5),
-                ),
-                cq.Solid.makeBox(
-                    5.00,
-                    4.0,
-                    D.BUTTON_STOP_Z - 17.50,
-                    cq.Vector(cx - 2.50, -20.80, 17.50),
-                ),
-            )
-        )
+    radii = (2.80, 2.80, 2.42)
+    for side in (-1.0, 1.0):
+        for (mx, my), r_b in zip(D.FRONT_SUBASM_MOUNT_PTS, radii):
+            out.append(_conical_boss(side * mx, my, r_b))
     return out
+
+
+def _front_subasm_bore_cutters() -> list[cq.Shape]:
+    """6x `4.10 mm`-deep `RX-M2.5x4.0` blind bores (`Z = 0.70 .. 4.80 mm`, leaving `0.70 mm` solid
+    floor underneath so `4.00 mm` Ruthex inserts seat flush and `M2.5 x 6` screws clear)."""
+    z0 = D.FRONT_SUBASM_BOSS_BORE_Z0
+    h = (D.FRONT_SUBASM_BOSS_TOP_Z + 0.10) - z0
+    return [
+        cq.Solid.makeCylinder(D.INSERT_M25_BORE_D / 2.0, h, cq.Vector(side * mx, my, z0))
+        for side in (-1.0, 1.0)
+        for mx, my in D.FRONT_SUBASM_MOUNT_PTS
+    ]
 
 
 def get_shape() -> cq.Shape:
     """Build the N64 Classic Mini Lower Tub variant from `part/lower_tub.py`."""
     base = FAITHFUL.get_shape()
 
-    # 1. Additive 4x Radxa X4 M2.5 standoffs + LED cradle + RJ45 cradle + Omron M3 stop bosses
+    # 1. Additive 4x Radxa X4 M2.5 standoffs + LED cradle + RJ45 cradle + 6x Front bosses
     post_h = D.RADXA_STANDOFF_H + 0.5
     post_base = standoff(
         bore_dia=D.INSERT_M25_BORE_D,
@@ -280,8 +257,8 @@ def get_shape() -> cq.Shape:
             post_base.moved(cq.Location(cq.Vector(hx, hy, D.FLOOR_T - 0.5)))
             for hx, hy in D.radxa_hole_centres()
         ]
-        + [_led_holder_cradle_solid(), _rj45_cradle_solid()]
-        + _omron_stop_posts()
+        + [_led_holder_cradle_solid()]
+        + _front_subasm_bosses()
     )
     with_posts = base.fuse(*additions)
 
@@ -307,17 +284,6 @@ def get_shape() -> cq.Shape:
             ),
         ),
     ]
-    # A close-fit hole through each Omron SS-5GL tower behind both switch holes, for the screws
-    # driven from behind
-    for x_m2 in (-33.73, -24.23, 24.23, 33.73):
-        cuts.append(
-            cq.Solid.makeCylinder(
-                D.OMRON_SCREW_CLEAR_D / 2.0,
-                D.OMRON_TOWER_Y1 + 0.1 - (-20.90),
-                cq.Vector(x_m2, -20.90, D.OMRON_HOLE_Z),
-                cq.Vector(0.0, 1.0, 0.0),
-            )
-        )
     # 1. Stepped USB-C 12V PD cutout (9.54x3.60mm bore + 12.80x6.80mm overmold counterbore)
     cuts.append(
         _stadium_y(
@@ -356,23 +322,7 @@ def get_shape() -> cq.Shape:
             cq.Vector(0.0, 1.0, 0.0),
         ).fuse(_stadium_y(D.REAR_AUDIO_X, 5.95, 8.80, 7.60, 48.80, 3.20))
     )
-    # 5. Snug aperture for 3D 2.5GbE 8P8C RJ45 Ethernet receptacle at X = +44.10 mm, Z = 7.20 mm
-    cuts.append(
-        cq.Solid.makeBox(
-            12.80,
-            5.80,
-            11.00,
-            cq.Vector(44.10 - 6.40, 45.20, D.REAR_RJ45_Z_CENTRE - 5.50),
-        )
-    )
-    # ...open to the split in the wall's thickness: the shell's wall above closes it. Left to the
-    # tub, its roof there was the wall's last 0.24 mm once the J-01 lip moved inside the wall line
-    # (wall). The lip and its ledge still cross inside the wall line.
-    cuts.append(
-        cq.Solid.makeBox(12.80, 10.0, 0.26, cq.Vector(44.10 - 6.40, 42.0, 12.69)).cut(
-            C.n64_plan_prism(z0=12.0, height=2.0, inset=D.LIP_IN0)
-        )
-    )
+    cuts.extend(_front_subasm_bore_cutters())
     cuts.extend(floor_vent_cutters())
     cuts.extend(waist_slot_cutters())
     return with_posts.cut(*cuts)

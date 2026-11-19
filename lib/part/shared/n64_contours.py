@@ -630,3 +630,19 @@ def n64_led_lens_prism(
         wire = wire.offset2D(clearance, "arc")[0]
     face = cq.Face.cast(BRepBuilderAPI_MakeFace(wire.wrapped, True).Face())
     return cq.Solid.extrudeLinear(face, cq.Vector(0.0, depth_y, 0.0))
+
+
+def hinge_teardrop(r: float, x0: float, length: float) -> cq.Shape:
+    """Round groove along X on the door hinge axis `(D.HINGE_Y, D.HINGE_Z)` with a 45-deg roof."""
+    centre = cq.Vector(x0, D.HINGE_Y, D.HINGE_Z)
+    along = cq.Vector(1.0, 0.0, 0.0)
+    roof = (
+        cq.Solid.makeBox(length, 2.0 * r, 2.0 * r, cq.Vector(x0, D.HINGE_Y - r, D.HINGE_Z - r))
+        .rotate(centre, centre + along, 45.0)
+        .intersect(
+            cq.Solid.makeBox(
+                length, 4.0 * r, 2.0 * r, cq.Vector(x0, D.HINGE_Y - 2.0 * r, D.HINGE_Z)
+            )
+        )
+    )
+    return cq.Solid.makeCylinder(r, length, centre, along).fuse(roof)

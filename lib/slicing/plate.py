@@ -1,12 +1,12 @@
-"""Orient and pack all 11 printable FDM parts onto a single 256 x 256 mm build plate (`plate.py`).
+"""Orient and pack all 12 printable part modules (17 bodies) onto a 256 x 256 mm build plate.
 
-Every FDM part declares `PRINT_NORMAL` (the unit vector in console coordinates that points `+Z`
+Every printed part declares `PRINT_NORMAL` (the unit vector in console coordinates that points `+Z`
 up on the print bed). This module rotates each part by a proper rotation (`det == +1`) so its
-`PRINT_NORMAL` aligns with `+Z`, drops its bed face to `Z = 0.0 mm`, packs all 11 parts of one
-complete N64 Classic Mini console (`lower_tub`, `upper_shell`, `front_bezel`, `power_slider`,
-`reset_button`, `led_light_pipe`, `front_port_cover`, `4x n64_port_insert`) with `6.0 mm` XY
-spacing inside the `256 x 256 mm` Bambu Lab P1S / X1C build plate, and writes
-`export/plate/print_plate.step`.
+`PRINT_NORMAL` aligns with `+Z`, drops its bed face to `Z = 0.0 mm`, packs all 17 bodies of one
+complete N64 Classic Mini console (`lower_tub`, `upper_shell`, `cartridge_flaps`, `front_bezel`,
+`power_slider`, `reset_button`, `led_light_pipe`, `2x front_port_cover`, `front_io_carrier_l`,
+`front_io_carrier_r`, `2x usb_retainer_bracket`, `4x n64_port_insert`) with `6.0 mm` XY spacing
+inside the `256 x 256 mm` build plate, and writes `export/plate/print_plate.step`.
 """
 
 import os
@@ -18,6 +18,8 @@ import cadquery as cq  # noqa: E402
 from part import (  # noqa: E402
     cartridge_flaps,
     front_bezel,
+    front_io_carrier_l,
+    front_io_carrier_r,
     front_port_cover,
     led_light_pipe,
     n64_port_insert,
@@ -37,9 +39,11 @@ PLATE_STEP = os.path.join(REPO, "export", "plate", "print_plate.step")
 BED_XY = (256.0, 256.0)
 SPACING_MM = 6.0
 
-# Complete FDM part set for one N64 Classic Mini console (15 printed bodies total).
+# Complete printed part set for one N64 Classic Mini console (12 modules, 17 printed bodies total).
 PLATE_BOM = (
     ("lower_tub", lower_tub, 1),
+    ("front_io_carrier_l", front_io_carrier_l, 1),
+    ("front_io_carrier_r", front_io_carrier_r, 1),
     ("upper_shell", upper_shell, 1),
     ("cartridge_flaps", cartridge_flaps, 1),
     ("front_bezel", front_bezel, 1),
@@ -53,7 +57,7 @@ PLATE_BOM = (
 
 
 def build_plate() -> tuple[cq.Compound, list[dict[str, object]]]:
-    """Orient and shelf-pack all 12 printable FDM parts onto `Z = 0.0 mm`."""
+    """Orient and shelf-pack all 17 printable bodies onto `Z = 0.0 mm`."""
     items = []
     for name, mod, qty in PLATE_BOM:
         oriented = orient_to_bed(mod.get_shape(), mod.PRINT_NORMAL)
@@ -106,7 +110,7 @@ def build_plate() -> tuple[cq.Compound, list[dict[str, object]]]:
 
 
 def export_plate(out_path: str = PLATE_STEP) -> tuple[cq.Compound, list[dict[str, object]]]:
-    """Build the 12-part print plate and export it to `export/plate/print_plate.step`."""
+    """Build the 17-body print plate and export it to `export/plate/print_plate.step`."""
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     compound, placements = build_plate()
     cq.exporters.export(compound, out_path)

@@ -102,62 +102,6 @@ def usb_a_cluster() -> cq.Shape:
     return cq.Compound.makeCompound(solids)
 
 
-def rj45_jack() -> cq.Shape:
-    """3D-modelled 2.5GbE 8P8C shielded RJ45 Ethernet receptacle + M2.5 mounting carrier (`REQ-05`).
-
-    Features:
-      - Shielded 8P8C housing (`11.00 x 19.50 x 10.40 mm` at `X = 37.50..48.50, Y = 27.50..47.00,
-        Z = 2.00..12.40 mm`) with rear panel-mount bezel nose (`14.00 x 1.30 x 10.60 mm` at
-        `Y = 47.00..48.30 mm`, flush with the rear `+Y` wall cutout)
-      - Stepped IEC 60603-7 8P8C modular plug cavity (`9.20 x 5.60 mm` upper cavity + `6.80 x 1.20`
-        keying shoulder + `3.60 x 1.20 mm` bottom locking-tab latch keyway)
-      - 8x gold-plated contact spring fingers (`1.02 mm` pitch) inside the upper 8P8C cavity
-      - Top-left (Green Link) and top-right (Amber 2.5GbE Activity) LED windows on the `+Y` face
-      - Carrier PCB (`Z = 5.65..7.25 mm`) with `2x Ø2.70 mm` M2.5 mounting ears at
-        `(43.00, 23.00)` and `(51.50, 28.50)` bolting to `lower_tub`'s `RX-M2.5x4.0` standoffs
-    """
-    housing = cq.Solid.makeBox(10.40, 20.80, 10.40, cq.Vector(38.00, 27.50, 2.00))
-    bezel = cq.Solid.makeBox(12.20, 2.10, 10.60, cq.Vector(38.00, 47.00, 1.90))
-    carrier_spine = cq.Solid.makeBox(
-        10.40, 8.50, 1.60, cq.Vector(38.00, 21.00, D.RJ45_SEAT_Z + 0.05)
-    )
-    ear_f = cq.Solid.makeCylinder(
-        3.00,
-        1.60,
-        cq.Vector(D.RJ45_MOUNT_HOLES[0][0], D.RJ45_MOUNT_HOLES[0][1], D.RJ45_SEAT_Z + 0.05),
-    )
-    ear_s_arm = cq.Solid.makeBox(6.80, 5.60, 1.60, cq.Vector(45.20, 25.70, D.RJ45_SEAT_Z + 0.05))
-    ear_s = cq.Solid.makeCylinder(
-        3.00,
-        1.60,
-        cq.Vector(D.RJ45_MOUNT_HOLES[1][0], D.RJ45_MOUNT_HOLES[1][1], D.RJ45_SEAT_Z + 0.05),
-    )
-    header_blk = cq.Solid.makeBox(8.40, 3.20, 2.80, cq.Vector(39.00, 24.00, D.RJ45_SEAT_Z + 1.65))
-    body = housing.fuse(bezel, carrier_spine, ear_f, ear_s_arm, ear_s, header_blk)
-
-    cuts = [
-        cq.Solid.makeCylinder(1.35, 3.00, cq.Vector(hx, hy, D.RJ45_SEAT_Z - 0.50))
-        for hx, hy in D.RJ45_MOUNT_HOLES
-    ] + [
-        cq.Solid.makeBox(8.80, 13.80, 5.60, cq.Vector(38.80, 35.80, 4.90)),
-        cq.Solid.makeBox(6.60, 13.80, 1.20, cq.Vector(39.90, 35.80, 3.70)),
-        cq.Solid.makeBox(3.60, 13.80, 1.20, cq.Vector(41.40, 35.80, 2.50)),
-        cq.Solid.makeBox(2.00, 1.00, 1.10, cq.Vector(38.40, 48.30, 10.90)),
-        cq.Solid.makeBox(2.00, 1.00, 1.10, cq.Vector(46.00, 48.30, 10.90)),
-    ]
-    carved = body.cut(*cuts)
-    pins = [
-        cq.Solid.makeBox(
-            0.42,
-            8.50,
-            1.10,
-            cq.Vector(43.20 + (i - 3.5) * 1.02 - 0.21, 36.20, 9.50),
-        )
-        for i in range(8)
-    ]
-    return carved.fuse(*pins)
-
-
 def get_shape() -> cq.Shape:
     """Combined reference compound of all internal bought electronics."""
     return cq.Compound.makeCompound(
@@ -166,6 +110,5 @@ def get_shape() -> cq.Shape:
             m2_keepout(),
             heatsink_solid(),
             usb_a_cluster(),
-            rj45_jack(),
         ]
     )

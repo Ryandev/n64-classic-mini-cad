@@ -21,15 +21,14 @@ are named in brackets: `PRINTING.md` is `GBA/CAD/lib/slicing/PRINTING.md`, `TOLE
 
 ## Materials
 
-**Every printed part is PETG Basic** (owner, 2026-11-13: no PETG-CF, no ASA, no resin). Clear PETG
-for the light pipe. PLA only as the support interface (below).
+**SLA Tough Resin for all visible, carrier, button and shell parts; PETG Basic only for the 3 internal cooling parts** (`cooling_duct`, `duct_floor`, `cooling_hood`, which clamp directly onto the `60–70 °C` heat sink; owner decision 2026-11-18). Clear SLA Resin (`JLC3DP 8001`) for the light pipe. FDM fit coupons (`./run coupons`) use PETG Basic with a PLA support interface (below).
 
-| Considered | Why not |
+| Considered | Why / Where used |
 |---|---|
+| **SLA Tough Resin** (`JLC3DP Imagine Black / 9600` or `PCBWay`) | **Used for all 11 visible, carrier, button and shell parts** (`upper_shell`, `lower_tub`, `front_io_carrier_l`/`_r`, `usb_retainer_bracket`, `front_port_cover`, `n64_port_insert`, `power_slider`, `reset_button`, `cartridge_flaps`, plus `8001 Clear Resin` for `led_light_pipe`). Gives crisp `0.08 mm/side` oblong button guide fit (`SLEEVE_CLEAR`) and smooth outer surfaces with no FDM layer lines |
+| **PETG Basic** (`Bambu Lab X2D`) | **Used for the 3 hidden cooling parts** (`cooling_duct`, `duct_floor`, `cooling_hood`) that sit on the `60–70 °C` heat sink, plus rapid fit-test coupons |
 | PLA in the console | softens at about 55 °C, below the heat sink's 60–70 °C (GBA rejected it too) |
-| ASA for the duct and hood | ~95 °C would give heat margin, but the owner keeps one material. PETG's ~70 °C is close to the heat sink, so the on-console thermal test (`n64mini.console.thermal_test`) should also check the duct holds its clamp |
 | PETG-CF | stiffer and flatter, but brittle at thin pins and hinges, a fibrous finish, a hardened nozzle |
-| Resin (PCBWay) plus paint | was for less sanding before paint; PETG printed for paint (below) instead |
 
 **Dry the PETG and the PLA interface spool** before use (G10).
 
@@ -111,7 +110,7 @@ Declared as of 2026-11-14, all measured by layers and all inside the console or 
 | `cooling_hood` | 900 (853) | stepped wall tops, closed top | inside the console |
 | `cooling_duct` | 480 (456) | fan seat ring round the bore, plate-frame ledge | inside; reached through the fan bore and the floor opening. The floor itself is the separate `duct_floor` (owner, 2026-11-13) |
 | `lower_tub` | 40 | rear port-opening tops, LED hole top | inside openings (the switch V-pins went on 2026-11-15: two screws per switch instead) |
-| `usb_retainer_bracket` | 8 (7.1) | the sideways guide pole | hidden, but the button's sleeve slides on it with 0.15 mm a side: the supported side comes out ~0.10 mm proud, so check the sleeve slides on the printed pole (2026-11-17, open) |
+| `usb_retainer_bracket` | 10 (10.0) | the sideways `2.8 x 4.2 mm` oblong guide pole | hidden, and the button's oblong sleeve (`3.1 x 4.5 mm`) slides on it with 0.15 mm a side (checked on coupon plate 7, 2026-11-18) |
 | `power_slider`, `reset_button` | 125 (116) each | the flange's underside round the guide sleeve | printed crown up, standing on the sleeve; the underside is hidden and only the switch lever touches it (~0.10 mm proud costs 0.10 of the 0.26 mm release margin) |
 | everything else | 0 | | prints support-free by the row |
 
@@ -174,11 +173,11 @@ so they outrank the generic ±0.2 mm in our `TOLERANCES.md`.
 |---|---|---|
 | Button in its chimney | 0.22 mm/side | matches the proven sliding fit |
 | Shell lip over the tub | 0.15 mm/side | in the proven locating range |
-| M3 inserts, corner bosses | Ø4.0 | same as GBA |
-| M2.5 inserts, standoffs | Ø3.2 | **untested** anywhere: coupon 4 |
-| M2.5 switch screws in the tower | Ø3.0 drawn (now Ø2.6 nominal, compensated at slicing) | coupon plate 3 (2026-11-15): screws into the switch well; a little play in the tower hole (minor, owner). Ø2.8 drawn would tighten it. (The Ø2.2 V-pin fitted the switch hole well, slight resistance, but left the switch no way in: removed 2026-11-15) |
-| Door hinge: steel pins in the door knuckle and bay walls | Ø1.5 pin: Ø1.8 where it turns, Ø1.5 pressed in the outer wall | **to test**: small holes print ~0.3 mm/side small (hole gauge, plate 4), so check the pin turns in the knuckle and presses in the wall. Coupon 3 and the hole gauge |
-| Magnets in their pockets | Ø3.0 in Ø3.2 (0.10 mm/side) | **at risk**: at −0.3 mm the pocket is ~Ø2.9 and the magnet won't go in. Not yet measured on GBA either. Coupon 3 |
+| M3 inserts, corner bosses | Ø4.0 nominal (Ø4.3 slip-fit for cold-glued SLA resin) | same as GBA |
+| M2.5 inserts, standoffs & front floor bosses | Ø3.2 nominal (Ø3.6 slip-fit for cold-glued SLA resin) | coupon 4 |
+| M2.5 switch screws in the tower | Ø2.6 nominal, compensated at slicing | coupon plate 3 (2026-11-15): screws into the switch well; a little play in the tower hole (minor, owner) |
+| Door hinge: `Ø1.5 x 27.4 mm` steel pin in the door centre knuckle and carrier hinge barrels | Ø1.5 pin: Ø1.8 where it turns in the door, Ø1.5 press in outer carrier barrel, Ø1.6 close fit in inner carrier barrel | 3-knuckle barrel hinge inside the 28.40 mm bay opening (through-bored for bench assembly/disassembly) |
+| Magnets in their pockets | Ø3.0 in Ø3.2 nominal pocket (45-deg roofed on horizontal pockets) | coupon plate 6 (2026-11-18): vertical holes (`6_hole_gauge_plate_downward`) printed at **3.1 x 3.2** (Ø3.2 drawn), **3.4 x 3.4** (Ø3.4), **3.7 x 3.7** (Ø3.6); sideways holes (`6_hole_gauge_wall_sideways`) printed at **3.0 x 2.8** (Ø3.2), **3.2 x 2.7** (Ø3.4), **3.4 x 3.1** (Ø3.6) |
 
 ## Prove it small first
 

@@ -179,6 +179,7 @@ def check_all():
     reset = reset_button.get_shape()
     bezel = front_bezel.get_shape()
     cov = front_panel_mech.cover()
+    carriers = front_panel_mech.front_carriers_compound()
     ret = front_panel_mech.usb_retainer_compound()
     inserts = front_panel_mech.port_inserts()
     pipe = led_light_pipe.get_shape()
@@ -327,6 +328,13 @@ def check_all():
         ("lower_tub/usb_retainer_brackets", tub, ret),
         ("upper_shell/usb_retainer_brackets", top, ret),
         ("usb_retainer_brackets/radxa_elec", ret, elec),
+        ("lower_tub/front_carriers", tub, carriers),
+        ("upper_shell/front_carriers", top, carriers),
+        ("front_carriers/radxa_elec", carriers, elec),
+        ("front_carriers/radxa_step", carriers, radxa_x4.vendor_step_compound()),
+        ("front_carriers/usb_retainer_brackets", carriers, ret),
+        ("front_carriers/tact_left", carriers, sw_l),
+        ("front_carriers/tact_right", carriers, sw_r),
         ("upper_shell/front_port_cover", top, cov),
         ("upper_shell/insert_p1", top, inserts[0]),
         ("upper_shell/insert_p2", top, inserts[1]),

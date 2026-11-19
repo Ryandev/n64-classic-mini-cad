@@ -110,7 +110,7 @@ def lip_gaps() -> list[tuple[float, float, float, float]]:
     """(x0, x1, y0, y1) where the J-01 lip and its channel stop: across the front, from the left
     bay's outer edge to the right bay's (the doors sit there, and the shell's badge block between
     them would be thinned by the channel); the lip locates on the sides, back and front corners."""
-    half = FRONT_BAY_W / 2.0 + 1.4
+    half = FRONT_BAY_W / 2.0 + HINGE_CHEEK_T + 0.1
     return [(min(FRONT_BAY_XS) - half, max(FRONT_BAY_XS) + half, -60.0, -34.0)]
 
 
@@ -121,6 +121,8 @@ CORNER_BOSS_OD = 8.4
 M3_CLEAR_D = 3.4
 M3_CBORE_D = 6.5
 M3_CBORE_H = 3.5
+# Nominal heat-set bore for Ruthex RX-M3x5.7 (knurl OD 4.20 mm) on the Stage-2 FDM fit mule
+# (`PROFILE = "fdm_petg_x2d"`); for Stage-5 SLA resin cold CA/epoxy bonding, offset to Ø4.30 mm.
 INSERT_M3_BORE_D = 4.0
 INSERT_M3_DEPTH = 5.8
 # Corner screws, from the tub's counterbore up into the shell's RX-M3x5.7 insert: 14 mm engages
@@ -195,7 +197,9 @@ STANDOFF_M25_OD = 7.0
 # The Radxa posts step in to this for their top 1.0 mm: Radxa's own model has a 0.4 mm-tall part
 # 3.45 mm from the front-right hole's centre, inside a Ø7.0 contact face (C10, G13_CLEAR).
 RADXA_STANDOFF_TOP_D, RADXA_STANDOFF_TOP_H = 6.4, 1.0
-INSERT_M25_BORE_D = 3.2  # Ruthex RX-M2.5x4.0 heat-set insert bore
+# Nominal heat-set bore for Ruthex RX-M2.5x4.0 (knurl OD 3.50 mm) on the Stage-2 FDM fit mule
+# (`PROFILE = "fdm_petg_x2d"`); for Stage-5 SLA resin cold CA/epoxy bonding, offset to Ø3.60 mm.
+INSERT_M25_BORE_D = 3.2
 INSERT_M25_DEPTH = 4.2
 
 
@@ -240,15 +244,6 @@ REAR_AUDIO_H = 6.60
 
 REAR_IO_Z_CENTRE = 6.55
 
-# Rear-right panel-mount RJ45 Ethernet bay (to the +X right of the Radxa X4 PCB)
-REAR_RJ45_X = 43.2
-REAR_RJ45_W = 10.4
-REAR_RJ45_D = 19.5
-REAR_RJ45_H = 10.4
-REAR_RJ45_Z_CENTRE = 7.2
-RJ45_SEAT_Z = 5.60  # top of 2x Ruthex RX-M2.5x4.0 standoffs in lower_tub for RJ45 carrier ears
-RJ45_MOUNT_HOLES = ((43.20, 23.00), (52.00, 28.50))  # 2x M2.5 mounting holes for RJ45 module
-
 # ---------------------------------------------------------------------------
 # 5. Twin-port front controller covers (P1+P2 left, P3+P4 right) at authentic Z = 13.19 mm
 #    split line, covering 4x TE Connectivity 292303-7 USB-A ports (REQ-06, J-05, J-07, J-08)
@@ -283,36 +278,60 @@ FRONT_COVER_FIT = 0.20  # J-05 XZ locating clearance per side in each twin-port 
 FRONT_COVER_CLEAR = FRONT_COVER_FIT + 2.0 * PAINT_T  # as drawn: door and bay edges both painted
 FRONT_COVER_T = 2.0  # nominal bay seat depth (each twin hinge cover is 1.8 mm thick)
 
-# Door hinge (J-05, owner 2026-11-17): a steel rod through the door's thickened bottom edge (its
-# knuckle), turning in a blind hole in the bay's inner wall and held by a press fit in the outer
-# wall. There's no room inside to push one long rod in, so it goes in as HINGE_PIN_COUNT short
-# pins pushed end to end through the outer wall from the hollow front corner behind it
-# (HINGE_PINS row). No printed snap: nothing flexes to fit the door.
-HINGE_PIN_D = 1.5  # steel dowel pins (ISO 8734 1.5 x 12, or cut from 1.5 mm rod)
-HINGE_PIN_L = 12.0
-HINGE_TURN_CLEAR = 0.15  # per side, where the door turns on the pins
-HINGE_BORE_D = HINGE_PIN_D + 2.0 * HINGE_TURN_CLEAR  # door knuckle and the inner blind hole
-HINGE_PRESS_D = HINGE_PIN_D  # outer wall: line to line, the last pin is pressed and holds the rest
-HINGE_KNUCKLE_R = HINGE_BORE_D / 2.0 + 0.8  # 0.8 mm wall round the bore: 1.7 mm
-HINGE_BLIND_DEPTH = 1.0  # into the inner wall, leaving 0.8 mm before the hollow behind it
+# Door hinge & removable Front Control/I/O Subassembly (J-05, owner 2026-11-17):
+# Each front bay's door, 2x USB-A receptacles, Omron SS-5GL switch, and button guide pole/stops
+# assemble on the bench into a removable module (`front_io_carrier_l`/`_r` + `usb_retainer_bracket`)
+# that seats flat at Z = 4.80 mm on 3x `RX-M2.5x4.0` bosses on `lower_tub`'s floor.
+# A 3-knuckle barrel hinge inside the 28.40 mm bay opening (2x 2.10 mm stationary carrier barrels
+# at the ends + 22.20 mm door centre knuckle) holds a single continuous `Ø1.5 x 27.4 mm` steel pin
+# all 360 deg on the bench and drops straight down (-Z) into `lower_tub` with zero undercut.
+HINGE_PIN_D = 1.5  # single continuous Ø1.5 x 27.4 mm steel rod per door (bench-assembled)
+HINGE_PIN_L = 27.4
+HINGE_TURN_CLEAR = 0.15  # per side, where the door centre knuckle turns on the pin
+HINGE_BORE_D = HINGE_PIN_D + 2.0 * HINGE_TURN_CLEAR  # door centre knuckle turning bore (1.8 mm)
+HINGE_PRESS_D = HINGE_PIN_D  # outer carrier barrel: line-to-line press fit holding the pin
+HINGE_INNER_BORE_D = HINGE_PIN_D + 0.10  # inner carrier barrel: 1.6 mm close-fit journal
+HINGE_KNUCKLE_R = HINGE_BORE_D / 2.0 + 0.8  # 0.8 mm wall round the door bore: 1.7 mm
+HINGE_BARREL_R = 1.65  # carrier hinge barrel radius (>= 0.85 mm 360-deg wall around pin)
+HINGE_BARREL_W = 2.10  # carrier hinge barrel width at each end of the 27.4 mm door width
+HINGE_CHEEK_T = 1.60  # left and right cheek wall thickness behind the bay opening
 HINGE_LEDGE_CLEAR = 0.25  # the knuckle turns in a groove in the ledge behind the door
 HINGE_Y = FRONT_BAY_Y0 + HINGE_KNUCKLE_R  # pivot at the knuckle's centre, 1.7 mm behind the front
 HINGE_Z = FRONT_BAY_Z0 + FRONT_COVER_CLEAR + HINGE_KNUCKLE_R  # and 1.7 mm above the door's bottom
-HINGE_OUTER_WALL = 6.6  # bay edge to where the pin line is clear of the curved corner wall
-HINGE_PIN_COUNT = 3
+HINGE_PIN_COUNT = 1
 # Beside each door's outer end the front curves 0.7 mm behind the door face; this strip is brought
-# flush with the door so the outer hinge wall is solid (owner, 2026-11-17)
+# flush with the door so the outer bay wall is full thickness (owner, 2026-11-17)
 FRONT_BAY_FLUSH_W = 4.1
+
+# Removable Front Control & I/O Subassembly mounting & USB wiring channels (owner, 2026-11-17):
+# Outer-Front boss is forward (-32.20 mm, matching usb_retainer_bracket's 180-deg symmetry axis),
+# Inner-Rear boss is at (6.40, -30.20 mm) behind the Power LED cradle, and Rear-Tower boss is at
+# (25.00, -15.50 mm) centred between the 2 USB wire bundles.
+FRONT_SUBASM_BASE_Z0 = 2.80
+FRONT_SUBASM_BOSS_BORE_Z0 = 0.85  # leaves 0.85 mm (>0.80 NECK) solid floor under 4.15 mm deep bore
+FRONT_SUBASM_BOSS_TOP_Z = 5.00  # flat Z=5.00 mm seat datum (4.15 mm blind bore for RX-M2.5x4.0)
+FRONT_SUBASM_MOUNT_PTS = (
+    (43.80, -32.20),  # Outer-Front locating boss (shared with usb_retainer_bracket clamping ear)
+    (6.40, -30.20),  # Inner-Rear locating boss (behind Power LED cradle, below cooling_duct)
+    (
+        25.00,
+        -15.50,
+    ),  # Rear switch-tower Z-clamp boss (extra radial clearance avoids over-constraint)
+)
+USB_SOLDER_PIN_Y = -28.51  # TE 292303-7 4x through-hole solder tails (2.71 mm behind shield legs)
+USB_SOLDER_PIN_DXS = (-3.50, -1.00, 1.00, 3.50)
+USB_SOLDER_PIN_Z0 = 3.50  # bottom of solder joints / wire exit above Z = 1.60 mm tub floor
+USB_SOLDER_BAY_W = 8.40  # open through-floor solder bay & rear wire-exit arch width per USB port
 
 # Top-centre fingernail slit on each twin-port cover (-Y/+Z edge at X = +-25.0 mm)
 FINGER_SLIT_W = 6.4
 FINGER_SLIT_H = 0.85
 FINGER_SLIT_D = 0.70
 
-# Magnetic catch behind the twin hinged covers (2x Ø3x1 mm magnets per cover + 2x in shell = 8x)
+# Magnetic catch behind the twin hinged covers (2x Ø3x1 mm magnets per cover + 2x in bay = 8x)
 MAGNET_D = 3.0
 MAGNET_T = 1.0
-MAGNET_BORE_D = 3.2
+MAGNET_BORE_D = 3.2  # nominal Ø3.20 mm magnet pocket (process allowances live in profiles.py)
 MAGNET_BORE_DEPTH = 1.15
 MAGNET_XS = (-25.0, 25.0)
 MAGNET_ZS = (9.9, 15.3)
@@ -407,12 +426,17 @@ BUTTON_POLE_HOLE_Z1 = 28.90  # where the guide-pole hole starts to narrow: its r
 # bracket's guide pole. They must never fight: the pole can sit off the chimney's axis by the
 # halves' lip play plus the glued bracket's placement, and the chimney's play plus the sleeve's
 # must cover that (BTN_STACK), so the bracket needs no screws.
-BRACKET_PLACE_TOL = 0.20  # the USB bracket is glued into the tub, located by eye and its walls
-BUTTON_POLE_D = 2.80  # the bracket's guide pole
+BRACKET_PLACE_TOL = 0.20  # outer M2.5 screw + 3 cradle walls locate the bracket within 0.20 mm
+# 180-deg symmetric oblong stadium pole (2.80 mm in X x 4.20 mm in Y) so the button sits and
+# slides on the pole without rotating in Z even with upper_shell removed (owner, 2026-11-18).
+BUTTON_POLE_D = 2.80  # the bracket's oblong guide pole width in X
+BUTTON_POLE_LEN_Y = 4.20  # the bracket's oblong guide pole length in Y (1.40 mm flat sides)
 BUTTON_POLE_Y = -32.20  # the pole's axis: mid-depth of the bracket, so one part serves both sides
-SLEEVE_CLEAR = 0.15  # per side, sleeve on pole: RESET_CLEAR + this covers LIP_CLEAR + placement
-SLEEVE_ID = BUTTON_POLE_D + 2.0 * SLEEVE_CLEAR  # 3.10 mm
-SLEEVE_OD = SLEEVE_ID + 2.0 * 1.0  # 1.0 mm wall
+SLEEVE_CLEAR = 0.15  # per side: RESET_CLEAR + this covers LIP_CLEAR + BRACKET_PLACE_TOL
+SLEEVE_ID = BUTTON_POLE_D + 2.0 * SLEEVE_CLEAR  # 3.10 mm X width
+SLEEVE_LEN_Y_ID = SLEEVE_ID + (BUTTON_POLE_LEN_Y - BUTTON_POLE_D)  # 4.50 mm Y length
+SLEEVE_OD = SLEEVE_ID + 2.0 * 1.0  # 5.10 mm X width (1.0 mm wall)
+SLEEVE_LEN_Y_OD = SLEEVE_LEN_Y_ID + 2.0 * 1.0  # 6.50 mm Y length (1.0 mm wall)
 SLEEVE_L = 3.5  # below the button's underside
 SLEEVE_Z0 = BUTTON_UNDERSIDE_Z - SLEEVE_L  # 21.57 mm, the sleeve's foot at rest
 BUTTON_STOP_Z = BUTTON_UNDERSIDE_Z - RESET_STROKE_Z  # top of the tub post (rear) stops

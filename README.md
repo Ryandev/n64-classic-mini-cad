@@ -16,7 +16,7 @@ Every push to `main` lints the code, builds every printed part and the print pla
 
 | File | Download | Contents |
 |---|---|---|
-| `print_plate.step` | [print_plate.step](https://github.com/Ryandev/n64-classic-mini-cad/releases/latest/download/print_plate.step) | All 15 printed bodies on one plate (`240.6 x 229.0 x 23.5 mm`), laid flat on `Z = 0` for a `256 x 256 mm` bed |
+| `print_plate.step` | [print_plate.step](https://github.com/Ryandev/n64-classic-mini-cad/releases/latest/download/print_plate.step) | All 17 printed bodies on one plate (`240.6 x 229.0 x 23.5 mm`), laid flat on `Z = 0` for a `256 x 256 mm` bed |
 | `n64-classic-mini-cad-exports.zip` | [n64-classic-mini-cad-exports.zip](https://github.com/Ryandev/n64-classic-mini-cad/releases/latest/download/n64-classic-mini-cad-exports.zip) | Each printed part as its own STEP, the laser jig SVG, the print plate, the BOM, manufacturing and tolerance notes, `LICENSE` and `CREDITS.md` |
 
 The geometry gate (`./run gate`) and the full console assembly check the case against
@@ -45,7 +45,7 @@ so they run on the maintainer's machine, not in CI.
 |---|---|
 | ![Internal cutaway](notes/screenshots/cad_internal_cutaway.png) | ![FEM von Mises stress](notes/screenshots/cad_fem_stress.png) |
 
-The print plate: all 15 printed bodies (`240.6 x 229.0 x 23.5 mm`).
+The print plate: all 17 printed bodies (`240.6 x 229.0 x 23.5 mm`).
 
 ![Print plate](notes/screenshots/cad_print_plate.png)
 
@@ -89,18 +89,18 @@ rim and is screwed at its 4 corners.
 | Load Case | Component | Loads | von Mises (p99) | Deflection | Mesh change (stress / defl.) |
 |---|---|---|---|---|---|
 | **`FEM_LC1`** | `usb_retainer_bracket.py` | `50 N` button-stop mash, `15 N` sideways on the guide pole, `15 N` USB-A pry | `11.2 MPa` (limit 25), at the middle leg's root under the bridge | `0.30 mm` at the guide pole tip (limit 0.57); **stop shelf gives `0.18 mm` (limit 0.158, the switch's over-travel margin)** | **31 %** / 2 % |
-| **`FEM_LC2`** | `lower_tub.py` front USB & Omron bay | `40 N` USB-A insertion, `30 N` cable yank, `50 N` button-stop mash | `3.0 MPa` (limit 20) | `0.05 mm` max (limit 0.158, the switch's over-travel margin) | 11 % / 11 % |
+| **`FEM_LC2`** | `front_io_carrier_l.py` front USB & Omron carrier | `40 N` USB-A insertion, `30 N` cable yank, `50 N` button-stop mash | `3.0 MPa` (limit 20) | `0.05 mm` max (limit 0.158, the switch's over-travel margin) | 11 % / 11 % |
 | **`FEM_LC3`** | `upper_shell.py` | `100 N` (~10 kg) on the dome | `5.2 MPa` (limit 25) | `0.78 mm` dome sag (reported only); chimneys `0.14 mm` (limit 0.22, the button clearance) | 6 % / 6 % |
-| **`FEM_LC4`** | `lower_tub.py` Radxa & RJ45 standoffs | `30 N` rear plug push, `60 N` screw preload, on the 6 standoff tops | `0.06 MPa` (limit 15) | `0.01 mm` (limit 0.50, the jack's gap to the wall) | **23 %** / 2 % |
+| **`FEM_LC4`** | `lower_tub.py` 4x Radxa X4 standoffs | `30 N` rear plug push, `60 N` screw preload, on the 4 standoff tops | `0.06 MPa` (limit 15) | `0.01 mm` (limit 0.50, the jack's gap to the wall) | **23 %** / 2 % |
 
 ---
 
 ## 🛠️ Building, Testing & Documentation
 
 ```bash
-./run all        # ruff lint + 155 B-Rep/printability gate rows + STEP/SVG/plate export + round-trip validation
+./run all        # ruff lint + 231 B-Rep/printability gate rows + STEP/SVG/plate export + round-trip validation
 ./run fem        # 4 Gmsh + CalculiX C3D10 load cases, each on two meshes (~4 min)
-./run selftest   # run 40 planted geometry mutations to prove every gate row can fail
+./run selftest   # run 44 planted geometry mutations to prove every gate row can fail
 ./run bom        # regenerate notes/BOM_COMPLETE.md from parametric subassemblies
 ```
 

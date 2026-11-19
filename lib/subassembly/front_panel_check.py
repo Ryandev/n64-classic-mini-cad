@@ -28,6 +28,9 @@ from component import radxa_x4  # noqa: E402
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common  # noqa: E402
 from OCP.BRepExtrema import BRepExtrema_DistShapeShape  # noqa: E402
 from part import (  # noqa: E402
+    cooling_duct,
+    front_io_carrier_l,
+    front_io_carrier_r,
     front_port_cover,
     led_light_pipe,
     n64_port_insert,
@@ -47,13 +50,13 @@ def _common_volume(a: cq.Shape, b: cq.Shape) -> float:
     return cq.Shape.cast(com.Shape()).Volume()
 
 
-def _hinge_pins_row(tub: cq.Shape, covers: list, usb: cq.Shape) -> tuple:
-    """HINGE_PINS (J-05, owner 2026-11-17): the steel pins, pushed end to end through the outer
-    bay wall from the hollow corner behind it, run the door's knuckle into the inner wall; each
-    hole has 0.8 mm of plastic round it; and the corner leaves room to push them in."""
+def _hinge_pins_row(tub: cq.Shape, carriers: cq.Shape, covers: list, usb: cq.Shape) -> tuple:
+    """HINGE_PINS (J-05, owner 2026-11-17): each bay's continuous Ø1.5 x 31.4 mm steel hinge pin
+    runs through both carrier cheeks and the door knuckle on the bench (through-bored at both ends
+    so the pin can be pushed out for disassembly) and sits behind >= 0.8 mm walls."""
     from OCP.BRepClass3d import BRepClass3d_SolidClassifier
     from OCP.gp import gp_Pnt
-    from OCP.TopAbs import TopAbs_IN
+    from OCP.TopAbs import TopAbs_IN, TopAbs_OUT
 
     def solid_round(shape: cq.Shape, x: float, r: float) -> bool:
         clf = BRepClass3d_SolidClassifier(shape.wrapped)
@@ -66,53 +69,70 @@ def _hinge_pins_row(tub: cq.Shape, covers: list, usb: cq.Shape) -> tuple:
 
     along = cq.Vector(1.0, 0.0, 0.0)
     wall = 0.8 - 0.01
+    clf_car = BRepClass3d_SolidClassifier(carriers.wrapped)
+
     msgs, ok = [], True
     for bx, door in zip(D.FRONT_BAY_XS, covers):
         side = -1.0 if bx < 0.0 else 1.0  # towards the outer wall
-        half = D.FRONT_BAY_W / 2.0
-        inner_edge, outer_edge = bx - side * half, bx + side * half
-        start = inner_edge - side * D.HINGE_BLIND_DEPTH  # bottom of the blind hole
+        w_door = D.FRONT_BAY_W - 2.0 * D.FRONT_COVER_CLEAR
+        half_door = w_door / 2.0
+        inner_bar_c = bx - side * (half_door - D.HINGE_BARREL_W / 2.0)
+        outer_bar_c = bx + side * (half_door - D.HINGE_BARREL_W / 2.0)
         length = D.HINGE_PIN_COUNT * D.HINGE_PIN_L
-        end = start + side * length
-        train = cq.Solid.makeCylinder(
-            D.HINGE_PIN_D / 2.0, length, cq.Vector(min(start, end), D.HINGE_Y, D.HINGE_Z), along
+        x0 = bx - length / 2.0
+        pin = cq.Solid.makeCylinder(
+            D.HINGE_PIN_D / 2.0, length, cq.Vector(x0, D.HINGE_Y, D.HINGE_Z), along
         )
-        clash = _common_volume(train, tub) + _common_volume(train, door)
-        clash += _common_volume(train, usb)  # <= 0.01: the press fit is drawn line to line
-        corner = outer_edge + side * D.HINGE_OUTER_WALL  # where the hole meets the hollow corner
-        # how much of the last pin is in the outer wall's press fit
-        last0, last1 = sorted((end - side * D.HINGE_PIN_L, end))
-        wall0, wall1 = sorted((outer_edge, corner))
-        pressed = max(0.0, min(last1, wall1) - max(last0, wall0))
-        # room to bring each pin up to the hole and push it in: a pin's length plus 1 mm
-        path = cq.Solid.makeCylinder(
-            D.HINGE_PIN_D / 2.0 + 0.3,
-            D.HINGE_PIN_L + 1.0,
-            cq.Vector(corner, D.HINGE_Y, D.HINGE_Z),
-            side * along,
+        clash = (
+            _common_volume(pin, tub)
+            + _common_volume(pin, door)
+            + _common_volume(pin, carriers)
+            + _common_volume(pin, usb)
         )
-        blocked = _common_volume(path, tub)
+        # Verify the pin is retained 360-deg by the carrier barrels on the bench (pulling -Y
+        # out the front must intersect the carrier barrels by >= 2.0 mm^3) and drops straight
+        # down (-Z) into `lower_tub` with the carrier & door with 0.000 mm^3 collision.
+        pin_front = pin.moved(cq.Location(cq.Vector(0.0, -0.50, 0.0)))
+        bench_held = _common_volume(pin_front, carriers) >= 2.0
+        drop_clash = max(
+            _common_volume(pin.moved(cq.Location(cq.Vector(0.0, 0.0, dz))), tub)
+            + _common_volume(door.moved(cq.Location(cq.Vector(0.0, 0.0, dz))), tub)
+            + _common_volume(carriers.moved(cq.Location(cq.Vector(0.0, 0.0, dz))), tub)
+            for dz in (0.5, 2.0, 5.0, 10.0)
+        )
+        # Both carrier barrels are through-bored along X so a pin punch pushes the pin out on bench
+        through_open = True
+        for px in (
+            outer_bar_c,
+            bx + side * (half_door + 0.5),
+            inner_bar_c,
+            bx - side * (half_door + 0.5),
+        ):
+            clf_car.Perform(gp_Pnt(px, D.HINGE_Y, D.HINGE_Z), 1e-4)
+            if clf_car.State() != TopAbs_OUT:
+                through_open = False
         walls = (
             solid_round(door, bx, D.HINGE_BORE_D / 2.0 + wall)
-            and solid_round(tub, outer_edge + side * 1.0, D.HINGE_PRESS_D / 2.0 + wall)
-            and solid_round(
-                tub, outer_edge + side * (D.HINGE_OUTER_WALL - 1.0), D.HINGE_PRESS_D / 2.0 + wall
-            )
-            and solid_round(tub, inner_edge - side * 0.6, D.HINGE_BORE_D / 2.0 + wall)
+            and solid_round(carriers, outer_bar_c, D.HINGE_PRESS_D / 2.0 + wall)
+            and solid_round(carriers, inner_bar_c, D.HINGE_INNER_BORE_D / 2.0 + wall)
         )
-        sticks_out = side * (end - corner)
         bay_ok = (
-            clash <= 0.01 and blocked <= 1e-3 and walls and pressed >= 3.0 and sticks_out <= 2.0
+            clash <= 0.01
+            and walls
+            and through_open
+            and bench_held
+            and drop_clash <= 1e-3
+            and abs(length - w_door) <= 0.05
         )
         ok = ok and bay_ok
         msgs.append(
-            f"bay {bx:+.0f}: pins clash {clash:.3f} mm^3, last pin pressed {pressed:.1f} mm and "
-            f"{sticks_out:+.1f} mm out of the wall, 0.8 mm walls {walls}, push-in path blocked "
-            f"{blocked:.3f} mm^3"
+            f"bay {bx:+.0f}: pin clash {clash:.3f} mm^3, barrel {D.HINGE_BARREL_W:.2f} mm, "
+            f"0.8 mm walls {walls}, bench held {bench_held}, drop clash {drop_clash:.3f} mm^3, "
+            f"through-bored {through_open}"
         )
     return (
-        f"HINGE_PINS {D.HINGE_PIN_COUNT}x Ø{D.HINGE_PIN_D:g} x {D.HINGE_PIN_L:g} steel pins fit "
-        "the knuckle and both bay walls, pushed in from the hollow corner",
+        f"HINGE_PINS {D.HINGE_PIN_COUNT}x Ø{D.HINGE_PIN_D:g} x {D.HINGE_PIN_L:g} steel pin fits "
+        "knuckle & both carrier barrels (360-deg bench held & vertical drop-in)",
         ok,
         "; ".join(msgs),
     )
@@ -121,6 +141,8 @@ def _hinge_pins_row(tub: cq.Shape, covers: list, usb: cq.Shape) -> tuple:
 def check_all():
     rows = []
     tub = lower_tub.get_shape()
+    car_l, car_r = front_panel_mech.front_carriers()
+    carriers = front_panel_mech.front_carriers_compound()
     cov_single = front_port_cover.get_shape()
     cov = front_panel_mech.cover()
     inserts = front_panel_mech.port_inserts()
@@ -131,8 +153,10 @@ def check_all():
     ret_single = usb_retainer_bracket.get_shape()
     ret_both = front_panel_mech.usb_retainer_compound()
 
-    # 1. Printability rows on front_port_cover, n64_port_insert, led_light_pipe & usb_retainer
+    # 1. Printability rows on front_io_carrier_l/_r, front_port_cover, insert, LED & usb_retainer
     for name, shape, mod in (
+        ("front_io_carrier_l", car_l, front_io_carrier_l),
+        ("front_io_carrier_r", car_r, front_io_carrier_r),
         ("front_port_cover", cov_single, front_port_cover),
         ("n64_port_insert", inserts[0], n64_port_insert),
         ("led_light_pipe", pipe, led_light_pipe),
@@ -152,6 +176,16 @@ def check_all():
 
     # 2. Rule G13: zero boolean interference across all front panel parts
     pairs = [
+        ("lower_tub/front_carriers", tub, carriers),
+        ("front_carriers/front_port_cover", carriers, cov),
+        ("front_carriers/usb_a", carriers, usb),
+        ("front_carriers/usb_retainer_brackets", carriers, ret_both),
+        ("front_carriers/led_light_pipe", carriers, pipe),
+        ("front_carriers/magnets", carriers, mags),
+        ("front_carriers/insert_p1", carriers, inserts[0]),
+        ("front_carriers/insert_p2", carriers, inserts[1]),
+        ("front_carriers/insert_p3", carriers, inserts[2]),
+        ("front_carriers/insert_p4", carriers, inserts[3]),
         ("lower_tub/front_port_cover", tub, cov),
         ("front_port_cover/led_light_pipe", cov, pipe),
         ("lower_tub/led_light_pipe", tub, pipe),
@@ -204,7 +238,9 @@ def check_all():
     pivot = cq.Vector(0.0, D.HINGE_Y, D.HINGE_Z)
     door_and_bezels = cq.Compound.makeCompound([*front_panel_mech.covers(), *inserts])
     swing_clash = max(
-        _common_volume(tub, opened) + _common_volume(pipe, opened)
+        _common_volume(tub, opened)
+        + _common_volume(carriers, opened)
+        + _common_volume(pipe, opened)
         for deg in range(5, 91, 5)
         for opened in [door_and_bezels.rotate(pivot, pivot + cq.Vector(1.0, 0.0, 0.0), deg)]
     )
@@ -242,7 +278,7 @@ def check_all():
         )
     )
 
-    rows.append(_hinge_pins_row(tub, front_panel_mech.covers(), usb))
+    rows.append(_hinge_pins_row(tub, carriers, front_panel_mech.covers(), usb))
 
     # 4. J-07: the light pipe sits in the tub's lens bore with a real clearance, flush with the
     # front, and the LED sits just behind it: measured on the solids (C8), not from the datums.
@@ -296,6 +332,45 @@ def check_all():
             j08_ok,
             f"radial clearance={port_rad_clear:.2f} mm/side, "
             f"insert OD={ins_bb.xlen:.2f} mm, shallow depth={ins_bb.ylen:.2f} mm",
+        )
+    )
+
+    # 6. SUBASM_CLEAR: minimum 3D Euclidean clearance from front_carriers + 6x M2.5 screw heads
+    #    to surrounding internal components (Radxa PCB, Radxa STEP, wired LED, cooling duct)
+    ear_z_tops = (18.45, 7.30, 7.30)
+    screw_heads = [
+        cq.Solid.makeCylinder(
+            D.BOARD_SCREW_HEAD_D / 2.0,
+            D.BOARD_SCREW_HEAD_H,
+            cq.Vector(side * mx, my, z_top),
+        )
+        for side in (-1.0, 1.0)
+        for (mx, my), z_top in zip(D.FRONT_SUBASM_MOUNT_PTS, ear_z_tops)
+    ]
+    screw_comp = cq.Compound.makeCompound(screw_heads)
+    carriers_and_screws = cq.Compound.makeCompound([*carriers.Solids(), *screw_heads])
+    clear_targets = (
+        ("radxa_pcb", carriers_and_screws, radxa_x4.board_solid(), 1.50),
+        ("radxa_step", carriers_and_screws, radxa_x4.vendor_step_compound(), 0.75),
+        ("wired_led_3mm", carriers_and_screws, led3, 1.00),
+        ("duct_floor", carriers_and_screws, cooling_duct.floor_plate(), 1.00),
+        ("screws_to_duct", screw_comp, cooling_duct.get_shape(), 1.50),
+    )
+    clear_msgs, clear_bad = [], []
+    for tname, src_shape, tshape, min_mm in clear_targets:
+        ext = BRepExtrema_DistShapeShape(src_shape.wrapped, tshape.wrapped)
+        ext.Perform()
+        gap_mm = ext.Value()
+        clear_msgs.append(f"{tname}={gap_mm:.2f}mm(>={min_mm:.2f})")
+        if gap_mm < min_mm - 1e-4:
+            clear_bad.append(f"{tname}={gap_mm:.2f}mm<{min_mm:.2f}mm")
+    rows.append(
+        (
+            "SUBASM_CLEAR front_carriers + 6x M2.5 screw heads clear Radxa, LED & cooling duct",
+            not clear_bad,
+            ", ".join(clear_msgs)
+            if not clear_bad
+            else "TOO CLOSE: " + ", ".join(clear_bad) + " (" + ", ".join(clear_msgs) + ")",
         )
     )
 
